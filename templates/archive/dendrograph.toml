@@ -10,7 +10,7 @@
 # fall back to observed activity and are marked "not yours".
 # emails = ["you@example.com"]
 
-[[sources]]
+# [[sources]]
 # kind = "github"
 # account = "your-account"
 
@@ -35,10 +35,17 @@
 [exclude]
 # artifacts = ["root-d4e5f6..."]   # omitted from the graph; NOT deleted from the store
 
-[[collections]]
+# [[collections]]
 # name = "Client work"
 # artifacts = ["root-a1b2c3..."]
 
-[[epoch_markers]]
+# [[succession]]
+# The only way a SUCCEEDS edge comes into being. `dendro suggest` proposes the
+# pair and prints this block; the edge exists because you pasted it (FR-011).
+# earlier = "root-a1b2c3..."
+# later = "root-9f8e7d..."
+# note = "the rewrite that replaced it"
+
+# [[epoch_markers]]
 # date = "2023-03-14"
 # label = "AI assistants arrive"
