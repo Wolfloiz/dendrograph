@@ -1,0 +1,85 @@
+# Refreshes GitHub-sourced Artifacts, rebuilds the site and commits the store.
+# A scheduled Actions run is one caller of the CLI, not the product's home
+# (ADR-0007). The tool is pinned: an archive must not change behaviour because
+# the tool did.
+#
+# CI authenticates with a fine-grained PAT in the DENDRO_GITHUB_TOKEN secret —
+# the one place a PAT is supported, because no browser exists here to approve
+# a device flow (ADR-0008). The token needs read access to the scanned
+# repositories and write access to this repository (and to the target
+# repository, when [publish].target_repository is set).
+
+name: Update archive
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # Mondays, 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  DENDROGRAPH_VERSION: "v0.1.0" # pinned tool tag; bump deliberately
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dendrograph (${{ env.DENDROGRAPH_VERSION }})
+        run: python -m pip install "dendrograph @ https://github.com/luiz/dendrograph/archive/${{ env.DENDROGRAPH_VERSION }}.tar.gz"
+        # Ajuste a URL acima para onde o pacote é publicado (PyPI ou o seu fork).
+
+      - name: Scan configured sources
+        env:
+          DENDRO_GITHUB_TOKEN: ${{ secrets.DENDRO_GITHUB_TOKEN }}
+        run: dendro scan
+
+      - name: Build the site for the configured publish mode
+        run: dendro build
+
+      - name: Commit store and site
+        run: |
+          git config user.name "dendrograph"
+          git config user.email "dendrograph@users.noreply.github.com"
+          git add store site
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Refresh archive from scheduled scan"
+            git push
+          fi
+
+  # Free-plan split (ADR-0010): when [publish].target_repository is set, the
+  # filtered site deploys to that second, public repository, which holds no
+  # store. `dendro publish` re-checks privacy and refuses a full build before
+  # anything travels.
+  deploy:
+    runs-on: ubuntu-latest
+    needs: update
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dendrograph (${{ env.DENDROGRAPH_VERSION }})
+        run: python -m pip install "dendrograph @ https://github.com/luiz/dendrograph/archive/${{ env.DENDROGRAPH_VERSION }}.tar.gz"
+
+      - name: Publish to the target repository
+        env:
+          DENDRO_GITHUB_TOKEN: ${{ secrets.DENDRO_GITHUB_TOKEN }}
+        run: |
+          if grep -q "^target_repository" dendrograph.toml 2>/dev/null || \
+             grep -qE "^\s*target_repository\s*=" dendrograph.toml 2>/dev/null; then
+            dendro publish
+          else
+            echo "[publish].target_repository is not set; the site stays in this repository."
+          fi

@@ -156,8 +156,8 @@ def _parse_publish(raw: dict) -> dict:
     )
     mode = raw.get("mode", "public")
     if mode not in PUBLISH_MODES:
-        # `full` is deliberately absent: it is a build flag for local inspection,
-        # never a published mode (contracts/graph.md).
+        # `full` está fora de propósito: é um sinalizador de build para
+        # inspeção local, nunca um modo de publicação (contracts/graph.md).
         raise ConfigError(
             f"[publish].mode must be one of {', '.join(PUBLISH_MODES)}, got {mode!r}"
         )

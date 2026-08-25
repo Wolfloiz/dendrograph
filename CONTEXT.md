@@ -77,3 +77,64 @@ _Avoid_: Ownership, contribution, originality
 How strongly a Technique is claimed, declared at the point of inference. Never a
 quality score — dendrograph does not judge work.
 _Avoid_: Score, rating, certainty
+
+## Resolved while building
+
+Words the implementation forced us to be precise about. Each is here because
+being vague about it produced something false.
+
+**Observation**:
+What one scan of one repository yields — never written over what is stored, always
+merged into it. A field the observation could not see stays as it was; an
+unreachable drive must not blank an Artifact.
+_Avoid_: Snapshot, sync, import
+
+**Source**:
+A place an Artifact was seen: a kind and a locator. One Artifact carries every
+source it was ever seen in, and neither overwrites the other. **Distinct from the
+Artifact**: losing every source loses nothing, because the store is the record.
+_Avoid_: Remote, origin, location
+
+**Reachable**:
+Whether a source answered on the last run. Not reaching one is a state that gets
+recorded, never a deletion, and it does not advance `last_seen` — nothing was seen.
+_Avoid_: Missing, deleted, gone, stale
+
+**Span**:
+A Tool's window: the first and last of **the Author's own commits** in Artifacts
+using it. Not the Artifacts' whole activity — a fork carries its upstream's past,
+and counting it read as seventeen years of a language for an account four years
+old. A span states experience, so it must understate rather than overstate.
+_Avoid_: Range, usage, experience, years
+
+**Untouched fork**:
+An Artifact the Author never committed to. It is the same Artifact as its upstream
+(identity is the root commit) and it stays in the archive, but it contributes no
+dates to any Span and is counted apart.
+_Avoid_: Fork (ambiguous — a rewritten fork is real work), clone, copy
+
+**Alias**:
+A name a private Artifact is published under, revealing nothing beyond the node and
+its dates until the Author names each field. Disclosure is opt-in per field; there
+is no opt-out redaction. See `docs/adr/0011`.
+_Avoid_: Pseudonym, anonymised, masked, redacted (means a whole build mode here)
+
+**Build mode**:
+`public`, `redacted` or `full`. It chooses the **output directory**, not a filter
+applied afterwards — `full` writes to `.dendro-local/` and therefore cannot reach a
+published path even by mistake.
+_Avoid_: Privacy level, visibility (means an Artifact's own state), profile
+
+**Declaration**:
+A line in `dendrograph.toml` where the Author decides something the machine only
+proposed. Declarations live in config, never in the store: the store is the
+observed record, and mixing the two makes it impossible to say which is which.
+_Avoid_: Override (only one kind is), setting, annotation
+
+**Identifying set** / **Authored set**:
+Two different file sets, and conflating them breaks identity. The identifying set
+is every tracked file outside an excluded directory, and answers *which Artifact is
+this*. The authored set is stricter — no lockfiles, nothing under 512 bytes — and
+answers *did these two share material*. A repository of small files has an identity
+and no lineage; treating one set as both gave it neither.
+_Avoid_: Fingerprint, file list, content

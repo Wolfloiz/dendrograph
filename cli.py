@@ -69,7 +69,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-# ---------- commands ----------
+# ---------- comandos ----------
 # Cada handler devolve um RunReport. Os que dependem de fases posteriores
 # levantam CommandError com o nome da tarefa que os entrega, para que uma
 # execução prematura diga o que falta em vez de falhar de forma opaca.

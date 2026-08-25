@@ -53,6 +53,27 @@ the force simulation is roughly 90 lines against a 2D canvas. Fully offline-capa
 
 No violations. No complexity justification required.
 
+### Reviewed against the built system (T092, 2026-08-25)
+
+Each row checked against what exists, not against what was planned. **No principle is
+violated, and no deviation needs an ADR.** What the review did turn up was three cases
+where the built system was *weaker* than the row claimed, all now closed:
+
+| Row | What the check found |
+|---|---|
+| I. Machine proposes | `SUCCEEDS` was contracted as Author-confirmed only, but **no config key existed to confirm one with** — the edge was unreachable and the principle held vacuously. `[[succession]]` now closes it. `dendro prune` and `dendro suggest` contain no deletion or write call at all. |
+| II. Store accumulates | `store.save` merges into what is already there; no path rebuilds. A source that vanishes is flagged unreachable and its `last_seen` does not advance. |
+| III. No server / no graph DB / no page deps | Verified mechanically: **zero non-stdlib imports** across the codebase. The two views reference only their own four sibling files — no CDN, no external font, no fetch. SQLite is written and never queried by v0.1. |
+| IV. Privacy by default | `privacy.select` includes private Artifacts only in `full`, which cannot reach `site/` because the output directory is chosen by mode. Tokens are read from the environment and never written to config or store — and never reach `argv` or an error message, which was a real leak until the credential helper replaced the URL. |
+| V. Honest inference or none | Eight Technique rules, all manifest or convention markers, each carrying confidence and evidence. `DERIVES_FROM` is thresholded at three shared authored files. `tests/test_no_judgement.py` now sweeps **every generated file**, not just the in-memory payload — it had never looked at what lands on disk, and the first sweep caught the prose in `llms.txt`. |
+| IV. Repo topology (ADR-0010) | `examples/` holds no private Artifact. |
+| Constraints | Python 3.11+ and stdlib-only confirmed; `unittest` throughout; public surface English with 0 Portuguese identifiers and 0 Portuguese file names against 201 Portuguese comments (ADR-0001). MIT was declared in `pyproject.toml` **with no `LICENSE` file in the repository** — added. |
+
+One deviation is recorded rather than fixed, in `contracts/graph.md`: `DERIVES_FROM` and
+`SUCCEEDS` use opposite conventions between the detector and the graph. That is
+deliberate — a detector sorts by time, an edge reads as a sentence — but it is a trap for
+anyone reading only one layer, so it is written down in both.
+
 ## Design
 
 ### Identity resolution (ADR-0003)

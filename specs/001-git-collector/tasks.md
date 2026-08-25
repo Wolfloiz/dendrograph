@@ -232,12 +232,12 @@ suggestion command and confirm no edge is created without confirmation.
 - [ ] T084 [P] Write `README.md` — Principle I stated explicitly, exactly what the published site does and does not contain, and the create-your-archive-from-template steps (ADR-0010)
 - [ ] T085 [P] Build the demo archive in `examples/` from the Author's public repositories only — real data, and automatically safe because it is what the privacy default produces
 - [ ] T086 Place a visualization above the fold in `README.md` — nobody stars a visualization tool without seeing it
-- [ ] T087 [P] Add `LICENSE` (MIT) and `CONTRIBUTING.md` (ADR-0006)
+- [X] T087 [P] Add `LICENSE` (MIT) and `CONTRIBUTING.md` (ADR-0006)
 - [ ] T088 Validate SC-001b — a ~500-repository account completes a first full scan unattended within 30 minutes, with progress reported throughout
 - [ ] T089 [P] Validate SC-001 — a stranger opens the demo archive and sees a rendered graph in under five minutes without creating any credential
-- [ ] T090 [P] Record any vocabulary resolved during implementation in `CONTEXT.md`, not in a backlog
-- [ ] T091 [P] Confirm the public surface is English — node and edge identifiers, CLI, file and directory names, docs — and that code comments are Portuguese (ADR-0001)
-- [ ] T092 Review the Constitution Check table in `plan.md` against the built system, and record any deviation as a new ADR rather than silently accepting it
+- [X] T090 [P] Record any vocabulary resolved during implementation in `CONTEXT.md`, not in a backlog
+- [X] T091 [P] Confirm the public surface is English — node and edge identifiers, CLI, file and directory names, docs — and that code comments are Portuguese (ADR-0001)
+- [X] T092 Review the Constitution Check table in `plan.md` against the built system, and record any deviation as a new ADR rather than silently accepting it
 
 ---
 

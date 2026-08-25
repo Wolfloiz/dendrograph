@@ -81,16 +81,42 @@
     return (a.date || "").localeCompare(b.date || "");
   });
 
-  var years = Object.keys(byYear).sort();
+  function relations(artifact) {
+    // Um Epoch Marker é uma linha que o Author desenhou; ler um Artifact como
+    // antes ou depois dela é o que faz do marker uma referência útil.
+    var parts = [];
+    markers.forEach(function (m) {
+      if (!m.date || !artifact.first) return;
+      var after = artifact.first > m.date;
+      var before = artifact.last && artifact.last < m.date;
+      if (before) parts.push("before “" + m.label + "”");
+      else if (after) parts.push("after “" + m.label + "”");
+      else parts.push("spans “" + m.label + "”");
+    });
+    return parts.join(" · ");
+  }
+
+  // O eixo existe onde houver Artifact ou marker: um marker num ano vazio não
+  // deixa de ter sido desenhado só porque nada foi construído naquele ano.
+  var markerByYear = {};
+  markers.forEach(function (m) {
+    if (m.date) (markerByYear[m.date.slice(0, 4)] = markerByYear[m.date.slice(0, 4)] || []).push(m);
+  });
+  var yearsSet = {};
+  Object.keys(byYear).forEach(function (y) { yearsSet[y] = true; });
+  Object.keys(markerByYear).forEach(function (y) { yearsSet[y] = true; });
+
   var container = document.getElementById("years");
+  var years = Object.keys(yearsSet).sort();
   years.forEach(function (year) {
-    markers.filter(function (m) { return m.date && m.date.slice(0, 4) === year; })
-      .forEach(function (m) {
-        var line = document.createElement("div");
-        line.className = "marker";
-        line.textContent = m.date + " — " + m.label;
-        container.appendChild(line);
-      });
+    (markerByYear[year] || []).forEach(function (m) {
+      var line = document.createElement("div");
+      line.className = "marker";
+      line.textContent = m.date + " — " + m.label;
+      container.appendChild(line);
+    });
+
+    if (!byYear[year]) return;
 
     var row = document.createElement("div");
     row.className = "year";
@@ -108,6 +134,8 @@
         chip.textContent = artifact.label;
         chip.title = (share !== null ? Math.round(share * 100) + "% authored by you" : "authorship unknown") +
           (artifact.aliased ? " · published under an alias" : "");
+        var relation = relations(artifact);
+        if (relation) chip.title += " · " + relation;
         chips.appendChild(chip);
       });
     row.appendChild(label);

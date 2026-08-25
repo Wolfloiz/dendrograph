@@ -84,7 +84,7 @@ class Artifact:
     last_seen: str | None = None
     declarations_applied: list[str] = field(default_factory=list)
 
-    # ---------- serialisation ----------
+    # ---------- serialização ----------
 
     def to_dict(self) -> dict:
         return {
@@ -130,7 +130,7 @@ class Artifact:
             declarations_applied=raw.get("declarations_applied", []),
         )
 
-    # ---------- accumulation ----------
+    # ---------- acumulação ----------
 
     def merge(self, observed: "Artifact") -> "Artifact":
         """Fold a fresh observation into what is already known.
@@ -169,7 +169,7 @@ class Artifact:
         return replace(self, sources=sources)
 
 
-# ---------- merge helpers ----------
+# ---------- auxiliares de merge ----------
 
 
 def _prefer(new, old):
@@ -281,7 +281,7 @@ def _authorship_to_dict(entry: Authorship) -> dict:
     }
 
 
-# ---------- file access ----------
+# ---------- acesso a arquivo ----------
 
 
 def artifacts_dir(root: Path | str = ".") -> Path:
