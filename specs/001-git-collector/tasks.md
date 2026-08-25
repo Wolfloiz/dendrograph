@@ -138,19 +138,19 @@ or remove the folder and re-run. The Artifacts must still be present in the grap
 **Independent Test**: With an archive built, confirm the earliest and latest use of a
 given Tool are visible and traceable to specific Artifacts.
 
-- [ ] T051 [P] [US3] Implement Tool span computation in `core/analysis/tool_spans.py` — first use, last use, and the Artifacts each Tool appears in, computed over **the Artifacts present in the build being produced**: public, aliased and opted-in ones under the default; every Artifact in the Author's own `full` build (FR-027, SC-007)
-  - Found validating the MVP against tinygrad (2026-08-25): a **fork carries its
-    upstream's whole history into the span**. `gpuocelot`, forked with commits back to
-    2009-06-11, makes C++, Docker, Python and Shell all read "first used 2009" for an
-    account whose own work starts in 2020. That overstates experience, which is the
-    direction ADR-0009 rules out, and it puts SC-007 ("state years of experience ... with
-    no estimation from memory") on the wrong side of correct. The span must be computed
-    over the Author's own commits, not the Artifact's full activity — the views already
-    make this distinction with `isBarelyMine` (share < 0.1), but `tool_spans.compute()`
-    does not. Needs `[author] emails` to be configured; with no emails there is no "own"
-    to measure and the span should say so rather than quietly report the fork's dates.
+- [X] T051 [P] [US3] Implement Tool span computation in `core/analysis/tool_spans.py` — first use, last use, and the Artifacts each Tool appears in, computed over **the Artifacts present in the build being produced**: public, aliased and opted-in ones under the default; every Artifact in the Author's own `full` build (FR-027, SC-007)
+  - Found validating the MVP against tinygrad (2026-08-25) and fixed the same day: a fork
+    carried its upstream's whole history into the span. `gpuocelot`, forked with commits
+    back to 2009-06-11, made C++, Docker, Python and Shell all read "first used 2009" for
+    an account whose own work starts in 2020 — the overstatement ADR-0009 rules out, and
+    SC-007 on the wrong side of correct. The window is now the Author's own commits, from
+    the per-author dates the store already recorded. Untouched Artifacts contribute no
+    dates and are counted in `untouched_count`; with no `[archive].emails` configured the
+    span is marked `attributed: false` rather than passing a fork's dates off as the
+    Author's. On the same 23 repositories Python went from 17.2 years to 3.1. See
+    *Whose dates a span reports* in `contracts/graph.md`.
 
-- [ ] T052 [US3] Render Tool spans in `views/timeline.html` — first and last use, with every contributing Artifact traceable
+- [X] T052 [US3] Render Tool spans in `views/timeline.html` — first and last use, with every contributing Artifact traceable
 - [ ] T053 [P] [US3] Implement `graph.sqlite` emission in `core/sqlite.py` — one table per node type plus one `edges` table, mirroring `graph.json` exactly; a derived query surface, never a graph database (Principle III)
 - [ ] T054 [US3] Add the FTS5 virtual table over Artifact names and descriptions in `core/sqlite.py` — populated in v0.1 and never queried by it, because v0.2's search needs it and adding it later means every Author rebuilds
 - [ ] T055 [P] [US3] Implement `llms.txt` emission in `core/llms.py` — the schema in prose, the archive's shape, and how to read `graph.json` (FR-017)
@@ -166,6 +166,12 @@ given Tool are visible and traceable to specific Artifacts.
 
 **Independent Test**: Build an archive containing private Artifacts and confirm no private
 name appears anywhere in the published output.
+
+  - Half done. `tests/test_tool_spans.py` covers the attribution half: the window follows
+    the Author's own commits, an untouched fork contributes no dates, and the index agrees
+    with the span. The visibility half — a span supported only by private Artifacts absent
+    from a `public` build, complete once aliased, complete in `full` — needs US4's
+    filtering, which does not exist yet.
 
 - [ ] T057 [US4] Implement visibility tracking in `core/store.py` — the most recently observed value, keeping its last known value when the source is unreachable and never decaying to `public` (FR-026)
 - [ ] T058 [P] [US4] Implement build modes in `core/build.py` — `public` by default, plus `redacted` and `full`; the **output directory follows the mode**: `site/` for `public` and `redacted`, `.dendro-local/` for `full`, so a `full` build cannot reach a published directory (FR-013)

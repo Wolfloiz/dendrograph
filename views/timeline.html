@@ -20,6 +20,10 @@
   th, td { text-align: left; padding: .3rem 1.25rem .3rem 0; }
   th { color: var(--muted); font-weight: 500; font-size: .8rem; }
   td.span { font-variant-numeric: tabular-nums; }
+  td.basis { font-size: .8rem; opacity: .65; }
+  tr.expandable { cursor: pointer; }
+  tr.expandable:hover td { background: rgba(127,127,127,.08); }
+  tr.detail td { padding: .3rem .5rem .6rem; }
 </style>
 
 <header>
@@ -33,7 +37,7 @@
   <section class="tools">
     <h2 style="font-size:1rem;margin:0 0 .5rem">Tools, and how long</h2>
     <table id="tools"><thead><tr>
-      <th>Tool</th><th>First</th><th>Last</th><th>Years</th><th>Artifacts</th>
+      <th>Tool</th><th>First</th><th>Last</th><th>Years</th><th>Artifacts</th><th>Basis</th>
     </tr></thead><tbody></tbody></table>
   </section>
 </main>
@@ -118,14 +122,56 @@
       var years = (tool.first && tool.last)
         ? (((new Date(tool.last) - new Date(tool.first)) / 31557600000).toFixed(1))
         : "—";
-      [tool.label, tool.first || "—", tool.last || "—", years, tool.artifact_count || 0]
+      // A coluna diz de onde vem a janela. Sem e-mails configurados não há
+      // "meu" para medir, e um fork intocado carrega a história de outra
+      // pessoa: apresentar qualquer um dos dois como experiência seria
+      // afirmar o que ninguém observou (SC-007, ADR-0009).
+      var basis = tool.attributed === false
+        ? "observed, not yours"
+        : (tool.untouched_count ? "+" + tool.untouched_count + " untouched" : "yours");
+      if (tool.attributed !== false && !tool.artifact_count) {
+        basis = "forks only";
+      }
+      [tool.label, tool.first || "—", tool.last || "—", years,
+       tool.artifact_count || 0, basis]
         .forEach(function (value, i) {
           var td = document.createElement("td");
-          if (i > 0) td.className = "span";
+          if (i > 0 && i < 5) td.className = "span";
+          if (i === 5) td.className = "basis";
           td.textContent = value;
           tr.appendChild(td);
         });
       body.appendChild(tr);
+
+      // Uma data de span sem os Artifacts que a sustentam é um número que o
+      // Author não pode conferir (SC-006, SC-007).
+      var contributors = (g.raw.indexes &&
+        g.raw.indexes.tool_to_artifacts &&
+        g.raw.indexes.tool_to_artifacts[tool.id]) || [];
+      if (!contributors.length) return;
+      tr.className = "expandable";
+      tr.title = "Show the Artifacts behind this span";
+      var detail = document.createElement("tr");
+      detail.className = "detail";
+      detail.hidden = true;
+      var cell = document.createElement("td");
+      cell.colSpan = 6;
+      contributors.forEach(function (id) {
+        var artifact = g.byId[id];
+        if (!artifact) return;
+        var chip = document.createElement("span");
+        var mine = g.authorshipShare(artifact);
+        chip.className = "chip" + (g.isBarelyMine(artifact) ? " fork" : (mine !== null ? " mine" : ""));
+        chip.textContent = artifact.label +
+          (artifact.first ? " (" + artifact.first.slice(0, 4) + ")" : "");
+        chip.title = g.isBarelyMine(artifact)
+          ? "a fork you barely touched — contributes no dates to this span"
+          : "contributes to this span";
+        cell.appendChild(chip);
+      });
+      detail.appendChild(cell);
+      body.appendChild(detail);
+      tr.addEventListener("click", function () { detail.hidden = !detail.hidden; });
     });
 })();
 </script>

@@ -60,11 +60,15 @@ def share(entries: list[Authorship], emails: tuple[str, ...]) -> float:
     """
     if not entries:
         return 0.0
-    weight = {a.author: a.commits + a.lines_added + a.lines_deleted for a in entries}
+    weight: dict[str, int] = {}
+    for a in entries:
+        weight[a.author] = weight.get(a.author, 0) + a.commits + a.lines_added + a.lines_deleted
     total = sum(weight.values())
     if total == 0:
         return 0.0
-    mine = sum(value for author, value in weight.items() if author in emails)
+    # `Authorship` normaliza o e-mail gravado; o configurado tem que combinar.
+    configured = {e.strip().lower() for e in emails}
+    mine = sum(value for author, value in weight.items() if author in configured)
     return round(mine / total, 4)
 
 

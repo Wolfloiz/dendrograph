@@ -26,7 +26,8 @@ Target: ~500 Artifacts → ~3,000 nodes → under 1 MB, first render under 2 sec
     { "id": "root-3f7a1c9e...", "type": "Artifact", "label": "dendrograph",
       "first": "2019-03-11", "last": "2026-08-20", "authorship": { "share": 0.87 } },
     { "id": "tool:python", "type": "Tool", "label": "Python",
-      "first": "2019-03-11", "last": "2026-08-20", "artifact_count": 12 },
+      "first": "2019-03-11", "last": "2026-08-20", "artifact_count": 12,
+      "untouched_count": 2 },
     { "id": "period:2019", "type": "Period", "label": "2019" },
     { "id": "root-8c2d5a1f...", "type": "Artifact", "label": "Anonymous fintech project",
       "aliased": true, "first": "2019-06-02", "last": "2021-11-30" }
@@ -52,11 +53,38 @@ Target: ~500 Artifacts → ~3,000 nodes → under 1 MB, first render under 2 sec
 | `schema` | Self-describing, so a consumer needs no companion docs (FR-017). |
 | `build_mode` | `public` \| `redacted` \| `full`. See *Build modes*. |
 | `nodes` / `edges` | Node ids: Artifacts use their store id; every other type uses `<lowercase type>:<slug>`. |
-| `Tool.first` / `.last` / `.artifact_count` | The Tool's span, computed over **the Artifacts present in this build**. Under `public` that is public, aliased and opted-in Artifacts; a span there is deliberately narrower than the Author's own, because a visitor must not learn that private work existed in an interval (FR-027). |
+| `Tool.first` / `.last` / `.artifact_count` | The Tool's span, computed over **the Artifacts present in this build**. Under `public` that is public, aliased and opted-in Artifacts; a span there is deliberately narrower than the Author's own, because a visitor must not learn that private work existed in an interval (FR-027). See *Whose dates a span reports*. |
+| `Tool.untouched_count` | Artifacts using the Tool that the Author never committed to. Omitted when zero. They contribute no dates, but they are not hidden — the Author has to be able to explain why the count does not match what they see in the archive. |
+| `Tool.attributed` | Present and `false` when no `[archive].emails` are configured. Omitted otherwise. |
 | `Artifact.aliased` | Present and `true` when the node is a private Artifact published under an alias. `label` is the Author's chosen or generated label, never the real name (FR-028, ADR-0011). |
 | `indexes.tool_to_artifacts` | Reverse index. **Present in v0.1, unrendered** — v0.2 needs it and adding it later means rebuilding every published archive. |
 | `aggregates.private_withheld` | Only in `redacted` mode; absent otherwise. Counts, Tools and a date range, never names (FR-013, ADR-0005). |
 | `unreachable_sources` | Sources this run could not reach, reported rather than omitted (FR-019). |
+
+### Whose dates a span reports
+
+Within each Artifact the window is the **Author's own commits**, taken from the per-author
+`first`/`last` the store already records — not the Artifact's whole activity.
+
+A fork carries its upstream's history. `gpuocelot`, forked with commits back to 2009, made
+C++, Docker, Python and Shell all report "first used 2009" for an account whose own work
+starts in 2020. Reading that off the page as seventeen years of C++ is exactly the
+overstatement ADR-0009 rules out, and it puts SC-007 — *state years of experience with no
+estimation from memory* — on the wrong side of correct.
+
+So:
+
+- An Artifact the Author has no commits in contributes **no dates** and does not count
+  toward `artifact_count`. It is counted in `untouched_count` instead.
+- A Tool that appears **only** in such Artifacts gets `artifact_count: 0` and no dates. The
+  archive still shows the Tool and the `USES` edges; the span simply claims nothing.
+- With **no `emails` configured** there is no "own" to measure. The span falls back to
+  observed activity and is marked `attributed: false`, so a view can say what it is rather
+  than pass a fork's dates off as the Author's. `views/timeline.html` renders this in a
+  *Basis* column: `yours`, `+N untouched`, `forks only`, or `observed, not yours`.
+
+This is the one place where configuring `[archive].emails` changes what the output *means*
+rather than only what it contains.
 
 ### `authorship.share`
 

@@ -9,6 +9,7 @@ See `specs/001-git-collector/contracts/graph.md`.
 
 from __future__ import annotations
 
+import hashlib
 import re
 from datetime import datetime, timezone
 
@@ -38,12 +39,34 @@ EDGE_TYPES = (
 )
 
 
+# Símbolos que distinguem nomes de Tool viram palavra antes de serem removidos.
+# Sem isto C, C++ e C# colapsavam todos em `tool:c`: um nó só, com o rótulo de
+# quem escreveu por último, as arestas USES das três somadas e o span de uma
+# pendurado na identidade de outra.
+SYMBOL_WORDS = (("+", "plus"), ("#", "sharp"), ("&", "and"))
+
+
 def slug(text: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    lowered = text.lower()
+    for symbol, word in SYMBOL_WORDS:
+        lowered = lowered.replace(symbol, f"-{word}-")
+    return re.sub(r"[^a-z0-9]+", "-", lowered).strip("-")
 
 
 def node_id(node_type: str, label: str) -> str:
+    # Um e-mail é identificador, não rótulo: sluggar come a pontuação e faz
+    # `ebagola@gmail,.com` — vírgula perdida no git config de alguém — colidir
+    # com `ebagola@gmail.com`. Ninguém pode consertar o config alheio, então o
+    # id de Author é derivado sem perda em vez de legível. Também mantém o
+    # endereço fora da string do id.
+    if node_type == "Author":
+        digest = hashlib.sha256(label.strip().lower().encode("utf-8")).hexdigest()
+        return f"author:{digest[:16]}"
     return f"{node_type.lower()}:{slug(label)}"
+
+
+class CollidingLabels(Exception):
+    """Two distinct labels resolved to one node id."""
 
 
 class GraphBuilder:
@@ -54,6 +77,15 @@ class GraphBuilder:
 
     def node(self, node_id_: str, node_type: str, label: str, **extra) -> str:
         existing = self._nodes.get(node_id_, {})
+        # Reencontrar o mesmo id com outro rótulo não é deduplicação, é dois
+        # nomes distintos caindo no mesmo nó. Silenciar isso já custou a fusão
+        # de C com C++; falhar alto é a única saída que não corrompe o grafo.
+        if existing and existing.get("label") != label:
+            raise CollidingLabels(
+                f"{node_type} labels {existing['label']!r} and {label!r} both "
+                f"produce the node id {node_id_!r}. Two different things would "
+                f"be merged into one node."
+            )
         existing.update({"id": node_id_, "type": node_type, "label": label, **extra})
         self._nodes[node_id_] = existing
         return node_id_
@@ -112,8 +144,8 @@ def build(artifacts, *, config=None, build_mode: str = "public",
     from core.analysis import tool_spans
 
     builder = GraphBuilder()
-    spans = spans if spans is not None else tool_spans.compute(artifacts)
     emails = tuple(config.emails) if config else ()
+    spans = spans if spans is not None else tool_spans.compute(artifacts, emails)
 
     for artifact in artifacts:
         extra = {}
@@ -140,6 +172,12 @@ def build(artifacts, *, config=None, build_mode: str = "public",
                     "last": span.last,
                     "artifact_count": span.artifact_count,
                 }
+                # Só viajam quando dizem algo: um span atribuído sem forks
+                # intocados não precisa carregar dois campos vazios.
+                if span.untouched_count:
+                    attrs["untouched_count"] = span.untouched_count
+                if not span.attributed:
+                    attrs["attributed"] = False
             tool_node = builder.node(
                 node_id("Tool", tool["name"]), "Tool", tool["name"], **attrs
             )

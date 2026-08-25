@@ -59,6 +59,13 @@ class Authorship:
     first: str | None = None
     last: str | None = None
 
+    def __post_init__(self):
+        # git grava o que a pessoa digitou, e a mesma pessoa digita
+        # `Cloud11665@gmail.com` num commit e `cloud11665@gmail.com` no
+        # seguinte. Sem normalizar aqui viram dois autores: duas contagens
+        # separadas, dois nós Author, e um `share` que não fecha em 1.
+        object.__setattr__(self, "author", self.author.strip().lower())
+
 
 @dataclass
 class Artifact:
