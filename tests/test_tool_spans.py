@@ -9,6 +9,7 @@ superestimar — a única direção que a ADR-0009 proíbe.
 
 import unittest
 
+from core import graph
 from core.analysis import tool_spans
 from core.config import Config
 from core.store import Artifact, Authorship
@@ -17,14 +18,15 @@ MINE = "eu@example.com"
 THEIRS = "outra@example.com"
 
 
-def artifact(artifact_id, tools, authorship, activity):
+def artifact(artifact_id, tools, authorship, activity, **kwargs):
     return Artifact(
         id=artifact_id,
         identity={"method": "root-commit", "value": artifact_id},
-        name=artifact_id,
+        name=kwargs.pop("name", artifact_id),
         tools=[{"name": t} for t in tools],
         authorship=authorship,
         activity=activity,
+        **kwargs,
     )
 
 
@@ -288,3 +290,120 @@ class TheSameAuthorTypedTwoWaysIsOnePerson(unittest.TestCase):
         payload = graph.build([art], config=Config(emails=(MINE,)))
         authors = [n for n in payload["nodes"] if n["type"] == "Author"]
         self.assertEqual(len(authors), 1)
+
+
+class ASpanNeverOutrunsWhatTheBuildPublishes(unittest.TestCase):
+    """T056, a metade de visibilidade: um span é tão largo quanto o build.
+
+    Um span sustentado só por Artifacts privados **não aparece num build
+    `public`**. Se aparecesse, a data diria a um visitante que houve trabalho
+    naquele intervalo — que é exatamente o que o Princípio IV proíbe, e a
+    largura da janela é um vazamento tão real quanto o nome (FR-027, US3 AS2).
+
+    Ele volta quando o Author decide, campo a campo, e está sempre completo na
+    visão que só o Author lê.
+    """
+
+    MINE = "eu@example.com"
+    # O nome que quebra a NDA se aparecer em qualquer lugar da saída.
+    CLIENT = "acme-bank-settlement"
+
+    def archive(self):
+        from core.store import VISIBILITY_PRIVATE, VISIBILITY_PUBLIC
+
+        return [
+            artifact(
+                "root-public",
+                ["Python"],
+                [entry(self.MINE, "2023-01-01", "2024-01-01")],
+                {"first": "2023-01-01", "last": "2024-01-01"},
+                visibility=VISIBILITY_PUBLIC,
+            ),
+            artifact(
+                "root-private",
+                ["Python", "Kafka"],
+                [entry(self.MINE, "2018-02-01", "2026-05-01")],
+                {"first": "2018-02-01", "last": "2026-05-01"},
+                visibility=VISIBILITY_PRIVATE,
+                name=self.CLIENT,
+                description=f"Internal trading platform for {self.CLIENT}",
+            ),
+        ]
+
+    def tools(self, *, mode, aliases=()):
+        from core import privacy
+
+        config = Config(emails=(self.MINE,), aliases=tuple(aliases))
+        selection = privacy.select(self.archive(), config=config, mode=mode)
+        payload = graph.build(selection.included, config=config, build_mode=mode)
+        return {n["label"]: n for n in payload["nodes"] if n["type"] == "Tool"}
+
+    def test_a_tool_only_private_work_uses_is_absent_from_a_public_build(self):
+        self.assertNotIn("Kafka", self.tools(mode="public"))
+
+    def test_a_shared_tools_span_is_narrowed_to_the_public_work(self):
+        # Python é usado nos dois. A janela publicada é só a do público: dizer
+        # 2018 revelaria que existiu trabalho privado começando ali.
+        python = self.tools(mode="public")["Python"]
+        self.assertEqual(python["first"], "2023-01-01")
+        self.assertEqual(python["last"], "2024-01-01")
+
+    def test_the_authors_own_build_shows_the_true_span(self):
+        python = self.tools(mode="full")["Python"]
+        self.assertEqual(python["first"], "2018-02-01")
+        self.assertEqual(python["last"], "2026-05-01")
+        self.assertIn("Kafka", self.tools(mode="full"))
+
+    def test_an_alias_alone_does_not_widen_the_span(self):
+        # ADR-0011: divulgação é opt-in campo a campo. O nó aparece; as Tools
+        # não, e portanto as datas delas também não.
+        from core.config import Alias
+
+        tools = self.tools(mode="public", aliases=(Alias(id="root-private"),))
+        self.assertNotIn("Kafka", tools)
+        self.assertEqual(tools["Python"]["first"], "2023-01-01")
+
+    def test_revealing_tools_completes_the_span(self):
+        from core.config import Alias
+
+        tools = self.tools(
+            mode="public", aliases=(Alias(id="root-private", reveal=("tools",)),)
+        )
+        self.assertIn("Kafka", tools)
+        self.assertEqual(tools["Python"]["first"], "2018-02-01")
+        self.assertEqual(tools["Python"]["last"], "2026-05-01")
+
+    def test_the_aliased_artifact_is_traceable_from_the_tool_it_revealed(self):
+        # SC-006/SC-007: a data tem que apontar para o Artifact que a sustenta,
+        # mesmo que esse Artifact esteja sob um nome que não é o dele.
+        from core import privacy
+        from core.config import Alias
+
+        config = Config(
+            emails=(self.MINE,),
+            aliases=(Alias(id="root-private", label="Anonymous client", reveal=("tools",)),),
+        )
+        selection = privacy.select(self.archive(), config=config, mode="public")
+        payload = graph.build(selection.included, config=config, build_mode="public")
+        index = payload["indexes"]["tool_to_artifacts"]
+        kafka = next(n for n in payload["nodes"] if n["label"] == "Kafka")
+        self.assertIn("root-private", index[kafka["id"]])
+        node = next(n for n in payload["nodes"] if n["id"] == "root-private")
+        self.assertEqual(node["label"], "Anonymous client")
+
+    def test_no_real_name_reaches_the_public_build_at_any_reveal_setting(self):
+        import json
+
+        from core import privacy
+        from core.config import Alias
+
+        for reveal in ((), ("tools",), ("tools", "period", "authorship")):
+            config = Config(
+                emails=(self.MINE,),
+                aliases=(Alias(id="root-private", reveal=reveal),),
+            )
+            selection = privacy.select(self.archive(), config=config, mode="public")
+            payload = graph.build(selection.included, config=config, build_mode="public")
+            text = json.dumps(payload)
+            self.assertNotIn(self.CLIENT, text, f"leaked at reveal={reveal}")
+            self.assertNotIn("Internal trading platform", text)

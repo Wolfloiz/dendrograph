@@ -154,7 +154,7 @@ given Tool are visible and traceable to specific Artifacts.
 - [X] T053 [P] [US3] Implement `graph.sqlite` emission in `core/sqlite.py` — one table per node type plus one `edges` table, mirroring `graph.json` exactly; a derived query surface, never a graph database (Principle III)
 - [X] T054 [US3] Add the FTS5 virtual table over Artifact names and descriptions in `core/sqlite.py` — populated in v0.1 and never queried by it, because v0.2's search needs it and adding it later means every Author rebuilds
 - [X] T055 [P] [US3] Implement `llms.txt` emission in `core/llms.py` — the schema in prose, the archive's shape, and how to read `graph.json` (FR-017)
-- [ ] T056 [P] [US3] Unit test in `tests/test_tool_spans.py` — a Tool's first and last use trace to specific Artifacts; a span supported only by private Artifacts is **absent from a `public` build**, complete once those Artifacts are aliased, and complete in the Author's own `full` build (FR-027, US3 AS2, Principle IV)
+- [X] T056 [P] [US3] Unit test in `tests/test_tool_spans.py` — a Tool's first and last use trace to specific Artifacts; a span supported only by private Artifacts is **absent from a `public` build**, complete once those Artifacts are aliased, and complete in the Author's own `full` build (FR-027, US3 AS2, Principle IV)
 
 **Checkpoint**: The résumé question is answerable from output, not memory.
 
@@ -167,30 +167,45 @@ given Tool are visible and traceable to specific Artifacts.
 **Independent Test**: Build an archive containing private Artifacts and confirm no private
 name appears anywhere in the published output.
 
-  - Half done. `tests/test_tool_spans.py` covers the attribution half: the window follows
-    the Author's own commits, an untouched fork contributes no dates, and the index agrees
-    with the span. The visibility half — a span supported only by private Artifacts absent
-    from a `public` build, complete once aliased, complete in `full` — needs US4's
-    filtering, which does not exist yet.
+  - Closed once agent C delivered US4's filtering. One correction to the task's wording:
+    it says the span is "complete once those Artifacts are aliased", but under ADR-0011
+    disclosure is opt-in per field, so an alias alone does **not** restore a Tool's dates —
+    `reveal = ["tools"]` does. Both are asserted: aliasing leaves the span narrow, and
+    revealing tools widens it, with the aliased Artifact still traceable from the Tool it
+    contributed to under its generated label.
+  - Update 2026-08-25: US4's filtering now exists (`core/privacy.py`); the visibility
+    half of T056 is unblocked.
 
-- [ ] T057 [US4] Implement visibility tracking in `core/store.py` — the most recently observed value, keeping its last known value when the source is unreachable and never decaying to `public` (FR-026)
-- [ ] T058 [P] [US4] Implement build modes in `core/build.py` — `public` by default, plus `redacted` and `full`; the **output directory follows the mode**: `site/` for `public` and `redacted`, `.dendro-local/` for `full`, so a `full` build cannot reach a published directory (FR-013)
-- [ ] T059 [US4] Implement redacted aggregates in `core/build.py` — counts, Tools and a date range under `aggregates.private_withheld`, never a name (ADR-0005)
-- [ ] T060 [US4] Implement per-Artifact opt-in from `[publish].opt_in` in `core/build.py` — only the named Artifact appears (US4 AS3)
-- [ ] T061 [US4] Implement `[exclude].artifacts` in `core/build.py` — omitted from the graph, retained in the store, restored intact by deleting the line (FR-008)
-- [ ] T062 [US4] Implement alias projection in `core/build.py` — from `[[publish.alias]]`, publish the Artifact as a node under its label carrying only the fields named in `reveal`; absent or empty `reveal` publishes the node and its dates and nothing else (FR-028, ADR-0011)
-- [ ] T063 [US4] Implement the never-crosses filter in `core/build.py` — for an aliased Artifact strip real name, description, URL, source locators, Technique evidence pointers, content hashes and `DERIVES_FROM`/`SUCCEEDS` edges at **every** setting; a Technique published under an alias ships without its pointer and is no longer verifiable (FR-028, contracts/graph.md)
-- [ ] T064 [US4] Implement stable generated labels in `core/build.py` — `Private project N` numbered from the sorted Artifact id and never from discovery order, so a newly scanned private Artifact does not renumber the others (ADR-0011)
-- [ ] T065 [US4] Implement `dendro publish` in `cli.py` — publishes from `site/` and never reads `.dendro-local/`; refuses as a second line of defence when `site/graph.json` declares `build_mode: full`; names every Artifact a visibility change removed from the output (FR-026)
-- [ ] T066 [P] [US4] Create the archive repository template in `templates/archive/` — `dendrograph.toml`, `store/artifacts/`, `site/`, a `.gitignore` covering `.dendro-local/`, and a README stating exactly what the published site does and does not contain (ADR-0010)
-- [ ] T067 [P] [US4] Create `templates/archive/.github/workflows/update.yml` — pins a tool tag, refreshes GitHub-sourced Artifacts and auto-commits the store (ADR-0007)
-- [ ] T068 [P] [US4] Support the free-plan split in `templates/archive/.github/workflows/update.yml` and `core/build.py` — when `[publish].target_repository` is set the built site deploys to a second, public repository holding no store, which is how an Author on a free plan keeps a private archive and a public site (ADR-0010)
-- [ ] T069 [P] [US4] Privacy test in `tests/test_privacy.py` — zero private Artifact names, descriptions or URLs in any published file under default settings (SC-004)
-- [ ] T070 [P] [US4] Test in `tests/test_publish_modes.py` — redacted mode publishes shape without names; `build --mode full` writes nothing into `site/`; `publish` refuses a `full` build
-- [ ] T071 [P] [US4] Test in `tests/test_visibility.py` — an Artifact that turns private drops out of the next publish and is named in the run report (FR-026)
-- [ ] T072 [P] [US4] Test in `tests/test_repo_topology.py` — no command writes **private** Author data into the tool repository, including into its version history; `examples/` holds public Artifacts only (FR-023, ADR-0010)
-- [ ] T073 [P] [US4] Privacy test in `tests/test_alias.py` — an aliased Artifact publishes no real name, description, URL, source locator or Technique evidence path, in any build mode (SC-004, FR-028)
-- [ ] T074 [P] [US4] Test in `tests/test_alias_labels.py` — generated labels are unchanged when a new private Artifact is scanned, and an unknown field name in `reveal` is rejected rather than ignored (ADR-0011)
+- [X] T057 [US4] Implement visibility tracking in `core/store.py` — the most recently observed value, keeping its last known value when the source is unreachable and never decaying to `public` (FR-026)
+- [X] T058 [P] [US4] Implement build modes in `core/build.py` — `public` by default, plus `redacted` and `full`; the **output directory follows the mode**: `site/` for `public` and `redacted`, `.dendro-local/` for `full`, so a `full` build cannot reach a published directory (FR-013)
+- [X] T059 [US4] Implement redacted aggregates in `core/build.py` — counts, Tools and a date range under `aggregates.private_withheld`, never a name (ADR-0005)
+- [X] T060 [US4] Implement per-Artifact opt-in from `[publish].opt_in` in `core/build.py` — only the named Artifact appears (US4 AS3)
+- [X] T061 [US4] Implement `[exclude].artifacts` in `core/build.py` — omitted from the graph, retained in the store, restored intact by deleting the line (FR-008)
+- [X] T062 [US4] Implement alias projection in `core/build.py` — from `[[publish.alias]]`, publish the Artifact as a node under its label carrying only the fields named in `reveal`; absent or empty `reveal` publishes the node and its dates and nothing else (FR-028, ADR-0011)
+- [X] T063 [US4] Implement the never-crosses filter in `core/build.py` — for an aliased Artifact strip real name, description, URL, source locators, Technique evidence pointers, content hashes and `DERIVES_FROM`/`SUCCEEDS` edges at **every** setting; a Technique published under an alias ships without its pointer and is no longer verifiable (FR-028, contracts/graph.md)
+  - Lives in `core/privacy.py` (selection + projection) with the field gates in
+    `core/graph.py`. Visibility `unknown` is not public: a locally scanned
+    repository stays out of a published build until opted in or aliased.
+    Techniques have no `reveal` field, so a bare APPLIES edge always crosses —
+    minus its evidence pointer.
+- [X] T064 [US4] Implement stable generated labels in `core/build.py` — `Private project N` numbered from the sorted Artifact id and never from discovery order, so a newly scanned private Artifact does not renumber the others (ADR-0011)
+  - Nuance: positional numbering over sorted ids is deterministic — same store,
+    same labels, never discovery order — but an id sorting **before** existing
+    ones shifts later labels visibly and stably in the diff. Stability under
+    arbitrary insertion would require persisting labels, contradicting
+    ADR-0002 ("everything but the store is derived"); determinism was chosen.
+- [X] T065 [US4] Implement `dendro publish` in `cli.py` — publishes from `site/` and never reads `.dendro-local/`; refuses as a second line of defence when `site/graph.json` declares `build_mode: full`; names every Artifact a visibility change removed from the output (FR-026)
+  - With `[publish].target_repository`, deployment pushes `site/` to the second
+    repository via `core/publish.py`.
+- [X] T066 [P] [US4] Create the archive repository template in `templates/archive/` — `dendrograph.toml`, `store/artifacts/`, `site/`, a `.gitignore` covering `.dendro-local/`, and a README stating exactly what the published site does and does not contain (ADR-0010)
+- [X] T067 [P] [US4] Create `templates/archive/.github/workflows/update.yml` — pins a tool tag, refreshes GitHub-sourced Artifacts and auto-commits the store (ADR-0007)
+- [X] T068 [P] [US4] Support the free-plan split in `templates/archive/.github/workflows/update.yml` and `core/build.py` — when `[publish].target_repository` is set the built site deploys to a second, public repository holding no store, which is how an Author on a free plan keeps a private archive and a public site (ADR-0010)
+- [X] T069 [P] [US4] Privacy test in `tests/test_privacy.py` — zero private Artifact names, descriptions or URLs in any published file under default settings (SC-004)
+- [X] T070 [P] [US4] Test in `tests/test_publish_modes.py` — redacted mode publishes shape without names; `build --mode full` writes nothing into `site/`; `publish` refuses a `full` build
+- [X] T071 [P] [US4] Test in `tests/test_visibility.py` — an Artifact that turns private drops out of the next publish and is named in the run report (FR-026)
+- [X] T072 [P] [US4] Test in `tests/test_repo_topology.py` — no command writes **private** Author data into the tool repository, including into its version history; `examples/` holds public Artifacts only (FR-023, ADR-0010)
+- [X] T073 [P] [US4] Privacy test in `tests/test_alias.py` — an aliased Artifact publishes no real name, description, URL, source locator or Technique evidence path, in any build mode (SC-004, FR-028)
+- [X] T074 [P] [US4] Test in `tests/test_alias_labels.py` — generated labels are unchanged when a new private Artifact is scanned, and an unknown field name in `reveal` is rejected rather than ignored (ADR-0011)
 
 **Checkpoint**: The archive is publishable without an NDA breach.
 
@@ -205,7 +220,7 @@ relationships the Author confirms.
 suggestion command and confirm no edge is created without confirmation.
 
 - [X] T075 [US5] Implement Epoch Marker nodes in `core/graph.py` — dated and labelled, read from `[[epoch_markers]]`, declared and never inferred (FR-014)
-- [ ] T076 [US5] Render Epoch Markers in `views/timeline.html` — drawn across the axis, with Artifacts reading as before or after each one
+- [X] T076 [US5] Render Epoch Markers in `views/timeline.html` — drawn across the axis, with Artifacts reading as before or after each one
 - [X] T077 [P] [US5] Implement content-hash lineage in `core/analysis/lineage.py` — authored files only, excluding dependencies, lockfiles, generated output and files under 512 bytes; several identical non-trivial files required (FR-012)
 - [X] T078 [US5] Emit `DERIVES_FROM` edges in `core/graph.py` — oriented older → newer, each carrying confidence and evidence
 - [X] T079 [P] [US5] Implement `dendro suggest` in `core/suggest.py` — proposes `SUCCEEDS` pairs, candidate Collections, and identity merges where a rewritten history matches an existing Artifact; prints config lines and creates nothing (FR-011, FR-021, Principle I)
