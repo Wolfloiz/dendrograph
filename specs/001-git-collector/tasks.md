@@ -206,13 +206,13 @@ suggestion command and confirm no edge is created without confirmation.
 
 - [X] T075 [US5] Implement Epoch Marker nodes in `core/graph.py` — dated and labelled, read from `[[epoch_markers]]`, declared and never inferred (FR-014)
 - [ ] T076 [US5] Render Epoch Markers in `views/timeline.html` — drawn across the axis, with Artifacts reading as before or after each one
-- [ ] T077 [P] [US5] Implement content-hash lineage in `core/analysis/lineage.py` — authored files only, excluding dependencies, lockfiles, generated output and files under 512 bytes; several identical non-trivial files required (FR-012)
+- [X] T077 [P] [US5] Implement content-hash lineage in `core/analysis/lineage.py` — authored files only, excluding dependencies, lockfiles, generated output and files under 512 bytes; several identical non-trivial files required (FR-012)
 - [X] T078 [US5] Emit `DERIVES_FROM` edges in `core/graph.py` — oriented older → newer, each carrying confidence and evidence
 - [X] T079 [P] [US5] Implement `dendro suggest` in `core/suggest.py` — proposes `SUCCEEDS` pairs, candidate Collections, and identity merges where a rewritten history matches an existing Artifact; prints config lines and creates nothing (FR-011, FR-021, Principle I)
 - [X] T080 [US5] Implement confirmed Collection membership in `core/graph.py` — `IN_COLLECTION` edges come only from `[[collections]]`, and an Artifact with an unanswered suggestion stays usable and ungrouped (FR-021)
 - [X] T081 [P] [US5] Implement `dendro prune` in `core/prune.py` — prints candidates and the config lines that would exclude them, and deletes nothing (FR-008, ADR-0002)
 - [X] T082 [P] [US5] Test in `tests/test_suggest.py` — no `SUCCEEDS` edge exists in the graph without a config confirmation (FR-011, SC-008)
-- [ ] T083 [P] [US5] Test in `tests/test_lineage.py` — dependencies, lockfiles, generated output and trivial files produce no `DERIVES_FROM`
+- [X] T083 [P] [US5] Test in `tests/test_lineage.py` — dependencies, lockfiles, generated output and trivial files produce no `DERIVES_FROM`
 
 **Checkpoint**: All five stories are independently functional.
 

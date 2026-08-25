@@ -111,7 +111,7 @@ with no redesign.
 | `IN_COLLECTION` | Artifact → Collection | **Author-confirmed only** (FR-021) |
 | `AUTHORED_BY` | Artifact → Author | Observed |
 | `DEPENDS_ON` | Artifact → Dependency | Observed |
-| `DERIVES_FROM` | Artifact → Artifact | Inferred, thresholded (FR-012), oriented older → newer: `from` is the **older** Artifact, `to` the newer. Note this is the one row that does not read as a sentence — see *Orientation*, below |
+| `DERIVES_FROM` | Artifact → Artifact | Inferred, thresholded (FR-012). `from` is the **newer** Artifact, `to` the older, so the edge reads as a sentence like every other row: the newer one derives from the older. See *Orientation* |
 | `SUCCEEDS` | Artifact → Artifact | **Author-confirmed only. Never inferred into the graph** (FR-011). Same orientation: `from` is the later Artifact, `to` the earlier. Created only by a `[[succession]]` line in config |
 
 Per SC-008, no edge may assert a relationship the Author did not either observe or
@@ -120,22 +120,27 @@ confirm. `APPLIES` and `DERIVES_FROM` are the only inferred edges, and both carr
 
 ### Orientation
 
-Every other edge here reads as a sentence from `from` to `to`: *Artifact* `USES` *Tool*.
-`DERIVES_FROM` does not. It is oriented **older → newer** by time, so the edge literally
-reads "the older one derives from the newer one", which is backwards from what the name
-says. `SUCCEEDS`, by contrast, is oriented `from` = the later Artifact, so it does read as
-a sentence.
+Every edge reads as a sentence from `from` to `to`: *Artifact* `USES` *Tool*, *newer*
+`DERIVES_FROM` *older*, *later* `SUCCEEDS` *earlier*. Time therefore runs `to` → `from`
+on both Artifact-to-Artifact edges.
 
-The two are inconsistent, and consumers must not assume one direction from the other.
-Left as-is for now because `core/analysis/lineage.py` is built to it; worth settling
-before anything outside this repository reads the schema.
+This was got wrong once, and the wrongness was not cosmetic. `DERIVES_FROM` was specified
+"oriented older → newer", and on a real scan that emitted `tinygrad DERIVES_FROM tinyos`
+— tinygrad is from 2020, tinyos from 2024, and it is tinyos that is built on tinygrad.
+The graph asserted the reverse of the truth, in an edge type SC-008 says must never
+assert what was not observed. A direction that only reads oddly is a style question; one
+that inverts a claim is a defect.
 
 ### What lineage detection returns
 
-`core/graph.py` emits `DERIVES_FROM` from `core.analysis.lineage.candidates(artifacts)`:
-dicts of `{"from", "to", "confidence", "evidence"}`, already oriented. Until that module
-exists the graph emits no such edge — an inferred relationship with no detector behind it
-would be a claim nobody made.
+`core.analysis.lineage.candidates(artifacts)` returns dicts of
+`{"from", "to", "confidence", "evidence"}` ordered **older → newer**: `from` is the older
+Artifact. `core/graph.py` reverses that when emitting, per *Orientation* above. The two
+conventions are deliberately different and each is right for its layer — a detector sorts
+by time, an edge reads as a sentence — so neither may be assumed from the other.
+
+Until that module exists the graph emits no such edge: an inferred relationship with no
+detector behind it would be a claim nobody made.
 
 `EpochMarker` nodes have a date and a label and no edges; the timeline draws them across
 the axis. Declared, never inferred (FR-014).

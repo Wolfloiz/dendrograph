@@ -316,13 +316,19 @@ def build(artifacts, *, config=None, build_mode: str = "public",
             builder.edge(artifact_node, author_node, "AUTHORED_BY")
 
     # DERIVES_FROM é inferido, então carrega confiança e evidência na própria
-    # aresta (SC-008). A orientação é a que `core/analysis/lineage.py` produz e
-    # que o contrato pede: older → newer.
+    # aresta (SC-008).
+    #
+    # `lineage.candidates` ordena older → newer: `from` é o mais antigo. Emitir
+    # nessa ordem afirmaria o falso — na varredura real saía
+    # `tinygrad DERIVES_FROM tinyos`, quando tinygrad é de 2020 e tinyos de
+    # 2024, e quem deriva é o segundo. A aresta é invertida aqui para se ler
+    # como frase, igual a todas as outras do grafo.
     for relation in lineage if lineage is not None else _detected_lineage(artifacts):
-        if relation["from"] in stored and relation["to"] in stored:
+        older, newer = relation["from"], relation["to"]
+        if older in stored and newer in stored:
             builder.edge(
-                relation["from"],
-                relation["to"],
+                newer,
+                older,
                 "DERIVES_FROM",
                 confidence=relation.get("confidence"),
                 evidence=list(relation.get("evidence") or []),

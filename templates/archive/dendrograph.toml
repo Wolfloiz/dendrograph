@@ -1,0 +1,44 @@
+# dendrograph archive configuration.
+#
+# The store holds what the machine observed; this file holds what you decided.
+# Every declaration is reversible by deleting its line — the store never loses
+# data (ADR-0002). An absent file is also valid: `dendro scan <path>` works
+# with none of this.
+
+[archive]
+# Which commit authors count as you, for Authorship. Without these, Tool spans
+# fall back to observed activity and are marked "not yours".
+# emails = ["you@example.com"]
+
+[[sources]]
+# kind = "github"
+# account = "your-account"
+
+# [[sources]]
+# kind = "local"
+# path = "/media/backup/old-projects"
+
+[publish]
+# mode = "public"                  # public (default) | redacted
+# opt_in = ["root-a1b2c3..."]      # private Artifacts published by name, one by one
+# target_repository = "you/archive-site"  # optional: deploy the site to a second,
+#                                  # public repository holding no store (ADR-0010)
+
+# Publish one private Artifact under a label, revealing only what `reveal`
+# names. Absent or empty `reveal` publishes the node and its dates and nothing
+# else (ADR-0011).
+# [[publish.alias]]
+# id = "root-a1b2c3..."
+# label = "Anonymous fintech project"
+# reveal = ["period", "tools", "authorship"]
+
+[exclude]
+# artifacts = ["root-d4e5f6..."]   # omitted from the graph; NOT deleted from the store
+
+[[collections]]
+# name = "Client work"
+# artifacts = ["root-a1b2c3..."]
+
+[[epoch_markers]]
+# date = "2023-03-14"
+# label = "AI assistants arrive"

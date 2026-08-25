@@ -1,0 +1,5 @@
+# A full build contains every Artifact, private ones included. It writes to
+# this directory and nothing deploys from here — but it must not be committed,
+# because committing it would publish private work into the repository's
+# history (FR-023, ADR-0010).
+.dendro-local/

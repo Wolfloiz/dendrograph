@@ -287,10 +287,19 @@ class LineageEdgesCarryTheirEvidence(unittest.TestCase):
     def test_a_relation_naming_an_absent_artifact_creates_nothing(self):
         self.assertEqual(self.edges([self.relation(to="root-absent")]), [])
 
-    def test_the_orientation_is_the_one_the_detector_produced(self):
-        # older → newer, como contracts/graph.md pede e lineage.py implementa.
+    def test_the_edge_says_the_newer_one_derives_from_the_older(self):
+        # `lineage.candidates` ordena older → newer; a aresta é o inverso, para
+        # se ler como frase. Emitir na ordem do detector afirmava o falso: na
+        # varredura real saiu `tinygrad DERIVES_FROM tinyos`, e é tinyos (2024)
+        # que é construído sobre tinygrad (2020).
         edge = self.edges([self.relation()])[0]
-        self.assertEqual((edge["from"], edge["to"]), ("root-old", "root-new"))
+        self.assertEqual((edge["from"], edge["to"]), ("root-new", "root-old"))
+
+    def test_the_detectors_own_order_is_the_opposite_and_stays_that_way(self):
+        # As duas convenções são diferentes de propósito, cada uma certa na sua
+        # camada. Um teste aqui para que ninguém "conserte" uma pela outra.
+        relation = self.relation()
+        self.assertEqual((relation["from"], relation["to"]), ("root-old", "root-new"))
 
     def test_the_detector_drives_it_when_no_lineage_is_passed(self):
         # T077 é da faixa do agente A. Sem o módulo, o grafo não emite aresta

@@ -164,7 +164,69 @@ def cmd_build(args, config) -> RunReport:
 
 
 def cmd_publish(args, config) -> RunReport:
-    raise CommandError("publish is not wired yet — see task T062 (US4)")
+    """Publish `site/`, refusing anything that smells like a full build (T065)."""
+    from pathlib import Path
+
+    from core import build as build_module
+    from core import privacy, store
+
+    report = RunReport()
+    site = build_module.output_dir(Path(args.root), build_module.MODE_PUBLIC)
+
+    # Segunda linha de defesa: por construção um build full escreve em
+    # .dendro-local/, nunca aqui. A checagem existe porque o custo de errar é
+    # uma quebra de NDA, não uma reconstrução.
+    previous = _published_state(site)
+    if previous["build_mode"] == build_module.MODE_FULL:
+        raise CommandError(
+            f"{site / 'graph.json'} declares build_mode: full — refusing to publish."
+        )
+
+    if args.dry_run:
+        selection = privacy.select(
+            store.load_all(args.root), config=config, mode=config.publish_mode
+        )
+        report.withheld = [
+            f"{artifact.name or artifact.id} ({reason})"
+            for artifact, reason in selection.withheld
+        ]
+        report.changed = [a.id for a in selection.included]
+        return report
+
+    build_module.build(args.root, mode=config.publish_mode, config=config, report=report)
+
+    # FR-026: um Artifact cuja visibilidade mudou tem nome no relatório.
+    current = _published_state(site)
+    for artifact_id in sorted(previous["artifact_ids"] - current["artifact_ids"]):
+        report.withheld.append(f"{artifact_id} (removed by a visibility change)")
+
+    if config.target_repository:
+        from core import publish as publish_module
+
+        try:
+            summary = publish_module.deploy(site, config.target_repository)
+        except publish_module.PublishError as exc:
+            raise CommandError(str(exc)) from exc
+        report.notes.append(summary)
+    else:
+        report.notes.append(f"Site ready in {site}/.")
+    return report
+
+
+def _published_state(site):
+    """What the last published output contained. Reads `site/` only — never `.dendro-local/`."""
+    graph_json = site / "graph.json"
+    if not graph_json.exists():
+        return {"build_mode": None, "artifact_ids": set()}
+    import json
+
+    payload = json.loads(graph_json.read_text(encoding="utf-8"))
+    return {
+        "build_mode": payload.get("build_mode"),
+        "artifact_ids": {
+            node["id"] for node in payload.get("nodes", []) if node.get("type") == "Artifact"
+        },
+    }
 
 
 def cmd_suggest(args, config) -> RunReport:
