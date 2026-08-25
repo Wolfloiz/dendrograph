@@ -278,9 +278,14 @@ suggestion command and confirm no edge is created without confirmation.
   settings, and zero appear in any public repository or its version history. For an aliased
   Artifact this holds at every setting, and extends to its description, URL and Technique
   evidence paths.
-- **SC-005**: An archive of roughly 500 Artifacts (~3,000 nodes) reaches first render in
-  under 2 seconds and sustains at least 30fps while panning, from a file opened with no
-  network access.
+- **SC-005**: An archive of roughly 500 Artifacts reaches first render in under 2 seconds
+  and sustains at least 30fps while panning, from a file opened with no network access.
+  The node count was estimated at ~3,000; measured, 500 Artifacts produce **554 nodes**,
+  because Tool, Technique, Period, Author and Dependency nodes are shared rather than one
+  set per Artifact. The threshold that matters for the force simulation is the node count,
+  and 3,000 nodes would need roughly 30× the per-frame work of 554 — so the ~3,000 figure
+  should be read as the point where Barnes-Hut (deferred to v0.3) becomes necessary, not
+  as the size of a 500-Artifact archive.
 - **SC-006**: Every Technique claim in the output can be traced to the specific evidence it
   was derived from.
 - **SC-007**: The Author can state years of experience with a given Tool from the output,

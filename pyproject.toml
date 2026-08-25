@@ -1,0 +1,18 @@
+[project]
+name = "dendrograph"
+version = "0.1.0"
+description = "A knowledge graph of what a person has built."
+requires-python = ">=3.11"
+dependencies = []
+license = { text = "MIT" }
+
+[project.scripts]
+dendro = "cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["core", "core.analysis", "collectors", "collectors.git"]
+py-modules = ["cli"]

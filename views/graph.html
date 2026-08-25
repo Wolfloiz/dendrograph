@@ -1,0 +1,175 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Graph — dendrograph</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  main { padding: 0; }
+  canvas { display: block; width: 100vw; height: calc(100vh - 108px); cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  .legend { position: fixed; right: 1rem; bottom: 1rem; font-size: .78rem;
+            color: var(--muted); background: var(--bg); border: 1px solid var(--line);
+            border-radius: 6px; padding: .5rem .7rem; }
+  .legend i { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%;
+              margin-right: .35rem; vertical-align: middle; }
+</style>
+
+<header>
+  <h1>Graph</h1>
+  <div class="meta" id="meta"></div>
+  <nav><a href="timeline.html">Timeline</a><a href="graph.html">Graph</a></nav>
+</header>
+<main><canvas id="canvas"></canvas></main>
+<div class="legend" id="legend"></div>
+
+<script src="graph.js"></script>
+<script src="loader.js"></script>
+<script>
+(function () {
+  "use strict";
+  var g = DendroLoader.load();
+  document.getElementById("meta").textContent =
+    g.nodes.length + " nodes · " + g.edges.length + " edges · drag to pan, scroll to zoom";
+
+  var css = getComputedStyle(document.documentElement);
+  var COLOUR = {
+    Artifact: css.getPropertyValue("--accent").trim(),
+    Tool: "#5b7fb5", Technique: "#a87b4f", Period: "#8a8a8a",
+    Collection: "#7a5ba8", Author: "#4f8f8f", Dependency: "#9a9a9a",
+    EpochMarker: css.getPropertyValue("--marker").trim()
+  };
+  var FORK = css.getPropertyValue("--fork").trim();
+
+  var canvas = document.getElementById("canvas");
+  var ctx = canvas.getContext("2d");
+  var view = { x: 0, y: 0, k: 1 };
+
+  // Cada nó vira um ponto com velocidade; nada aqui vem de biblioteca.
+  var nodes = g.nodes.map(function (node, i) {
+    var angle = i * 2.399963;             // ângulo áureo: espalha sem agrupar
+    var radius = 14 * Math.sqrt(i);
+    return {
+      ref: node, x: Math.cos(angle) * radius, y: Math.sin(angle) * radius,
+      vx: 0, vy: 0,
+      r: node.type === "Artifact" ? 5 : 3.2,
+      colour: g.isBarelyMine(node) ? FORK : (COLOUR[node.type] || "#888")
+    };
+  });
+  var index = {};
+  nodes.forEach(function (n) { index[n.ref.id] = n; });
+  var links = g.edges.map(function (edge) {
+    return { source: index[edge.from], target: index[edge.to] };
+  }).filter(function (l) { return l.source && l.target; });
+
+  function resize() {
+    var ratio = window.devicePixelRatio || 1;
+    canvas.width = canvas.clientWidth * ratio;
+    canvas.height = canvas.clientHeight * ratio;
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  var alpha = 1;
+  function tick() {
+    // Repulsão O(n²): a 3.000 nós isto ainda cabe num quadro. Barnes-Hut fica
+    // para a v0.3, e a validação de SC-005 é o que diz quando ele passa a ser
+    // necessário.
+    for (var i = 0; i < nodes.length; i++) {
+      var a = nodes[i];
+      for (var j = i + 1; j < nodes.length; j++) {
+        var b = nodes[j];
+        var dx = b.x - a.x, dy = b.y - a.y;
+        var d2 = dx * dx + dy * dy || 0.01;
+        var force = 220 / d2;
+        var d = Math.sqrt(d2);
+        var fx = (dx / d) * force, fy = (dy / d) * force;
+        a.vx -= fx; a.vy -= fy; b.vx += fx; b.vy += fy;
+      }
+    }
+    links.forEach(function (link) {
+      var dx = link.target.x - link.source.x, dy = link.target.y - link.source.y;
+      var d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      var force = (d - 42) * 0.012;
+      var fx = (dx / d) * force, fy = (dy / d) * force;
+      link.source.vx += fx; link.source.vy += fy;
+      link.target.vx -= fx; link.target.vy -= fy;
+    });
+    nodes.forEach(function (n) {
+      n.vx -= n.x * 0.0016; n.vy -= n.y * 0.0016;   // gravidade ao centro
+      n.x += n.vx * alpha; n.y += n.vy * alpha;
+      n.vx *= 0.82; n.vy *= 0.82;
+    });
+    alpha *= 0.995;
+    if (alpha < 0.02) alpha = 0.02;
+  }
+
+  function draw() {
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    ctx.translate(w / 2 + view.x, h / 2 + view.y);
+    ctx.scale(view.k, view.k);
+
+    ctx.strokeStyle = css.getPropertyValue("--line").trim();
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    links.forEach(function (link) {
+      ctx.moveTo(link.source.x, link.source.y);
+      ctx.lineTo(link.target.x, link.target.y);
+    });
+    ctx.stroke();
+
+    nodes.forEach(function (n) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, 6.2832);
+      ctx.fillStyle = n.colour;
+      ctx.fill();
+      // Um fork intocado sai tracejado, e não infla a contagem (ADR-0003).
+      if (g.isBarelyMine(n.ref)) {
+        ctx.strokeStyle = n.colour; ctx.lineWidth = 0.8; ctx.stroke();
+      }
+    });
+
+    if (view.k > 1.4) {
+      ctx.fillStyle = css.getPropertyValue("--fg").trim();
+      ctx.font = "10px ui-sans-serif, system-ui, sans-serif";
+      nodes.forEach(function (n) {
+        if (n.ref.type === "Artifact" || view.k > 2.4) {
+          ctx.fillText(n.ref.label, n.x + n.r + 2, n.y + 3);
+        }
+      });
+    }
+    ctx.restore();
+  }
+
+  function frame() { tick(); draw(); requestAnimationFrame(frame); }
+  frame();
+
+  var dragging = false, last = null;
+  canvas.addEventListener("mousedown", function (e) { dragging = true; last = e; });
+  window.addEventListener("mouseup", function () { dragging = false; });
+  window.addEventListener("mousemove", function (e) {
+    if (!dragging) return;
+    view.x += e.clientX - last.clientX;
+    view.y += e.clientY - last.clientY;
+    last = e;
+  });
+  canvas.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    view.k = Math.min(6, Math.max(0.2, view.k * (e.deltaY < 0 ? 1.1 : 0.9)));
+  }, { passive: false });
+
+  var legend = document.getElementById("legend");
+  Object.keys(COLOUR).forEach(function (type) {
+    if (!g.nodesOfType(type).length) return;
+    var row = document.createElement("div");
+    row.innerHTML = '<i style="background:' + COLOUR[type] + '"></i>' + type;
+    legend.appendChild(row);
+  });
+  if (g.artifacts.some(function (a) { return g.isBarelyMine(a); })) {
+    var row = document.createElement("div");
+    row.innerHTML = '<i style="background:' + FORK + '"></i>fork, barely yours';
+    legend.appendChild(row);
+  }
+})();
+</script>

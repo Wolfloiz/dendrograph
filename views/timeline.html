@@ -1,0 +1,131 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Timeline — dendrograph</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .years { display: grid; gap: .4rem; }
+  .year { display: grid; grid-template-columns: 4.5rem 1fr; align-items: start; gap: 1rem; }
+  .year > b { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums;
+              padding-top: .15rem; font-size: .85rem; }
+  .row { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: .15rem .6rem;
+          font-size: .82rem; background: transparent; cursor: default; }
+  .chip.mine { border-color: var(--accent); }
+  .chip.fork { color: var(--fork); border-style: dashed; }
+  .chip.aliased { font-style: italic; }
+  .marker { grid-column: 1 / -1; border-top: 2px dashed var(--marker);
+            color: var(--marker); font-size: .8rem; padding-top: .3rem; margin: .5rem 0; }
+  .tools { margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 1.25rem; }
+  table { border-collapse: collapse; font-size: .88rem; }
+  th, td { text-align: left; padding: .3rem 1.25rem .3rem 0; }
+  th { color: var(--muted); font-weight: 500; font-size: .8rem; }
+  td.span { font-variant-numeric: tabular-nums; }
+</style>
+
+<header>
+  <h1>Timeline</h1>
+  <div class="meta" id="meta"></div>
+  <nav><a href="timeline.html">Timeline</a><a href="graph.html">Graph</a></nav>
+</header>
+<main>
+  <div id="notices"></div>
+  <div class="years" id="years"></div>
+  <section class="tools">
+    <h2 style="font-size:1rem;margin:0 0 .5rem">Tools, and how long</h2>
+    <table id="tools"><thead><tr>
+      <th>Tool</th><th>First</th><th>Last</th><th>Years</th><th>Artifacts</th>
+    </tr></thead><tbody></tbody></table>
+  </section>
+</main>
+
+<script src="graph.js"></script>
+<script src="loader.js"></script>
+<script>
+(function () {
+  "use strict";
+  var g = DendroLoader.load();
+
+  document.getElementById("meta").textContent =
+    g.artifacts.length + " Artifacts · built " + g.generatedAt + " · mode: " + g.mode;
+
+  var notices = document.getElementById("notices");
+  function notice(text) {
+    var el = document.createElement("p");
+    el.className = "notice";
+    el.textContent = text;
+    notices.appendChild(el);
+  }
+  if (g.aggregates && g.aggregates.private_withheld) {
+    var w = g.aggregates.private_withheld;
+    notice(w.count + " private Artifacts are withheld from this site. " +
+           "Their shape only: " + (w.tools || []).join(", ") + " · " + w.first + "–" + w.last);
+  }
+  g.unreachable.forEach(function (source) {
+    notice("Not reached this build: " + (source.locator || source) +
+           (source.last_seen ? " (last seen " + source.last_seen + ")" : ""));
+  });
+
+  // Um Artifact aparece em cada ano que atravessou, via as arestas IN_PERIOD.
+  var byYear = {};
+  g.artifacts.forEach(function (artifact) {
+    g.neighbours(artifact.id, "IN_PERIOD").forEach(function (period) {
+      (byYear[period.label] = byYear[period.label] || []).push(artifact);
+    });
+  });
+
+  var markers = g.epochMarkers.slice().sort(function (a, b) {
+    return (a.date || "").localeCompare(b.date || "");
+  });
+
+  var years = Object.keys(byYear).sort();
+  var container = document.getElementById("years");
+  years.forEach(function (year) {
+    markers.filter(function (m) { return m.date && m.date.slice(0, 4) === year; })
+      .forEach(function (m) {
+        var line = document.createElement("div");
+        line.className = "marker";
+        line.textContent = m.date + " — " + m.label;
+        container.appendChild(line);
+      });
+
+    var row = document.createElement("div");
+    row.className = "year";
+    var label = document.createElement("b");
+    label.textContent = year;
+    var chips = document.createElement("div");
+    chips.className = "row";
+    byYear[year].sort(function (a, b) { return a.label.localeCompare(b.label); })
+      .forEach(function (artifact) {
+        var chip = document.createElement("span");
+        var share = g.authorshipShare(artifact);
+        chip.className = "chip" +
+          (g.isBarelyMine(artifact) ? " fork" : (share !== null ? " mine" : "")) +
+          (artifact.aliased ? " aliased" : "");
+        chip.textContent = artifact.label;
+        chip.title = (share !== null ? Math.round(share * 100) + "% authored by you" : "authorship unknown") +
+          (artifact.aliased ? " · published under an alias" : "");
+        chips.appendChild(chip);
+      });
+    row.appendChild(label);
+    row.appendChild(chips);
+    container.appendChild(row);
+  });
+
+  var body = document.querySelector("#tools tbody");
+  g.tools.slice().sort(function (a, b) { return (a.first || "").localeCompare(b.first || ""); })
+    .forEach(function (tool) {
+      var tr = document.createElement("tr");
+      var years = (tool.first && tool.last)
+        ? (((new Date(tool.last) - new Date(tool.first)) / 31557600000).toFixed(1))
+        : "—";
+      [tool.label, tool.first || "—", tool.last || "—", years, tool.artifact_count || 0]
+        .forEach(function (value, i) {
+          var td = document.createElement("td");
+          if (i > 0) td.className = "span";
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+      body.appendChild(tr);
+    });
+})();
+</script>

@@ -31,11 +31,11 @@ maps the same tasks onto three parallel owners.
 
 **Purpose**: Repository skeleton and the fixture harness every test depends on
 
-- [ ] T001 Create the tool repository structure — `collectors/git/`, `core/`, `views/`, `templates/archive/`, `examples/`, `tests/` — per plan.md
-- [ ] T002 [P] Create `pyproject.toml` declaring Python 3.11+, zero runtime dependencies and a `dendro` console entry point
-- [ ] T003 [P] Implement the fixture harness in `tests/support/fixtures.py` — unbundles `tests/fixtures/*.bundle` into a temp directory at setUp, removes it at tearDown
-- [ ] T004 [P] Build and commit the fixture repositories as `git bundle` files in `tests/fixtures/`: multi-contributor, no-commits, no-commits-no-files, two-clones-divergent, rewritten-history, barely-touched-fork
-- [ ] T005 [P] Create `.github/workflows/test.yml` running `python -m unittest discover` on Python 3.11 and 3.12
+- [X] T001 Create the tool repository structure — `collectors/git/`, `core/`, `views/`, `templates/archive/`, `examples/`, `tests/` — per plan.md
+- [X] T002 [P] Create `pyproject.toml` declaring Python 3.11+, zero runtime dependencies and a `dendro` console entry point
+- [X] T003 [P] Implement the fixture harness in `tests/support/fixtures.py` — unbundles `tests/fixtures/*.bundle` into a temp directory at setUp, removes it at tearDown
+- [X] T004 [P] Build and commit the fixture repositories as `git bundle` files in `tests/fixtures/`: multi-contributor, no-commits, no-commits-no-files, two-clones-divergent, rewritten-history, barely-touched-fork
+- [X] T005 [P] Create `.github/workflows/test.yml` running `python -m unittest discover` on Python 3.11 and 3.12
 
 ---
 
@@ -47,23 +47,23 @@ through this layer.
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete. This is the
 serial neck of the project — see [three-agent assignment](#three-agent-assignment).
 
-- [ ] T006 Implement `core/config.py` — parse `dendrograph.toml` with `tomllib` per contracts/config.md: every table, absent config valid, unknown key is an error not a warning, no credential ever read from the file
-- [ ] T007 [P] Unit tests for config in `tests/test_config.py` — absent file works, unknown key rejected, a declaration naming an unknown Artifact id is reported and is not an error
-- [ ] T008 Implement `core/store.py` read and write per contracts/store-artifact.md — deterministic serialisation: sorted keys, two-space indent, UTF-8, trailing newline
-- [ ] T009 Implement `schema_version` enforcement in `core/store.py` — refuse an unrecognised version, naming the file and both versions; never partially read, never rewrite (FR-025)
-- [ ] T010 Implement append-merge semantics in `core/store.py` — a field the run could not observe is left as it was, never overwritten with null (FR-007, ADR-0002)
-- [ ] T011 [P] Unit tests for the store in `tests/test_store.py` — a run observing nothing produces a byte-identical file, an unknown `schema_version` is refused, a merge preserves prior observations
-- [ ] T012 [P] Implement `collectors/git/plumbing.py` — `subprocess` wrappers for root-commit enumeration, log, `ls-files`, and clone with full history and `--no-checkout`
-- [ ] T013 Implement root-commit identity in `core/identity.py` — id `root-<sha>`; on multiple root commits pick the earliest committer date, breaking ties on the smallest SHA (FR-004, contracts/store-artifact.md)
-- [ ] T014 Implement the authored-files set in `core/identity.py` — exclusions per contracts/store-artifact.md, sorted POSIX paths, each contributing `path\0size\0sha256(content)`
-- [ ] T015 Implement the content hash in `core/identity.py` — computed for **every** Artifact from the authored-files set, used as the id (`content-<sha>`) when there is no root commit and recorded as `identity.fallback_content_hash` otherwise, so a rewritten history can later be recognised as an existing Artifact; a repository with no commits and no tracked files is reported as unidentifiable and is **not** stored
-- [ ] T016 Implement identity overrides in `core/identity.py` — `[[identity.merge]]` and `[[identity.separate]]` from config always win (FR-005)
-- [ ] T017 [P] Unit tests for identity in `tests/test_identity.py` — two clones collapse to one Artifact, multi-root selection is deterministic, no-commits falls back, no-commits-no-files is unidentifiable, both override directions work
-- [ ] T018 Implement command dispatch in `cli.py` for the six commands in contracts/cli.md — `scan`, `login`, `build`, `publish`, `suggest`, `prune` (FR-020)
-- [ ] T019 Implement `--dry-run` and exit codes in `cli.py` — `0` success, `1` failure, `2` usage error, `3` partial success (a source was unreachable)
-- [ ] T020 Implement the run report in `core/report.py` — Artifacts added, Artifacts changed, sources unreachable, Artifacts withheld from output (FR-018, FR-019)
-- [ ] T021 [P] Unit tests for the CLI in `tests/test_cli.py` — exit code `3` on an unreachable source, `--dry-run` writes nothing
-- [ ] T022 [P] Verify against current GitHub documentation whether device flow must be explicitly enabled on the OAuth App, and record the finding in `docs/adr/0008-device-flow-auth-no-personal-access-token.md` — plan.md flags this as the one open external unknown
+- [X] T006 Implement `core/config.py` — parse `dendrograph.toml` with `tomllib` per contracts/config.md: every table, absent config valid, unknown key is an error not a warning, no credential ever read from the file
+- [X] T007 [P] Unit tests for config in `tests/test_config.py` — absent file works, unknown key rejected, a declaration naming an unknown Artifact id is reported and is not an error
+- [X] T008 Implement `core/store.py` read and write per contracts/store-artifact.md — deterministic serialisation: sorted keys, two-space indent, UTF-8, trailing newline
+- [X] T009 Implement `schema_version` enforcement in `core/store.py` — refuse an unrecognised version, naming the file and both versions; never partially read, never rewrite (FR-025)
+- [X] T010 Implement append-merge semantics in `core/store.py` — a field the run could not observe is left as it was, never overwritten with null (FR-007, ADR-0002)
+- [X] T011 [P] Unit tests for the store in `tests/test_store.py` — a run observing nothing produces a byte-identical file, an unknown `schema_version` is refused, a merge preserves prior observations
+- [X] T012 [P] Implement `collectors/git/plumbing.py` — `subprocess` wrappers for root-commit enumeration, log, `ls-files`, and clone with full history and `--no-checkout`
+- [X] T013 Implement root-commit identity in `core/identity.py` — id `root-<sha>`; on multiple root commits pick the earliest committer date, breaking ties on the smallest SHA (FR-004, contracts/store-artifact.md)
+- [X] T014 Implement the authored-files set in `core/identity.py` — exclusions per contracts/store-artifact.md, sorted POSIX paths, each contributing `path\0size\0sha256(content)`
+- [X] T015 Implement the content hash in `core/identity.py` — computed for **every** Artifact from the authored-files set, used as the id (`content-<sha>`) when there is no root commit and recorded as `identity.fallback_content_hash` otherwise, so a rewritten history can later be recognised as an existing Artifact; a repository with no commits and no tracked files is reported as unidentifiable and is **not** stored
+- [X] T016 Implement identity overrides in `core/identity.py` — `[[identity.merge]]` and `[[identity.separate]]` from config always win (FR-005)
+- [X] T017 [P] Unit tests for identity in `tests/test_identity.py` — two clones collapse to one Artifact, multi-root selection is deterministic, no-commits falls back, no-commits-no-files is unidentifiable, both override directions work
+- [X] T018 Implement command dispatch in `cli.py` for the six commands in contracts/cli.md — `scan`, `login`, `build`, `publish`, `suggest`, `prune` (FR-020)
+- [X] T019 Implement `--dry-run` and exit codes in `cli.py` — `0` success, `1` failure, `2` usage error, `3` partial success (a source was unreachable)
+- [X] T020 Implement the run report in `core/report.py` — Artifacts added, Artifacts changed, sources unreachable, Artifacts withheld from output (FR-018, FR-019)
+- [X] T021 [P] Unit tests for the CLI in `tests/test_cli.py` — exit code `3` on an unreachable source, `--dry-run` writes nothing
+- [X] T022 [P] Verify against current GitHub documentation whether device flow must be explicitly enabled on the OAuth App, and record the finding in `docs/adr/0008-device-flow-auth-no-personal-access-token.md` — plan.md flags this as the one open external unknown
 
 **Checkpoint**: The contracts are executable. The three streams can now fork.
 
@@ -77,28 +77,37 @@ every Artifact it finds.
 **Independent Test**: Run against an account with public repositories only, with no
 credentials configured, and confirm a browsable timeline and graph are produced.
 
-- [ ] T023 [P] [US1] Implement GitHub discovery in `collectors/git/github.py` — `urllib`, pagination, unauthenticated by default and limited to public Artifacts (FR-002)
-- [ ] T024 [US1] Implement rate-limit degradation in `collectors/git/github.py` — report what could not be reached, never truncate silently (FR-019)
-- [ ] T025 [P] [US1] Implement the OAuth device flow in `collectors/git/auth.py` — public `client_id`, no secret, no redirect URI, poll until approval; token read from the environment only (ADR-0008)
-- [ ] T026 [US1] Implement the `gh auth token` shortcut and the CI PAT path in `collectors/git/auth.py` — convenience and CI respectively, never required (FR-003)
-- [ ] T027 [US1] Implement clone-and-discard in `collectors/git/clone.py` — complete history, `--no-checkout`, temporary directory removed at the end of the run, nothing cached between runs (FR-024)
-- [ ] T028 [US1] Implement progress reporting in `collectors/git/scan.py` — reported throughout, sized so ~500 public repositories complete unattended within 30 minutes (SC-001b)
-- [ ] T029 [P] [US1] Implement Tool detection in `core/analysis/tools.py` — manifest and extension markers, each carrying the evidence it was observed from
-- [ ] T030 [P] [US1] Implement Technique inference in `core/analysis/techniques.py` — dependency manifests and directory conventions only, each claim carrying a confidence and at least one evidence pointer; a Technique with no evidence is invalid (FR-010, SC-006)
-- [ ] T031 [P] [US1] Implement Dependency extraction in `core/analysis/dependencies.py` — recorded distinctly from Tools (FR-022)
-- [ ] T032 [US1] Implement authorship counting in `collectors/git/authorship.py` — per-author commits and lines, matched against `[archive].emails`, computed independently of identity (FR-006, FR-009)
-- [ ] T033 [US1] Wire `dendro scan` end to end in `collectors/git/scan.py` — discover → clone → analyse → resolve identity → write store
-- [ ] T034 [P] [US1] Implement `core/graph.py` — nodes and edges per contracts/graph.md, node id conventions, and the self-describing `schema` block
-- [ ] T035 [US1] Implement `indexes.tool_to_artifacts` in `core/graph.py` — present in v0.1 and unrendered by it, because adding it later means every Author rebuilds
-- [ ] T036 [US1] Implement deterministic ordering in `core/graph.py` — nodes by `(type, id)`, edges by `(type, from, to)`, so only real change dirties the archive repository
-- [ ] T037 [US1] Implement `core/build.py` emitting `graph.json` and `graph.js` from the same object — the `.js` wraps it in one global assignment, because a browser blocks `fetch()` from a `file://` page (FR-016)
-- [ ] T038 [P] [US1] Implement the shared data-loading layer in `views/loader.js` — reads `window.DENDROGRAPH_GRAPH`; one layer behind both views, not two standalone pages
-- [ ] T039 [P] [US1] Implement the timeline view in `views/timeline.html` — Artifacts placed by Period, no page dependencies
-- [ ] T040 [US1] Implement the graph view in `views/graph.html` — force simulation against a 2D canvas, no CDN and no graph library (Principle III)
-- [ ] T041 [US1] Make forks distinguishable in `views/graph.html` — a fork reads differently from authored work and does not inflate the Artifact count (US1 AS2, ADR-0003)
+- [X] T023 [P] [US1] Implement GitHub discovery in `collectors/git/github.py` — `urllib`, pagination, unauthenticated by default and limited to public Artifacts (FR-002)
+- [X] T024 [US1] Implement rate-limit degradation in `collectors/git/github.py` — report what could not be reached, never truncate silently (FR-019)
+- [X] T025 [P] [US1] Implement the OAuth device flow in `collectors/git/auth.py` — public `client_id`, no secret, no redirect URI, poll until approval; token read from the environment only (ADR-0008)
+- [X] T026 [US1] Implement the `gh auth token` shortcut and the CI PAT path in `collectors/git/auth.py` — convenience and CI respectively, never required (FR-003)
+- [X] T027 [US1] Implement clone-and-discard in `collectors/git/clone.py` — complete history, `--no-checkout`, temporary directory removed at the end of the run, nothing cached between runs (FR-024)
+- [X] T028 [US1] Implement progress reporting in `collectors/git/scan.py` — reported throughout, sized so ~500 public repositories complete unattended within 30 minutes (SC-001b)
+- [X] T029 [P] [US1] Implement Tool detection in `core/analysis/tools.py` — manifest and extension markers, each carrying the evidence it was observed from
+- [X] T030 [P] [US1] Implement Technique inference in `core/analysis/techniques.py` — dependency manifests and directory conventions only, each claim carrying a confidence and at least one evidence pointer; a Technique with no evidence is invalid (FR-010, SC-006)
+- [X] T031 [P] [US1] Implement Dependency extraction in `core/analysis/dependencies.py` — recorded distinctly from Tools (FR-022)
+- [X] T032 [US1] Implement authorship counting in `collectors/git/authorship.py` — per-author commits and lines, matched against `[archive].emails`, computed independently of identity (FR-006, FR-009)
+- [X] T033 [US1] Wire `dendro scan` end to end in `collectors/git/scan.py` — discover → clone → analyse → resolve identity → write store
+- [X] T034 [P] [US1] Implement `core/graph.py` — nodes and edges per contracts/graph.md, node id conventions, and the self-describing `schema` block
+- [X] T035 [US1] Implement `indexes.tool_to_artifacts` in `core/graph.py` — present in v0.1 and unrendered by it, because adding it later means every Author rebuilds
+- [X] T036 [US1] Implement deterministic ordering in `core/graph.py` — nodes by `(type, id)`, edges by `(type, from, to)`, so only real change dirties the archive repository
+- [X] T037 [US1] Implement `core/build.py` emitting `graph.json` and `graph.js` from the same object — the `.js` wraps it in one global assignment, because a browser blocks `fetch()` from a `file://` page (FR-016)
+- [X] T038 [P] [US1] Implement the shared data-loading layer in `views/loader.js` — reads `window.DENDROGRAPH_GRAPH`; one layer behind both views, not two standalone pages
+- [X] T039 [P] [US1] Implement the timeline view in `views/timeline.html` — Artifacts placed by Period, no page dependencies
+- [X] T040 [US1] Implement the graph view in `views/graph.html` — force simulation against a 2D canvas, no CDN and no graph library (Principle III)
+- [X] T041 [US1] Make forks distinguishable in `views/graph.html` — a fork reads differently from authored work and does not inflate the Artifact count (US1 AS2, ADR-0003)
 - [ ] T042 [US1] Validate SC-005 as soon as the graph view renders, in `views/graph.html` — ~500 Artifacts and ~3,000 nodes reach first render under 2 seconds and sustain at least 30fps while panning, from a page opened with no network access. Barnes-Hut is deferred to v0.3, so a failure here is a redesign and must surface now rather than in polish
-- [ ] T043 [P] [US1] Integration test in `tests/test_dedup.py` — the same project present on two paths produces exactly one Artifact (SC-002, US1 AS3)
-- [ ] T044 [P] [US1] Guard test in `tests/test_no_judgement.py` — no output in any build mode contains a quality score, a grade, a complexity proof, or an AI-authorship label (FR-015, Principle V)
+  - Partially measured 2026-08-25 with a headless harness (no browser): 500 Artifacts
+    produce **554 nodes**, not the ~3,000 assumed — Tool, Technique, Period, Author and
+    Dependency nodes are shared across Artifacts. 4,454 edges; `graph.json` 858 KB.
+    Parse + eval 13.7 ms; physics 1.57 ms/frame against a 33.3 ms budget at 30fps.
+    This excludes canvas rasterisation and is **not** an fps measurement. Real browser
+    validation is still outstanding. At the spec's assumed 3,000 nodes the O(n²)
+    repulsion is ~30× more work and would exceed the budget — the assumption, not the
+    measurement, is what carries the risk.
+
+- [X] T043 [P] [US1] Integration test in `tests/test_dedup.py` — the same project present on two paths produces exactly one Artifact (SC-002, US1 AS3)
+- [X] T044 [P] [US1] Guard test in `tests/test_no_judgement.py` — no output in any build mode contains a quality score, a grade, a complexity proof, or an AI-authorship label (FR-015, Principle V)
 
 **Checkpoint**: A public archive renders. This is the MVP and the demo.
 

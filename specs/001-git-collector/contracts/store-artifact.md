@@ -127,8 +127,8 @@ Per ADR-0003 and FR-004:
 
 1. **Primary** — SHA of the repository's root commit. Stable across clone, rename,
    re-host and disk. Id is `root-<sha>`.
-2. **Fallback** — SHA-256 over a deterministic file set: every tracked file not in an
-   excluded directory, sorted by POSIX path, each contributing
+2. **Fallback** — SHA-256 over the identity set (see *Two file sets*): every tracked file
+   not in an excluded directory, sorted by POSIX path, each contributing
    `path\0size\0sha256(content)`. Used for repositories with no commits, and for future
    non-git Artifacts. Id is `content-<sha>`.
 3. **Override** — an Author declaration in config merges or separates Artifacts, and
@@ -155,15 +155,23 @@ next is private, and drops out of the published site on the next publish without
 Author acting. When the most recent observation is from an unreachable source,
 `visibility` keeps its last known value; it never decays to `public`.
 
-## Authored files
+## Two file sets
 
-The file set used for both the fallback identity hash and for lineage. Excluded:
+Identity and lineage need different sets, and conflating them breaks identity.
 
-- dependency directories — `node_modules/`, `vendor/`, `.venv/`, `venv/`,
-  `target/`, `dist/`, `build/`, `.git/`
+**The identity set** is every tracked file outside an excluded directory —
+`node_modules/`, `vendor/`, `.venv/`, `venv/`, `target/`, `dist/`, `build/`,
+`__pycache__/`, `.git/`. **No size floor, and lockfiles are included.** A repository
+whose files are all small is perfectly identifiable; it simply has nothing substantial
+in it. Excluding by size here would leave such an Artifact with no identity at all.
+
+**The lineage set** is stricter, because a false `DERIVES_FROM` is a false claim about
+the Author's work. It takes the identity set and further excludes:
+
 - lockfiles — `package-lock.json`, `yarn.lock`, `poetry.lock`, `Cargo.lock`, and peers
 - generated output — anything matched by `.gitignore`, minified bundles
-- files under 512 bytes, which are too common to be evidence of anything (FR-012)
+- files under 512 bytes, which are too common to be evidence of shared descent (FR-012)
 
-The exclusion list is part of this contract: it determines identity, so changing it
-changes ids of already-stored Artifacts. Treat additions to it as a schema version bump.
+Both lists are part of this contract. The identity set determines ids, so changing it
+changes the ids of already-stored Artifacts — treat additions to it as a schema version
+bump. The lineage set only affects inference, so changing it costs a rebuild.
