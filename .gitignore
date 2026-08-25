@@ -1,0 +1,6 @@
+# docs/ was ignored here, which excluded docs/adr/ — the binding decision
+# records that CLAUDE.md, CONTEXT.md, the constitution, spec, plan and tasks
+# all reference. They belong in the repository.
+
+__pycache__/
+*.pyc
