@@ -23,6 +23,7 @@ class RunReport:
     withheld: list[str] = field(default_factory=list)
     unidentifiable: list[str] = field(default_factory=list)
     declared_but_unseen: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
     dry_run: bool = False
 
     @property
@@ -55,6 +56,7 @@ class RunReport:
                 "A source that could not be reached is recorded as unreachable, "
                 "never as deleted."
             )
+        out.extend(self.notes)
         return out
 
     def render(self) -> str:

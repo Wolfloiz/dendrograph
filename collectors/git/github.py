@@ -37,6 +37,8 @@ class Discovery:
     repositories: list[Repository] = field(default_factory=list)
     unreachable: list[str] = field(default_factory=list)
     rate_limited: bool = False
+    # Falso quando o token pertence a outra conta: só o que é público foi visto.
+    account_is_authenticated: bool = True
 
     @property
     def complete(self) -> bool:
@@ -84,6 +86,17 @@ def _to_repository(raw: dict) -> Repository:
     )
 
 
+def authenticated_login(token: str, request=_request) -> str | None:
+    """Which account the token belongs to, or None if it cannot be established."""
+    try:
+        payload, _ = request(f"{API}/user", token)
+    except (RateLimited, urllib.error.HTTPError, urllib.error.URLError):
+        return None
+    if isinstance(payload, dict):
+        return payload.get("login")
+    return None
+
+
 def discover(account: str, token: str | None = None, request=_request) -> Discovery:
     """Every repository the credentials can see for one account.
 
@@ -92,7 +105,15 @@ def discover(account: str, token: str | None = None, request=_request) -> Discov
     """
     found = Discovery()
     # /user/repos vê os privados do próprio Author; /users/<a>/repos vê só públicos.
-    path = "/user/repos" if token else f"/users/{urllib.parse.quote(account)}/repos"
+    # Só vale quando o token É desta conta: pedir github:outra-pessoa e receber os
+    # próprios repositórios privados de volta seria varrer o que ninguém pediu.
+    path = f"/users/{urllib.parse.quote(account)}/repos"
+    if token:
+        login = authenticated_login(token, request)
+        if login and login.casefold() == account.casefold():
+            path = "/user/repos"
+        else:
+            found.account_is_authenticated = False
     page = 1
     while True:
         url = f"{API}{path}?per_page={PAGE_SIZE}&page={page}&type=owner&sort=full_name"

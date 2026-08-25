@@ -139,6 +139,17 @@ or remove the folder and re-run. The Artifacts must still be present in the grap
 given Tool are visible and traceable to specific Artifacts.
 
 - [ ] T051 [P] [US3] Implement Tool span computation in `core/analysis/tool_spans.py` — first use, last use, and the Artifacts each Tool appears in, computed over **the Artifacts present in the build being produced**: public, aliased and opted-in ones under the default; every Artifact in the Author's own `full` build (FR-027, SC-007)
+  - Found validating the MVP against tinygrad (2026-08-25): a **fork carries its
+    upstream's whole history into the span**. `gpuocelot`, forked with commits back to
+    2009-06-11, makes C++, Docker, Python and Shell all read "first used 2009" for an
+    account whose own work starts in 2020. That overstates experience, which is the
+    direction ADR-0009 rules out, and it puts SC-007 ("state years of experience ... with
+    no estimation from memory") on the wrong side of correct. The span must be computed
+    over the Author's own commits, not the Artifact's full activity — the views already
+    make this distinction with `isBarelyMine` (share < 0.1), but `tool_spans.compute()`
+    does not. Needs `[author] emails` to be configured; with no emails there is no "own"
+    to measure and the span should say so rather than quietly report the fork's dates.
+
 - [ ] T052 [US3] Render Tool spans in `views/timeline.html` — first and last use, with every contributing Artifact traceable
 - [ ] T053 [P] [US3] Implement `graph.sqlite` emission in `core/sqlite.py` — one table per node type plus one `edges` table, mirroring `graph.json` exactly; a derived query surface, never a graph database (Principle III)
 - [ ] T054 [US3] Add the FTS5 virtual table over Artifact names and descriptions in `core/sqlite.py` — populated in v0.1 and never queried by it, because v0.2's search needs it and adding it later means every Author rebuilds

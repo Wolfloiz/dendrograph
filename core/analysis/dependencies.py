@@ -10,6 +10,7 @@ import json
 import re
 from pathlib import Path
 
+from collectors.git import plumbing
 from core.analysis.evidence import KIND_MANIFEST, evidence
 
 _REQUIREMENT = re.compile(r"^\s*([A-Za-z0-9._-]+)\s*(?:[=<>!~]=?\s*([^;#\s]+))?")
@@ -54,13 +55,10 @@ def detect(repository: Path | str, paths: list[str]) -> list[dict]:
         if parser is None:
             continue
         ecosystem, parse = parser
-        absolute = repository / path
-        if not absolute.is_file():
+        raw = plumbing.read_blob(repository, path)
+        if raw is None:
             continue
-        try:
-            text = absolute.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
+        text = raw.decode("utf-8", errors="replace")
         for name, version in parse(text):
             found[(ecosystem, name)] = {
                 "name": name,

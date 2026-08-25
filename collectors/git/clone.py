@@ -26,9 +26,9 @@ def working_directory(prefix: str = "dendro-scan-"):
         shutil.rmtree(path, ignore_errors=True)
 
 
-def clone_into(url: str, workdir: Path, name: str) -> Path:
+def clone_into(url: str, workdir: Path, name: str, token: str | None = None) -> Path:
     """Clone one repository with its whole history and no working tree."""
     target = workdir / name
     if target.exists():
         shutil.rmtree(target, ignore_errors=True)
-    return plumbing.clone(url, target)
+    return plumbing.clone(url, target, token=token)

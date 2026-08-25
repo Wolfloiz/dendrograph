@@ -127,6 +127,11 @@ def scan_github(
     report = report or RunReport()
     found = github.discover(account, token)
     report.unreachable.extend(found.unreachable)
+    if token and not found.account_is_authenticated:
+        report.notes.append(
+            f"The credentials in use are not {account}'s, so only {account}'s "
+            "public repositories were visible."
+        )
 
     progress = progress or Progress(total=len(found.repositories))
     progress.total = progress.total or len(found.repositories)
@@ -136,7 +141,10 @@ def scan_github(
             progress.step(repository.full_name)
             try:
                 checkout = clone.clone_into(
-                    repository.clone_url, workdir, repository.full_name.replace("/", "__")
+                    repository.clone_url,
+                    workdir,
+                    repository.full_name.replace("/", "__"),
+                    token=token,
                 )
             except plumbing.GitError as exc:
                 report.unreachable.append(f"{repository.html_url} ({exc})")

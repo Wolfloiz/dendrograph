@@ -105,7 +105,21 @@ def is_authored(relative_path: str, size: int) -> bool:
 
 
 def _hashed_files(repository: Path, keep) -> list[tuple[str, int, str]]:
-    rows: list[tuple[str, int, str]] = []
+    """(path, size, sha256) for the files `keep` accepts, sorted by path.
+
+    Where there are commits this reads the committed tree rather than the disk:
+    a `--no-checkout` clone has no working tree, and that is how every
+    repository cloned from GitHub arrived here with zero files. Where there are
+    none — the case the content-hash fallback exists for — the index and the
+    working tree are all there is.
+    """
+    if plumbing.has_commits(repository):
+        entries = [e for e in plumbing.tree_entries(repository) if keep(e.path, e.size)]
+        digests = plumbing.blob_digests(repository, [e.blob for e in entries])
+        rows = [(e.path, e.size, digests[e.blob]) for e in entries if e.blob in digests]
+        return sorted(rows, key=lambda row: row[0])
+
+    rows = []
     for relative in plumbing.tracked_files(repository):
         absolute = repository / relative
         if not absolute.is_file():
@@ -113,8 +127,7 @@ def _hashed_files(repository: Path, keep) -> list[tuple[str, int, str]]:
         size = absolute.stat().st_size
         if not keep(relative, size):
             continue
-        digest = hashlib.sha256(absolute.read_bytes()).hexdigest()
-        rows.append((relative, size, digest))
+        rows.append((relative, size, hashlib.sha256(absolute.read_bytes()).hexdigest()))
     return sorted(rows, key=lambda row: row[0])
 
 
