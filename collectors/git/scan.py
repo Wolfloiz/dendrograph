@@ -12,7 +12,7 @@ import time
 from datetime import date
 from pathlib import Path
 
-from collectors.git import authorship, clone, github, plumbing
+from collectors.git import authorship, clone, github, local, plumbing
 from core import identity as identity_module
 from core import store
 from core.analysis import dependencies, techniques, tools
@@ -171,3 +171,87 @@ def scan_github(
             _persist(observed, root, report, dry_run)
     progress.finish()
     return report
+
+
+KIND_LOCAL = "local"
+
+
+def scan_local(
+    path: Path | str,
+    root: Path | str = ".",
+    *,
+    emails: tuple[str, ...] = (),
+    dry_run: bool = False,
+    progress: Progress | None = None,
+    report: RunReport | None = None,
+) -> RunReport:
+    """Scan a folder of repositories, then account for what was not there.
+
+    The point of this path is that the archive outlives the folder (SC-003), so
+    what is *missing* matters as much as what is found: a source that was not
+    seen is marked unreachable, never removed.
+    """
+    report = report or RunReport()
+    path = Path(path).expanduser()
+    found = local.discover(path)
+    report.unreachable.extend(found.unreachable)
+
+    progress = progress or Progress(total=len(found.repositories))
+    progress.total = progress.total or len(found.repositories)
+
+    seen_locators: set[str] = set()
+    for repository in found.repositories:
+        progress.step(str(repository))
+        locator = str(repository)
+        try:
+            observed = observe(
+                repository,
+                kind=KIND_LOCAL,
+                locator=locator,
+                name=repository.name,
+                emails=emails,
+            )
+        except identity_module.Unidentifiable:
+            report.unidentifiable.append(locator)
+            continue
+        except plumbing.GitError as exc:
+            report.unreachable.append(f"{locator} ({exc})")
+            continue
+        seen_locators.add(locator)
+        _persist(observed, root, report, dry_run)
+
+    _account_for_absences(path, seen_locators, root, report, dry_run)
+    progress.finish()
+    return report
+
+
+def _account_for_absences(
+    scanned: Path,
+    seen_locators: set[str],
+    root: Path | str,
+    report: RunReport,
+    dry_run: bool,
+) -> None:
+    """Mark every local source under `scanned` that this run did not find.
+
+    Only sources under the folder that was actually scanned: a run over
+    `~/projects` says nothing about whether the external drive still exists,
+    and claiming otherwise would report a healthy archive as half missing.
+    """
+    prefix = str(scanned.resolve()) if scanned.exists() else str(scanned)
+    for artifact in store.load_all(root):
+        for source in artifact.sources:
+            if source.kind != KIND_LOCAL or source.locator in seen_locators:
+                continue
+            if not _within(source.locator, prefix):
+                continue
+            if not source.reachable:
+                report.unreachable.append(f"{source.locator} (still missing)")
+                continue
+            report.unreachable.append(f"{source.locator} (was here before, not now)")
+            if not dry_run:
+                store.write(artifact.mark_unreachable(source.kind, source.locator), root)
+
+
+def _within(locator: str, prefix: str) -> bool:
+    return locator == prefix or locator.startswith(prefix.rstrip("/") + "/")

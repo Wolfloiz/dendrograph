@@ -43,7 +43,8 @@ Target: ~500 Artifacts → ~3,000 nodes → under 1 MB, first render under 2 sec
     "private_withheld": { "count": 4, "tools": ["Rust"], "first": "2019", "last": "2021" }
   },
   "unreachable_sources": [
-    { "kind": "local", "locator": "/media/backup", "last_seen": "2025-11-02" }
+    { "kind": "local", "last_seen": "2025-11-02" },
+    { "kind": "github", "locator": "https://github.com/author/thing", "last_seen": "2026-02-14" }
   ]
 }
 ```
@@ -59,7 +60,7 @@ Target: ~500 Artifacts → ~3,000 nodes → under 1 MB, first render under 2 sec
 | `Artifact.aliased` | Present and `true` when the node is a private Artifact published under an alias. `label` is the Author's chosen or generated label, never the real name (FR-028, ADR-0011). |
 | `indexes.tool_to_artifacts` | Reverse index. **Present in v0.1, unrendered** — v0.2 needs it and adding it later means rebuilding every published archive. |
 | `aggregates.private_withheld` | Only in `redacted` mode; absent otherwise. Counts, Tools and a date range, never names (FR-013, ADR-0005). |
-| `unreachable_sources` | Sources this run could not reach, reported rather than omitted (FR-019). |
+| `unreachable_sources` | Sources the archive knows it cannot reach, reported rather than omitted (FR-019). Derived from the store, not from the run: a rebuild has not scanned anything, and "could not reach it" is a state the store carries between runs. Only sources of Artifacts present in this build appear — a source with no visible Artifact behind it would tell a visitor that private work exists. A `local` locator is withheld from a published build (`kind` and `last_seen` still appear); a `github` locator is already public and already in the graph, so it stays. |
 
 ### Whose dates a span reports
 

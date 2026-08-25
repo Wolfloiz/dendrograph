@@ -120,12 +120,12 @@ credentials configured, and confirm a browsable timeline and graph are produced.
 **Independent Test**: Scan a local folder, confirm its Artifacts are stored, then rename
 or remove the folder and re-run. The Artifacts must still be present in the graph.
 
-- [ ] T045 [P] [US2] Implement local discovery in `collectors/git/local.py` — walk a folder for git repositories, with the same fidelity as the GitHub path (FR-001)
-- [ ] T046 [US2] Implement multi-source merging in `core/store.py` — one Artifact carries every source it was seen in; neither overwrites the other (US2 AS3)
-- [ ] T047 [US2] Implement `last_seen` and `reachable` semantics in `core/store.py` — a source unreachable this run updates only its `reachable` flag and is never treated as deletion (FR-007, US2 AS2)
-- [ ] T048 [US2] Implement divergent-clone merging in `core/store.py` — same root commit, different later commits: observations merge rather than one silently overwriting the other
-- [ ] T049 [P] [US2] Integration test in `tests/test_accumulation.py` — scan a folder, remove it, rebuild; every previously seen Artifact remains, with when it was last seen (SC-003)
-- [ ] T050 [P] [US2] Integration test in `tests/test_sources.py` — a project present locally and on GitHub resolves to one Artifact carrying two sources (US2 AS3)
+- [X] T045 [P] [US2] Implement local discovery in `collectors/git/local.py` — walk a folder for git repositories, with the same fidelity as the GitHub path (FR-001)
+- [X] T046 [US2] Implement multi-source merging in `core/store.py` — one Artifact carries every source it was seen in; neither overwrites the other (US2 AS3)
+- [X] T047 [US2] Implement `last_seen` and `reachable` semantics in `core/store.py` — a source unreachable this run updates only its `reachable` flag and is never treated as deletion (FR-007, US2 AS2)
+- [X] T048 [US2] Implement divergent-clone merging in `core/store.py` — same root commit, different later commits: observations merge rather than one silently overwriting the other
+- [X] T049 [P] [US2] Integration test in `tests/test_accumulation.py` — scan a folder, remove it, rebuild; every previously seen Artifact remains, with when it was last seen (SC-003)
+- [X] T050 [P] [US2] Integration test in `tests/test_sources.py` — a project present locally and on GitHub resolves to one Artifact carrying two sources (US2 AS3)
 
 **Checkpoint**: The archive now outlives its sources. US1 and US2 both work.
 

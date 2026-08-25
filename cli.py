@@ -106,8 +106,12 @@ def cmd_scan(args, config) -> RunReport:
                 report=report,
             )
         else:
-            raise CommandError(
-                "local scanning is not wired yet — see task T045 (US2)"
+            scan_module.scan_local(
+                locator,
+                args.root,
+                emails=config.emails,
+                dry_run=args.dry_run,
+                report=report,
             )
 
     seen = {a.id for a in _stored_ids(args.root)}

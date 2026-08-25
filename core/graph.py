@@ -137,6 +137,36 @@ class GraphBuilder:
         return payload
 
 
+def unreachable_sources(artifacts, build_mode: str = "public") -> list[dict]:
+    """Sources the archive knows it cannot reach, reported rather than omitted.
+
+    Derived from the store, not from the run: a rebuild has not scanned
+    anything, and "we could not reach it" is a state the store carries between
+    runs (FR-007, FR-019).
+
+    Only sources of the Artifacts in *this* build appear. That matters once a
+    published build excludes private Artifacts: a source with no visible
+    Artifact behind it would tell a visitor that private work exists, which is
+    exactly what Principle IV forbids.
+
+    A `local` locator is a path on the Author's machine and is withheld from a
+    published build — the kind and the date say what happened without
+    publishing their directory layout. A `github` locator is already public and
+    already in the graph, so it stays.
+    """
+    published = build_mode != "full"
+    rows = []
+    for artifact in artifacts:
+        for source in artifact.sources:
+            if source.reachable:
+                continue
+            row = {"kind": source.kind, "last_seen": source.last_seen}
+            if not (published and source.kind == "local"):
+                row["locator"] = source.locator
+            rows.append(row)
+    return sorted(rows, key=lambda r: (r["kind"], r.get("locator") or "", r["last_seen"] or ""))
+
+
 def build(artifacts, *, config=None, build_mode: str = "public",
           spans=None, aggregates: dict | None = None,
           unreachable: list | None = None, generated_at: str | None = None) -> dict:
@@ -146,6 +176,8 @@ def build(artifacts, *, config=None, build_mode: str = "public",
     builder = GraphBuilder()
     emails = tuple(config.emails) if config else ()
     spans = spans if spans is not None else tool_spans.compute(artifacts, emails)
+    if unreachable is None:
+        unreachable = unreachable_sources(artifacts, build_mode)
 
     for artifact in artifacts:
         extra = {}
