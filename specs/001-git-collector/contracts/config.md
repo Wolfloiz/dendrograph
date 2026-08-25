@@ -28,6 +28,11 @@ mode = "public"                 # public | redacted
 opt_in = ["root-a1b2c3..."]     # private Artifacts published by name, one by one
 target_repository = "author/archive-site"   # optional: deploy the site to a second, public repo
 
+[[publish.alias]]
+id = "root-a1b2c3..."
+label = "Anonymous fintech project"   # omit for a stable generated "Private project N"
+reveal = ["period", "tools", "authorship"]   # empty by default: the node and its dates only
+
 [exclude]
 artifacts = ["root-d4e5f6..."]  # omitted from the graph; NOT deleted from the store
 
@@ -55,6 +60,7 @@ label = "AI assistants arrive"
 | `[publish].mode` | `public` (default) or `redacted` | FR-013 |
 | `[publish].opt_in` | Private Artifacts published by name, one at a time | FR-013 |
 | `[publish].target_repository` | Optional. Deploys the built site to a second, public repository holding no store — the free-plan path, since Pages from a private repository requires a paid plan | ADR-0010 |
+| `[[publish.alias]]` | Publishes one private Artifact under a label, revealing only the fields named in `reveal` | FR-028, ADR-0011 |
 | `[exclude].artifacts` | Omitted from the graph, retained in the store, reversible | FR-008 |
 | `[[identity.merge]]` | Declares two ids to be one Artifact. Overrides always win | FR-005 |
 | `[[identity.separate]]` | Declares one id to be two Artifacts — the escape hatch for a fork the Author wants counted separately | FR-005 |
@@ -68,7 +74,12 @@ label = "AI assistants arrive"
 - **No tokens.** Credentials come from the environment only, never from this file
   (Principle IV).
 - **An unknown key is an error, not a warning.** A typo in `opt_in` that silently does
-  nothing is a privacy failure, and this file is where privacy is decided.
+  nothing is a privacy failure, and this file is where privacy is decided. The same applies
+  to an unknown value in `reveal`: it is rejected, never ignored.
+- **`reveal` is a disclosure list, not a redaction list.** It names what may be published.
+  Absent or empty, an alias publishes the node and its dates and nothing else. There is no
+  way to express "publish everything except X", because a control shaped that way makes
+  forgetting the failure mode (ADR-0011).
 - **Declarations may name Artifacts that do not exist yet.** An id in `exclude` or
   `opt_in` with no matching store file is reported in the run report and is not an error
   — the Artifact may be on a drive that is currently unplugged.

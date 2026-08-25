@@ -64,7 +64,9 @@ be unreachable, and is checked anyway because the cost of being wrong here is an
 breach.
 
 Re-evaluates every Artifact's visibility from the most recent observation and names each
-Artifact that a visibility change removed from the output (FR-026).
+Artifact that a visibility change removed from the output (FR-026). Private Artifacts the
+Author has aliased are published under their labels, revealing only what `reveal` names
+(FR-028, ADR-0011).
 
 When `[publish].target_repository` is set, the built site is deployed to that second,
 public repository, which holds no store. This is the path for an Author whose archive

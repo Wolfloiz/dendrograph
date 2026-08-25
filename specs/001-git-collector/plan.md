@@ -46,7 +46,7 @@ the force simulation is roughly 90 lines against a 2D canvas. Fully offline-capa
 | I. Machine proposes, Author disposes | `SUCCEEDS` only via `dendro suggest` + confirmation; `dendro prune` prints config lines and never deletes; identity overridable; Epoch Markers declared |
 | II. Store accumulates | Per-Artifact JSON is the source of truth; scans append; `last_seen` recorded; all other outputs derived |
 | III. No server / no graph DB / no page deps | Device flow needs only a public `client_id`; SQLite is a derived file, not a graph engine; canvas rendering with zero page dependencies |
-| IV. Privacy by default | Visibility stored per Artifact; publish step filters private by default; redacted mode aggregates; tokens from env only, read-only scope |
+| IV. Privacy by default | Visibility stored per Artifact; publish step filters private by default; aliases and redacted mode are per-Artifact and per-mode opt-ins that reveal nothing until asked (ADR-0011); tokens from env only, read-only scope |
 | V. Honest inference or none | Techniques limited to manifest/convention markers with confidence + evidence; `DERIVES_FROM` thresholded; no quality, complexity or AI-authorship claims |
 | IV. Privacy by default (repo topology) | Tool repo holds no Author data; store lives in the Author's own archive repo, which may be private (ADR-0010) |
 | Constraints | Python 3.11+ stdlib only; `unittest`; English public surface, Portuguese comments; MIT |
@@ -123,8 +123,16 @@ explicitly enabled in its settings. Confirm against current GitHub documentation
 ### Publishing and privacy (ADR-0005)
 
 The publish step filters the store: private Artifacts excluded unless opted in per
-Artifact, or aggregated under redacted mode ("4 private repositories, Rust, 2019–2021").
-README wording must state exactly what the published site contains.
+Artifact, aliased per Artifact, or aggregated under redacted mode ("4 private repositories,
+Rust, 2019–2021"). README wording must state exactly what the published site contains.
+
+**Aliases (ADR-0011)** are the third treatment and the one that serves the job-search case:
+the Artifact is published as a node under a label the Author chose, revealing nothing beyond
+its dates until the Author names each further field. Real name, description, URL, source
+locators, Technique evidence paths, content hashes and lineage edges never cross, at any
+setting — an evidence path such as `clientname/api/deploy.yml` would undo the anonymity
+without anyone having looked. Re-identification from dates and Tools alone remains possible;
+the README must say so rather than promise anonymity.
 
 ### Constraints v0.2 imposes on v0.1
 
@@ -173,8 +181,10 @@ dendrograph/
 ```
 <author>-archive/
 ├─ .github/workflows/update.yml   pins a tool tag; refreshes and auto-commits the store
+├─ .gitignore                     ignores .dendro-local/
 ├─ dendrograph.toml               config
 ├─ store/artifacts/               source of truth, committed
+├─ .dendro-local/                 full builds; never committed, never deployed
 └─ site/                          build output, deployed to Pages
 ```
 

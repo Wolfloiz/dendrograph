@@ -7,7 +7,7 @@
 **Status**: Draft
 
 **Input**: Derived from `initial-ideia-project.md` and four rounds of design grilling.
-Decisions are recorded in `docs/adr/0001`–`0009`; vocabulary in `CONTEXT.md`;
+Decisions are recorded in `docs/adr/0001`–`0011`; vocabulary in `CONTEXT.md`;
 principles in `.specify/memory/constitution.md`. Technical choices live in `plan.md`.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -81,9 +81,10 @@ given Tool are visible and traceable to specific Artifacts.
 
 1. **Given** a built archive, **When** the Author looks at a Tool, **Then** they can see
    when they first and last used it and which Artifacts it appears in.
-2. **Given** private Artifacts contribute to a Tool's history, **When** the site is
-   published publicly, **Then** the Tool's span is still expressible without revealing
-   private Artifact names.
+2. **Given** private Artifacts contribute to a Tool's history, **When** the Author
+   publishes them under aliases, **Then** the Tool's span is complete and no private
+   Artifact name appears. Without aliases the published span reflects public Artifacts
+   only, because privacy is the default and not a setting.
 
 ---
 
@@ -109,6 +110,9 @@ private name appears anywhere in the published output.
    with no identifying names.
 3. **Given** the Author opts a specific private Artifact in, **When** the site is
    published, **Then** only that Artifact appears.
+4. **Given** the Author gives a private Artifact an alias, **When** the site is published,
+   **Then** the Artifact appears under the chosen label with only the fields the Author
+   named, and its real name, description, URL and Technique evidence paths appear nowhere.
 
 ---
 
@@ -159,6 +163,9 @@ suggestion command and confirm no edge is created without confirmation.
   requires a paid plan, so the archive cannot be both private and directly published.
 - **A Collection suggestion the Author never answers.** Artifacts must remain usable and
   ungrouped rather than blocked awaiting confirmation.
+- **An aliased Artifact whose Technique evidence would name its owner.** The evidence
+  pointer is a file path, and a path can carry a client's name. Publishing the Technique
+  without its pointer is the only safe option, and costs the claim its verifiability.
 
 ## Clarifications
 
@@ -188,8 +195,10 @@ suggestion command and confirm no edge is created without confirmation.
   its source still exists, and MUST record when each was last seen.
 - **FR-008**: System MUST NOT delete stored Artifacts as part of any routine operation.
   Exclusion MUST be reversible and MUST NOT discard data.
-- **FR-009**: System MUST record for each Artifact: its Author, its Tools, its Period, its
-  Collection, and per-author contribution counts.
+- **FR-009**: System MUST record for each Artifact: its Author, its Tools, its Period and
+  per-author contribution counts, and MUST associate it with the Collections the Author has
+  confirmed. Collection membership is a declaration, not an observation, so it lives with
+  the Author's other declarations rather than in the observed record (FR-021).
 - **FR-010**: System MUST attach a confidence and a pointer to supporting evidence to every
   inferred Technique.
 - **FR-011**: System MUST NOT create a `SUCCEEDS` edge without explicit Author confirmation.
@@ -219,22 +228,24 @@ suggestion command and confirm no edge is created without confirmation.
   and MUST NOT place private Artifact data in any repository the Author has not designated
   as private — including in version history. The tool repository's `examples/` demo archive
   contains public Artifacts only, which is what the privacy default produces (ADR-0010).
-
 - **FR-024**: System MUST clone remote Artifacts with their complete commit history — root
   commit and per-author counts depend on it — into a temporary working directory that is
   discarded at the end of the run. No cloned source is retained between runs; only the
   store persists.
-
 - **FR-025**: Every stored Artifact and every derived output MUST declare the schema
   version it was written against, and the System MUST refuse to read a version it does not
   recognise rather than interpret it by guesswork.
-
 - **FR-026**: System MUST re-evaluate every Artifact's visibility at each publish, from the
   most recently observed value, and MUST report each Artifact whose change in visibility
   removed it from the published output.
-- **FR-027**: System MUST compute Tool spans across every Artifact regardless of
-  visibility, and MUST express a span supported by private Artifacts without naming them —
-  the span's dates and counts are published; the Artifacts behind it are not.
+- **FR-027**: System MUST compute Tool spans over the Artifacts present in the output it
+  is building. Under the default, that is public Artifacts and any the Author has aliased or
+  opted in; the Author's own unfiltered view always shows the true span.
+- **FR-028**: System MUST let the Author publish a private Artifact under an alias — a label
+  they chose, or a stable generated one — revealing nothing beyond the node and its dates
+  unless the Author names each further field. The Artifact's real name, description, URL,
+  source locators, Technique evidence pointers, content hashes and lineage edges MUST NOT
+  appear in published output at any setting (ADR-0011).
 
 ### Key Entities
 
@@ -264,15 +275,17 @@ suggestion command and confirm no edge is created without confirmation.
 - **SC-003**: After a source is removed and the archive rebuilt, 100% of previously seen
   Artifacts remain present.
 - **SC-004**: Zero private Artifact names appear in published output under default
-  settings, and zero appear in any public repository or its version history.
+  settings, and zero appear in any public repository or its version history. For an aliased
+  Artifact this holds at every setting, and extends to its description, URL and Technique
+  evidence paths.
 - **SC-005**: An archive of roughly 500 Artifacts (~3,000 nodes) reaches first render in
   under 2 seconds and sustains at least 30fps while panning, from a file opened with no
   network access.
 - **SC-006**: Every Technique claim in the output can be traced to the specific evidence it
   was derived from.
 - **SC-007**: The Author can state years of experience with a given Tool from the output,
-  with no estimation from memory, and the figure is correct even when private Artifacts
-  contribute to it.
+  with no estimation from memory. Read from their own archive the figure is always correct;
+  published, it is correct once the private Artifacts behind it are aliased or opted in.
 - **SC-008**: No edge in the graph asserts a relationship the Author did not either observe
   or confirm.
 

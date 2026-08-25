@@ -25,8 +25,11 @@ Target: ~500 Artifacts → ~3,000 nodes → under 1 MB, first render under 2 sec
   "nodes": [
     { "id": "root-3f7a1c9e...", "type": "Artifact", "label": "dendrograph",
       "first": "2019-03-11", "last": "2026-08-20", "authorship": { "share": 0.87 } },
-    { "id": "tool:python", "type": "Tool", "label": "Python" },
-    { "id": "period:2019", "type": "Period", "label": "2019" }
+    { "id": "tool:python", "type": "Tool", "label": "Python",
+      "first": "2019-03-11", "last": "2026-08-20", "artifact_count": 12 },
+    { "id": "period:2019", "type": "Period", "label": "2019" },
+    { "id": "root-8c2d5a1f...", "type": "Artifact", "label": "Anonymous fintech project",
+      "aliased": true, "first": "2019-06-02", "last": "2021-11-30" }
   ],
   "edges": [
     { "from": "root-3f7a1c9e...", "to": "tool:python", "type": "USES" },
@@ -49,6 +52,8 @@ Target: ~500 Artifacts → ~3,000 nodes → under 1 MB, first render under 2 sec
 | `schema` | Self-describing, so a consumer needs no companion docs (FR-017). |
 | `build_mode` | `public` \| `redacted` \| `full`. See *Build modes*. |
 | `nodes` / `edges` | Node ids: Artifacts use their store id; every other type uses `<lowercase type>:<slug>`. |
+| `Tool.first` / `.last` / `.artifact_count` | The Tool's span, computed over **the Artifacts present in this build**. Under `public` that is public, aliased and opted-in Artifacts; a span there is deliberately narrower than the Author's own, because a visitor must not learn that private work existed in an interval (FR-027). |
+| `Artifact.aliased` | Present and `true` when the node is a private Artifact published under an alias. `label` is the Author's chosen or generated label, never the real name (FR-028, ADR-0011). |
 | `indexes.tool_to_artifacts` | Reverse index. **Present in v0.1, unrendered** — v0.2 needs it and adding it later means rebuilding every published archive. |
 | `aggregates.private_withheld` | Only in `redacted` mode; absent otherwise. Counts, Tools and a date range, never names (FR-013, ADR-0005). |
 | `unreachable_sources` | Sources this run could not reach, reported rather than omitted (FR-019). |
@@ -117,12 +122,37 @@ generated from the same object in the same run and can never disagree.
 This is why the views stream must go through one shared data-loading layer rather than
 two standalone pages — the layer is what hides this from the timeline and the graph view.
 
+## Aliased Artifacts
+
+A private Artifact the Author has aliased is published as a node under a chosen or generated
+label. What it carries beyond the node and its dates is exactly what `[[publish.alias]].reveal`
+names — `period`, `tools`, `authorship` — and nothing else.
+
+**These never appear in published output for an aliased Artifact, at any setting:**
+
+| Withheld | Why |
+|---|---|
+| Real name, description, URL | The point of the alias |
+| `sources[].locator` | A path or URL names the owner |
+| Technique evidence pointers | Evidence is a file path, and `clientname/api/deploy.yml` undoes the anonymity without anyone having looked. A Technique published under an alias ships **without** its pointer, and is therefore not verifiable — say so, do not imply otherwise |
+| `content_hashes` | Feeds lineage, and lineage identifies |
+| `DERIVES_FROM` / `SUCCEEDS` edges | An edge from an anonymous node to a known public Artifact identifies the anonymous one |
+
+Generated labels are `Private project N`, numbered from the **sorted Artifact id** rather
+than from discovery order, so a newly scanned private Artifact never renumbers the others and
+the published site's diff stays readable.
+
+Re-identification is narrowed, not solved: exact dates plus a Tool set plus an authorship
+share can be enough for a reader who was there. User-facing text must say that rather than
+promise anonymity.
+
 ## Build modes
 
 | Mode | Private Artifacts | Where |
 |---|---|---|
 | `public` | Excluded entirely. **Default** (FR-013). | Published site |
 | `redacted` | Aggregate shape only — counts, Tools, date ranges, no names | Published site, opt-in |
+| any mode | An **aliased** private Artifact appears as a node under its label, per *Aliased Artifacts* above | Published site, per-Artifact opt-in |
 | `full` | Included | `.dendro-local/` only — gitignored by the archive template, never read by `publish` |
 
 `full` is a local-inspection mode, and the guard is the **output directory**, not a check

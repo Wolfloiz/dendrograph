@@ -54,12 +54,12 @@ serial neck of the project — see [three-agent assignment](#three-agent-assignm
 - [ ] T010 Implement append-merge semantics in `core/store.py` — a field the run could not observe is left as it was, never overwritten with null (FR-007, ADR-0002)
 - [ ] T011 [P] Unit tests for the store in `tests/test_store.py` — a run observing nothing produces a byte-identical file, an unknown `schema_version` is refused, a merge preserves prior observations
 - [ ] T012 [P] Implement `collectors/git/plumbing.py` — `subprocess` wrappers for root-commit enumeration, log, `ls-files`, and clone with full history and `--no-checkout`
-- [ ] T013 Implement root-commit identity in `core/identity.py` — id `root-<sha>`; on multiple root commits pick the earliest committer date, breaking ties on the smallest SHA (contracts/store-artifact.md)
+- [ ] T013 Implement root-commit identity in `core/identity.py` — id `root-<sha>`; on multiple root commits pick the earliest committer date, breaking ties on the smallest SHA (FR-004, contracts/store-artifact.md)
 - [ ] T014 Implement the authored-files set in `core/identity.py` — exclusions per contracts/store-artifact.md, sorted POSIX paths, each contributing `path\0size\0sha256(content)`
 - [ ] T015 Implement the content hash in `core/identity.py` — computed for **every** Artifact from the authored-files set, used as the id (`content-<sha>`) when there is no root commit and recorded as `identity.fallback_content_hash` otherwise, so a rewritten history can later be recognised as an existing Artifact; a repository with no commits and no tracked files is reported as unidentifiable and is **not** stored
 - [ ] T016 Implement identity overrides in `core/identity.py` — `[[identity.merge]]` and `[[identity.separate]]` from config always win (FR-005)
 - [ ] T017 [P] Unit tests for identity in `tests/test_identity.py` — two clones collapse to one Artifact, multi-root selection is deterministic, no-commits falls back, no-commits-no-files is unidentifiable, both override directions work
-- [ ] T018 Implement command dispatch in `cli.py` for the six commands in contracts/cli.md — `scan`, `login`, `build`, `publish`, `suggest`, `prune`
+- [ ] T018 Implement command dispatch in `cli.py` for the six commands in contracts/cli.md — `scan`, `login`, `build`, `publish`, `suggest`, `prune` (FR-020)
 - [ ] T019 Implement `--dry-run` and exit codes in `cli.py` — `0` success, `1` failure, `2` usage error, `3` partial success (a source was unreachable)
 - [ ] T020 Implement the run report in `core/report.py` — Artifacts added, Artifacts changed, sources unreachable, Artifacts withheld from output (FR-018, FR-019)
 - [ ] T021 [P] Unit tests for the CLI in `tests/test_cli.py` — exit code `3` on an unreachable source, `--dry-run` writes nothing
@@ -129,12 +129,12 @@ or remove the folder and re-run. The Artifacts must still be present in the grap
 **Independent Test**: With an archive built, confirm the earliest and latest use of a
 given Tool are visible and traceable to specific Artifacts.
 
-- [ ] T051 [P] [US3] Implement Tool span computation in `core/analysis/tool_spans.py` — first use, last use, and the Artifacts each Tool appears in, computed across every Artifact **before** visibility filtering so a span is never understated (FR-027, SC-007)
+- [ ] T051 [P] [US3] Implement Tool span computation in `core/analysis/tool_spans.py` — first use, last use, and the Artifacts each Tool appears in, computed over **the Artifacts present in the build being produced**: public, aliased and opted-in ones under the default; every Artifact in the Author's own `full` build (FR-027, SC-007)
 - [ ] T052 [US3] Render Tool spans in `views/timeline.html` — first and last use, with every contributing Artifact traceable
 - [ ] T053 [P] [US3] Implement `graph.sqlite` emission in `core/sqlite.py` — one table per node type plus one `edges` table, mirroring `graph.json` exactly; a derived query surface, never a graph database (Principle III)
 - [ ] T054 [US3] Add the FTS5 virtual table over Artifact names and descriptions in `core/sqlite.py` — populated in v0.1 and never queried by it, because v0.2's search needs it and adding it later means every Author rebuilds
 - [ ] T055 [P] [US3] Implement `llms.txt` emission in `core/llms.py` — the schema in prose, the archive's shape, and how to read `graph.json` (FR-017)
-- [ ] T056 [P] [US3] Unit test in `tests/test_tool_spans.py` — a Tool's first and last use trace to specific Artifacts, and a span supported only by private Artifacts publishes correct dates while naming none of them (FR-027, US3 AS2)
+- [ ] T056 [P] [US3] Unit test in `tests/test_tool_spans.py` — a Tool's first and last use trace to specific Artifacts; a span supported only by private Artifacts is **absent from a `public` build**, complete once those Artifacts are aliased, and complete in the Author's own `full` build (FR-027, US3 AS2, Principle IV)
 
 **Checkpoint**: The résumé question is answerable from output, not memory.
 
@@ -152,14 +152,19 @@ name appears anywhere in the published output.
 - [ ] T059 [US4] Implement redacted aggregates in `core/build.py` — counts, Tools and a date range under `aggregates.private_withheld`, never a name (ADR-0005)
 - [ ] T060 [US4] Implement per-Artifact opt-in from `[publish].opt_in` in `core/build.py` — only the named Artifact appears (US4 AS3)
 - [ ] T061 [US4] Implement `[exclude].artifacts` in `core/build.py` — omitted from the graph, retained in the store, restored intact by deleting the line (FR-008)
-- [ ] T062 [US4] Implement `dendro publish` in `cli.py` — publishes from `site/` and never reads `.dendro-local/`; refuses as a second line of defence when `site/graph.json` declares `build_mode: full`; names every Artifact a visibility change removed from the output (FR-026)
-- [ ] T063 [P] [US4] Create the archive repository template in `templates/archive/` — `dendrograph.toml`, `store/artifacts/`, `site/`, a `.gitignore` covering `.dendro-local/`, and a README stating exactly what the published site does and does not contain (ADR-0010)
-- [ ] T064 [P] [US4] Create `templates/archive/.github/workflows/update.yml` — pins a tool tag, refreshes GitHub-sourced Artifacts and auto-commits the store (ADR-0007)
-- [ ] T065 [P] [US4] Support the free-plan split in `templates/archive/.github/workflows/update.yml` and `core/build.py` — when `[publish].target_repository` is set the built site deploys to a second, public repository holding no store, which is how an Author on a free plan keeps a private archive and a public site (ADR-0010)
-- [ ] T066 [P] [US4] Privacy test in `tests/test_privacy.py` — zero private Artifact names, descriptions or URLs in any published file under default settings (SC-004)
-- [ ] T067 [P] [US4] Test in `tests/test_publish_modes.py` — redacted mode publishes shape without names; `build --mode full` writes nothing into `site/`; `publish` refuses a `full` build
-- [ ] T068 [P] [US4] Test in `tests/test_visibility.py` — an Artifact that turns private drops out of the next publish and is named in the run report (FR-026)
-- [ ] T069 [P] [US4] Test in `tests/test_repo_topology.py` — no command writes **private** Author data into the tool repository, including into its version history; `examples/` holds public Artifacts only (FR-023, ADR-0010)
+- [ ] T062 [US4] Implement alias projection in `core/build.py` — from `[[publish.alias]]`, publish the Artifact as a node under its label carrying only the fields named in `reveal`; absent or empty `reveal` publishes the node and its dates and nothing else (FR-028, ADR-0011)
+- [ ] T063 [US4] Implement the never-crosses filter in `core/build.py` — for an aliased Artifact strip real name, description, URL, source locators, Technique evidence pointers, content hashes and `DERIVES_FROM`/`SUCCEEDS` edges at **every** setting; a Technique published under an alias ships without its pointer and is no longer verifiable (FR-028, contracts/graph.md)
+- [ ] T064 [US4] Implement stable generated labels in `core/build.py` — `Private project N` numbered from the sorted Artifact id and never from discovery order, so a newly scanned private Artifact does not renumber the others (ADR-0011)
+- [ ] T065 [US4] Implement `dendro publish` in `cli.py` — publishes from `site/` and never reads `.dendro-local/`; refuses as a second line of defence when `site/graph.json` declares `build_mode: full`; names every Artifact a visibility change removed from the output (FR-026)
+- [ ] T066 [P] [US4] Create the archive repository template in `templates/archive/` — `dendrograph.toml`, `store/artifacts/`, `site/`, a `.gitignore` covering `.dendro-local/`, and a README stating exactly what the published site does and does not contain (ADR-0010)
+- [ ] T067 [P] [US4] Create `templates/archive/.github/workflows/update.yml` — pins a tool tag, refreshes GitHub-sourced Artifacts and auto-commits the store (ADR-0007)
+- [ ] T068 [P] [US4] Support the free-plan split in `templates/archive/.github/workflows/update.yml` and `core/build.py` — when `[publish].target_repository` is set the built site deploys to a second, public repository holding no store, which is how an Author on a free plan keeps a private archive and a public site (ADR-0010)
+- [ ] T069 [P] [US4] Privacy test in `tests/test_privacy.py` — zero private Artifact names, descriptions or URLs in any published file under default settings (SC-004)
+- [ ] T070 [P] [US4] Test in `tests/test_publish_modes.py` — redacted mode publishes shape without names; `build --mode full` writes nothing into `site/`; `publish` refuses a `full` build
+- [ ] T071 [P] [US4] Test in `tests/test_visibility.py` — an Artifact that turns private drops out of the next publish and is named in the run report (FR-026)
+- [ ] T072 [P] [US4] Test in `tests/test_repo_topology.py` — no command writes **private** Author data into the tool repository, including into its version history; `examples/` holds public Artifacts only (FR-023, ADR-0010)
+- [ ] T073 [P] [US4] Privacy test in `tests/test_alias.py` — an aliased Artifact publishes no real name, description, URL, source locator or Technique evidence path, in any build mode (SC-004, FR-028)
+- [ ] T074 [P] [US4] Test in `tests/test_alias_labels.py` — generated labels are unchanged when a new private Artifact is scanned, and an unknown field name in `reveal` is rejected rather than ignored (ADR-0011)
 
 **Checkpoint**: The archive is publishable without an NDA breach.
 
@@ -173,15 +178,15 @@ relationships the Author confirms.
 **Independent Test**: Declare a marker and confirm it appears on the timeline; run the
 suggestion command and confirm no edge is created without confirmation.
 
-- [ ] T070 [US5] Implement Epoch Marker nodes in `core/graph.py` — dated and labelled, read from `[[epoch_markers]]`, declared and never inferred (FR-014)
-- [ ] T071 [US5] Render Epoch Markers in `views/timeline.html` — drawn across the axis, with Artifacts reading as before or after each one
-- [ ] T072 [P] [US5] Implement content-hash lineage in `core/analysis/lineage.py` — authored files only, excluding dependencies, lockfiles, generated output and files under 512 bytes; several identical non-trivial files required (FR-012)
-- [ ] T073 [US5] Emit `DERIVES_FROM` edges in `core/graph.py` — oriented older → newer, each carrying confidence and evidence
-- [ ] T074 [P] [US5] Implement `dendro suggest` in `core/suggest.py` — proposes `SUCCEEDS` pairs, candidate Collections, and identity merges where a rewritten history matches an existing Artifact; prints config lines and creates nothing (FR-011, FR-021, Principle I)
-- [ ] T075 [US5] Implement confirmed Collection membership in `core/graph.py` — `IN_COLLECTION` edges come only from `[[collections]]`, and an Artifact with an unanswered suggestion stays usable and ungrouped (FR-021)
-- [ ] T076 [P] [US5] Implement `dendro prune` in `core/prune.py` — prints candidates and the config lines that would exclude them, and deletes nothing (FR-008, ADR-0002)
-- [ ] T077 [P] [US5] Test in `tests/test_suggest.py` — no `SUCCEEDS` edge exists in the graph without a config confirmation (FR-011, SC-008)
-- [ ] T078 [P] [US5] Test in `tests/test_lineage.py` — dependencies, lockfiles, generated output and trivial files produce no `DERIVES_FROM`
+- [ ] T075 [US5] Implement Epoch Marker nodes in `core/graph.py` — dated and labelled, read from `[[epoch_markers]]`, declared and never inferred (FR-014)
+- [ ] T076 [US5] Render Epoch Markers in `views/timeline.html` — drawn across the axis, with Artifacts reading as before or after each one
+- [ ] T077 [P] [US5] Implement content-hash lineage in `core/analysis/lineage.py` — authored files only, excluding dependencies, lockfiles, generated output and files under 512 bytes; several identical non-trivial files required (FR-012)
+- [ ] T078 [US5] Emit `DERIVES_FROM` edges in `core/graph.py` — oriented older → newer, each carrying confidence and evidence
+- [ ] T079 [P] [US5] Implement `dendro suggest` in `core/suggest.py` — proposes `SUCCEEDS` pairs, candidate Collections, and identity merges where a rewritten history matches an existing Artifact; prints config lines and creates nothing (FR-011, FR-021, Principle I)
+- [ ] T080 [US5] Implement confirmed Collection membership in `core/graph.py` — `IN_COLLECTION` edges come only from `[[collections]]`, and an Artifact with an unanswered suggestion stays usable and ungrouped (FR-021)
+- [ ] T081 [P] [US5] Implement `dendro prune` in `core/prune.py` — prints candidates and the config lines that would exclude them, and deletes nothing (FR-008, ADR-0002)
+- [ ] T082 [P] [US5] Test in `tests/test_suggest.py` — no `SUCCEEDS` edge exists in the graph without a config confirmation (FR-011, SC-008)
+- [ ] T083 [P] [US5] Test in `tests/test_lineage.py` — dependencies, lockfiles, generated output and trivial files produce no `DERIVES_FROM`
 
 **Checkpoint**: All five stories are independently functional.
 
@@ -189,15 +194,15 @@ suggestion command and confirm no edge is created without confirmation.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T079 [P] Write `README.md` — Principle I stated explicitly, exactly what the published site does and does not contain, and the create-your-archive-from-template steps (ADR-0010)
-- [ ] T080 [P] Build the demo archive in `examples/` from the Author's public repositories only — real data, and automatically safe because it is what the privacy default produces
-- [ ] T081 Place a visualization above the fold in `README.md` — nobody stars a visualization tool without seeing it
-- [ ] T082 [P] Add `LICENSE` (MIT) and `CONTRIBUTING.md` (ADR-0006)
-- [ ] T083 Validate SC-001b — a ~500-repository account completes a first full scan unattended within 30 minutes, with progress reported throughout
-- [ ] T084 [P] Validate SC-001 — a stranger opens the demo archive and sees a rendered graph in under five minutes without creating any credential
-- [ ] T085 [P] Record any vocabulary resolved during implementation in `CONTEXT.md`, not in a backlog
-- [ ] T086 [P] Confirm the public surface is English — node and edge identifiers, CLI, file and directory names, docs — and that code comments are Portuguese (ADR-0001)
-- [ ] T087 Review the Constitution Check table in `plan.md` against the built system, and record any deviation as a new ADR rather than silently accepting it
+- [ ] T084 [P] Write `README.md` — Principle I stated explicitly, exactly what the published site does and does not contain, and the create-your-archive-from-template steps (ADR-0010)
+- [ ] T085 [P] Build the demo archive in `examples/` from the Author's public repositories only — real data, and automatically safe because it is what the privacy default produces
+- [ ] T086 Place a visualization above the fold in `README.md` — nobody stars a visualization tool without seeing it
+- [ ] T087 [P] Add `LICENSE` (MIT) and `CONTRIBUTING.md` (ADR-0006)
+- [ ] T088 Validate SC-001b — a ~500-repository account completes a first full scan unattended within 30 minutes, with progress reported throughout
+- [ ] T089 [P] Validate SC-001 — a stranger opens the demo archive and sees a rendered graph in under five minutes without creating any credential
+- [ ] T090 [P] Record any vocabulary resolved during implementation in `CONTEXT.md`, not in a backlog
+- [ ] T091 [P] Confirm the public surface is English — node and edge identifiers, CLI, file and directory names, docs — and that code comments are Portuguese (ADR-0001)
+- [ ] T092 Review the Constitution Check table in `plan.md` against the built system, and record any deviation as a new ADR rather than silently accepting it
 
 ---
 
@@ -212,12 +217,12 @@ them three ways would mean three agents negotiating the store format while writi
 
 | Agent | Territory | Tasks |
 |---|---|---|
-| **A — collector** | `collectors/git/`, `core/analysis/` | T012, T022–T033, T045, T072, T078 |
-| **B — core** | `core/` (identity, store, graph, derived outputs), `cli.py` | T006–T011, T013–T021, T034–T037, T043–T044, T046–T051, T053–T056, T070, T073–T077 |
-| **C — views & publish** | `views/`, `templates/archive/`, publish and privacy | T038–T042, T052, T057–T069, T071 |
+| **A — collector** | `collectors/git/`, `core/analysis/` | T012, T022–T033, T045, T077, T083 |
+| **B — core** | `core/` (identity, store, graph, derived outputs), `cli.py` | T006–T011, T013–T021, T034–T037, T043–T044, T046–T051, T053–T056, T075, T078–T082 |
+| **C — views & publish** | `views/`, `templates/archive/`, publish, privacy and aliases | T038–T042, T052, T057–T074, T076 |
 
 Phases 1 and 8 are shared: whoever is free takes them. Every task from T006 to
-T078 is assigned to exactly one agent, with no overlap.
+T083 is assigned to exactly one agent, with no overlap.
 
 **This split is not even, and pretending otherwise would mislead.** Agent B owns most of
 Phase 2 alone, and A and C are largely idle until it lands. Two honest ways to handle it:
@@ -238,8 +243,8 @@ them without B's code existing.
 - `core/store.py` — B owns it (T008–T011), but T046–T048 (US2) and T057 (US4) extend it.
   **Sequence these; do not run them in parallel.** T057 is C's requirement but B's file:
   either B implements it on C's behalf, or C takes the file for that task.
-- `core/graph.py` — B owns it (T034–T036), extended by T070, T073, T075. Same rule.
-- `views/timeline.html` — C owns it across T039, T052 and T071, all sequential.
+- `core/graph.py` — B owns it (T034–T036), extended by T075, T078, T080. Same rule.
+- `views/timeline.html` — C owns it across T039, T052 and T076, all sequential.
 
 ---
 
@@ -269,7 +274,7 @@ them without B's code existing.
 - Phase 2: T007, T011, T012, T017, T021, T022 in parallel; T006/T008–T010, T013–T016 and
   T018–T020 are each same-file sequences
 - Phase 3: T023/T025 in parallel, T029–T031 in parallel, T034/T038/T039 in parallel
-- Phase 6: T063–T069 all in parallel
+- Phase 6: T066–T072 all in parallel
 - Once Phase 2 lands, US1/US2 (Agent A + B) and the view work (Agent C) proceed together
 
 ---
