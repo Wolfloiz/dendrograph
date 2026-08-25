@@ -48,6 +48,11 @@ locator = "https://github.com/author/fork-i-rewrote"
 name = "Client work"
 artifacts = ["root-a1b2c3..."]
 
+[[succession]]
+earlier = "root-a1b2c3..."
+later = "root-9f8e7d..."
+note = "the rewrite that replaced it"
+
 [[epoch_markers]]
 date = "2023-03-14"
 label = "AI assistants arrive"
@@ -65,6 +70,7 @@ label = "AI assistants arrive"
 | `[[identity.merge]]` | Declares two ids to be one Artifact. Overrides always win | FR-005 |
 | `[[identity.separate]]` | Declares one id to be two Artifacts — the escape hatch for a fork the Author wants counted separately | FR-005 |
 | `[[collections]]` | **Confirmed** Collection membership. `dendro suggest` proposes; only this file assigns | FR-021 |
+| `[[succession]]` | The only way a `SUCCEEDS` edge comes into being. `dendro suggest` proposes pairs; the edge exists because this line does, never because the tool found a resemblance. `note` is optional and travels onto the edge | FR-011 |
 | `[[epoch_markers]]` | Dated, labelled lines across the timeline. Declared, never inferred | FR-014 |
 
 ## Rules

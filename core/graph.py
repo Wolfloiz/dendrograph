@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+from dataclasses import replace
 from datetime import datetime, timezone
 
 SCHEMA_VERSION = 1
@@ -65,6 +66,9 @@ def node_id(node_type: str, label: str) -> str:
     return f"{node_type.lower()}:{slug(label)}"
 
 
+LINEAGE_EDGES = ("DERIVES_FROM", "SUCCEEDS")
+
+
 class CollidingLabels(Exception):
     """Two distinct labels resolved to one node id."""
 
@@ -74,6 +78,12 @@ class GraphBuilder:
         self._nodes: dict[str, dict] = {}
         self._edges: set[tuple[str, str, str]] = set()
         self._edge_payload: dict[tuple[str, str, str], dict] = {}
+        # Nós cujas arestas de linhagem nunca podem cruzar: uma aresta de um
+        # nó anônimo para um Artifact público identifica o anônimo.
+        self._shielded: set[str] = set()
+
+    def shield(self, node_id_: str) -> None:
+        self._shielded.add(node_id_)
 
     def node(self, node_id_: str, node_type: str, label: str, **extra) -> str:
         existing = self._nodes.get(node_id_, {})
@@ -91,6 +101,10 @@ class GraphBuilder:
         return node_id_
 
     def edge(self, source: str, target: str, edge_type: str, **extra) -> None:
+        if edge_type in LINEAGE_EDGES and (
+            source in self._shielded or target in self._shielded
+        ):
+            return
         key = (edge_type, source, target)
         self._edges.add(key)
         if extra:
@@ -137,6 +151,20 @@ class GraphBuilder:
         return payload
 
 
+def _detected_lineage(artifacts):
+    """Whatever the lineage detector found, or nothing if there is no detector.
+
+    An inferred relationship with no detector behind it would be a claim nobody
+    made, so the absence of the module means the absence of the edge — never a
+    guess made here instead (FR-012, SC-008).
+    """
+    try:
+        from core.analysis import lineage as lineage_module
+    except ImportError:
+        return []
+    return lineage_module.candidates(artifacts)
+
+
 def unreachable_sources(artifacts, build_mode: str = "public") -> list[dict]:
     """Sources the archive knows it cannot reach, reported rather than omitted.
 
@@ -157,6 +185,11 @@ def unreachable_sources(artifacts, build_mode: str = "public") -> list[dict]:
     published = build_mode != "full"
     rows = []
     for artifact in artifacts:
+        # Um locator de um Artifact sob alias é exatamente o que o alias
+        # existe para não publicar; nem o par kind/last_seen atravessa, porque
+        # "algo inacessível existiu aqui" já é informação sobre ele.
+        if getattr(artifact, "aliased", False):
+            continue
         for source in artifact.sources:
             if source.reachable:
                 continue
@@ -168,34 +201,59 @@ def unreachable_sources(artifacts, build_mode: str = "public") -> list[dict]:
 
 
 def build(artifacts, *, config=None, build_mode: str = "public",
-          spans=None, aggregates: dict | None = None,
+          spans=None, lineage=None, aggregates: dict | None = None,
           unreachable: list | None = None, generated_at: str | None = None) -> dict:
     """Turn a list of store Artifacts into the graph a consumer reads."""
     from core.analysis import tool_spans
 
     builder = GraphBuilder()
     emails = tuple(config.emails) if config else ()
-    spans = spans if spans is not None else tool_spans.compute(artifacts, emails)
+    stored = {a.id for a in artifacts}
+
+    # O span é computado sobre os Artifacts presentes NESTE build — e um
+    # Artifact sob alias só contribui para o span de uma Tool cuja aresta USES
+    # foi publicada; mover o span de uma Tool que o anônimo "não usa" revela
+    # que trabalho privado existiu num intervalo (FR-027).
+    span_view = []
+    for artifact in artifacts:
+        if getattr(artifact, "aliased", False) and not (
+            set(getattr(artifact, "reveal", ()) or ()) & {"tools"}
+        ):
+            span_view.append(replace(artifact, tools=[]))
+        else:
+            span_view.append(artifact)
+    spans = spans if spans is not None else tool_spans.compute(span_view, emails)
     if unreachable is None:
         unreachable = unreachable_sources(artifacts, build_mode)
 
     for artifact in artifacts:
+        aliased = getattr(artifact, "aliased", False)
+        reveal = set(getattr(artifact, "reveal", ()) or ())
         extra = {}
         if artifact.activity.get("first"):
             extra["first"] = artifact.activity["first"]
         if artifact.activity.get("last"):
             extra["last"] = artifact.activity["last"]
-        if getattr(artifact, "aliased", False):
+        if aliased:
             extra["aliased"] = True
-        share = _share(artifact, emails)
-        if share is not None:
-            extra["authorship"] = {"share": share}
+        elif artifact.description:
+            # Sob alias a descrição nunca cruza, em nenhum ajuste: ela nomeia o
+            # cliente com a mesma clareza que o nome real (ADR-0011).
+            extra["description"] = artifact.description
+        if not (aliased and "authorship" not in reveal):
+            share = _share(artifact, emails)
+            if share is not None:
+                extra["authorship"] = {"share": share}
 
         artifact_node = builder.node(
             artifact.id, "Artifact", artifact.name or artifact.id, **extra
         )
+        if aliased:
+            builder.shield(artifact_node)
 
         for tool in artifact.tools:
+            if aliased and "tools" not in reveal:
+                continue
             span = spans.get(tool["name"])
             attrs = {}
             if span:
@@ -219,12 +277,16 @@ def build(artifacts, *, config=None, build_mode: str = "public",
             technique_node = builder.node(
                 node_id("Technique", technique["name"]), "Technique", technique["name"]
             )
+            # A evidência é um caminho de arquivo, e `clientname/api/deploy.yml`
+            # desfaz o anonimato sem que ninguém tenha olhado. Sob alias a
+            # Technique viaja sem o ponteiro — e portanto sem verificação; o que
+            # ela perde é dito, não escondido (contracts/graph.md).
             builder.edge(
                 artifact_node,
                 technique_node,
                 "APPLIES",
                 confidence=technique.get("confidence"),
-                evidence=technique.get("evidence", []),
+                evidence=[] if aliased else technique.get("evidence", []),
             )
 
         for dependency in artifact.dependencies:
@@ -237,19 +299,38 @@ def build(artifacts, *, config=None, build_mode: str = "public",
             )
             builder.edge(artifact_node, dependency_node, "DEPENDS_ON")
 
-        for period in _periods(artifact):
+        for period in () if aliased and "period" not in reveal else _periods(artifact):
             period_node = builder.node(node_id("Period", period), "Period", period)
             builder.edge(artifact_node, period_node, "IN_PERIOD")
 
-        for entry in artifact.authorship:
+        for entry in (
+            ()
+            if aliased and "authorship" not in reveal
+            else artifact.authorship
+        ):
+            # O e-mail de um Author identifica tanto quanto o nome: sob alias,
+            # AUTORED_BY só cruza quando `reveal` o nomeia.
             author_node = builder.node(
                 node_id("Author", entry.author), "Author", entry.author
             )
             builder.edge(artifact_node, author_node, "AUTHORED_BY")
 
+    # DERIVES_FROM é inferido, então carrega confiança e evidência na própria
+    # aresta (SC-008). A orientação é a que `core/analysis/lineage.py` produz e
+    # que o contrato pede: older → newer.
+    for relation in lineage if lineage is not None else _detected_lineage(artifacts):
+        if relation["from"] in stored and relation["to"] in stored:
+            builder.edge(
+                relation["from"],
+                relation["to"],
+                "DERIVES_FROM",
+                confidence=relation.get("confidence"),
+                evidence=list(relation.get("evidence") or []),
+            )
+
     if config:
         # IN_COLLECTION vem só do config: a máquina propõe, o Author dispõe (FR-021).
-        stored_ids = {a.id for a in artifacts}
+        stored_ids = stored
         for collection in config.collections:
             collection_node = builder.node(
                 node_id("Collection", collection.name), "Collection", collection.name
@@ -257,6 +338,18 @@ def build(artifacts, *, config=None, build_mode: str = "public",
             for artifact_id in collection.artifacts:
                 if artifact_id in stored_ids:
                     builder.edge(artifact_id, collection_node, "IN_COLLECTION")
+        # SUCCEEDS existe porque uma linha do config diz que existe, nunca
+        # porque a ferramenta achou parecido (FR-011, ADR-0009). `dendro
+        # suggest` propõe o par; só isto aqui o cria.
+        for succession in config.successions:
+            if succession.earlier in stored_ids and succession.later in stored_ids:
+                builder.edge(
+                    succession.later,
+                    succession.earlier,
+                    "SUCCEEDS",
+                    **({"note": succession.note} if succession.note else {}),
+                )
+
         for marker in config.epoch_markers:
             builder.node(
                 node_id("EpochMarker", marker.label),

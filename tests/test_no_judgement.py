@@ -95,3 +95,44 @@ class NoJudgement(FixtureCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheProhibitionCoversEveryFileOnDisk(FixtureCase):
+    """O grafo em memória passar não basta: o que sai no disco é o que é lido.
+
+    `graph.sqlite` e `llms.txt` carregam o mesmo payload em outras formas, e uma
+    prosa gerada é justamente onde um julgamento entraria sem ninguém notar.
+    """
+
+    def written_files(self):
+        repository = self.unbundle("multi-contributor")
+        store.save(
+            scan.observe(repository, kind="local", locator=str(repository),
+                         visibility="public", seen="2026-08-25"),
+            self.tmp / "archive",
+        )
+        for mode in ("public", "redacted", "full"):
+            build_module.build(
+                self.tmp / "archive", mode=mode, generated_at="2026-08-25T00:00:00Z"
+            )
+            directory = build_module.output_dir(self.tmp / "archive", mode)
+            for path in sorted(directory.iterdir()):
+                yield mode, path
+
+    def test_no_written_output_asserts_quality_or_authorship(self):
+        checked = 0
+        for mode, path in self.written_files():
+            raw = path.read_bytes()
+            # sqlite é binário; decodifica com tolerância para varrer o texto.
+            text = raw.decode("utf-8", errors="ignore")
+            match = FORBIDDEN.search(text)
+            self.assertIsNone(
+                match, f"{mode}/{path.name} asserts {match.group(0) if match else ''}"
+            )
+            checked += 1
+        self.assertGreater(checked, 6, "the sweep did not reach the new outputs")
+
+    def test_the_sweep_actually_reaches_sqlite_and_the_prose(self):
+        names = {path.name for _, path in self.written_files()}
+        self.assertIn("graph.sqlite", names)
+        self.assertIn("llms.txt", names)

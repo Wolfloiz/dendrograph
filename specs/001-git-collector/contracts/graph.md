@@ -9,8 +9,9 @@ filtered out of these outputs when they are built for publication. See *Build mo
 
 ## `graph.json`
 
-Target: ~500 Artifacts → ~3,000 nodes → under 1 MB, first render under 2 seconds
-(SC-005).
+Target: ~500 Artifacts → under 1 MB, first render under 2 seconds (SC-005). Measured,
+500 Artifacts produce ~554 nodes, not the ~3,000 first assumed: Tool, Technique, Period,
+Author and Dependency nodes are shared rather than one set per Artifact.
 
 ```json
 {
@@ -24,6 +25,7 @@ Target: ~500 Artifacts → ~3,000 nodes → under 1 MB, first render under 2 sec
   },
   "nodes": [
     { "id": "root-3f7a1c9e...", "type": "Artifact", "label": "dendrograph",
+      "description": "A knowledge graph of what you have built.",
       "first": "2019-03-11", "last": "2026-08-20", "authorship": { "share": 0.87 } },
     { "id": "tool:python", "type": "Tool", "label": "Python",
       "first": "2019-03-11", "last": "2026-08-20", "artifact_count": 12,
@@ -57,6 +59,7 @@ Target: ~500 Artifacts → ~3,000 nodes → under 1 MB, first render under 2 sec
 | `Tool.first` / `.last` / `.artifact_count` | The Tool's span, computed over **the Artifacts present in this build**. Under `public` that is public, aliased and opted-in Artifacts; a span there is deliberately narrower than the Author's own, because a visitor must not learn that private work existed in an interval (FR-027). See *Whose dates a span reports*. |
 | `Tool.untouched_count` | Artifacts using the Tool that the Author never committed to. Omitted when zero. They contribute no dates, but they are not hidden — the Author has to be able to explain why the count does not match what they see in the archive. |
 | `Tool.attributed` | Present and `false` when no `[archive].emails` are configured. Omitted otherwise. |
+| `Artifact.description` | Omitted when absent, and **omitted entirely for an aliased Artifact** — a description names the client as plainly as the real name does (ADR-0011). |
 | `Artifact.aliased` | Present and `true` when the node is a private Artifact published under an alias. `label` is the Author's chosen or generated label, never the real name (FR-028, ADR-0011). |
 | `indexes.tool_to_artifacts` | Reverse index. **Present in v0.1, unrendered** — v0.2 needs it and adding it later means rebuilding every published archive. |
 | `aggregates.private_withheld` | Only in `redacted` mode; absent otherwise. Counts, Tools and a date range, never names (FR-013, ADR-0005). |
@@ -108,12 +111,31 @@ with no redesign.
 | `IN_COLLECTION` | Artifact → Collection | **Author-confirmed only** (FR-021) |
 | `AUTHORED_BY` | Artifact → Author | Observed |
 | `DEPENDS_ON` | Artifact → Dependency | Observed |
-| `DERIVES_FROM` | Artifact → Artifact | Inferred, thresholded (FR-012), oriented older → newer |
-| `SUCCEEDS` | Artifact → Artifact | **Author-confirmed only. Never inferred into the graph** (FR-011) |
+| `DERIVES_FROM` | Artifact → Artifact | Inferred, thresholded (FR-012), oriented older → newer: `from` is the **older** Artifact, `to` the newer. Note this is the one row that does not read as a sentence — see *Orientation*, below |
+| `SUCCEEDS` | Artifact → Artifact | **Author-confirmed only. Never inferred into the graph** (FR-011). Same orientation: `from` is the later Artifact, `to` the earlier. Created only by a `[[succession]]` line in config |
 
 Per SC-008, no edge may assert a relationship the Author did not either observe or
 confirm. `APPLIES` and `DERIVES_FROM` are the only inferred edges, and both carry
 `confidence` and `evidence` on the edge itself.
+
+### Orientation
+
+Every other edge here reads as a sentence from `from` to `to`: *Artifact* `USES` *Tool*.
+`DERIVES_FROM` does not. It is oriented **older → newer** by time, so the edge literally
+reads "the older one derives from the newer one", which is backwards from what the name
+says. `SUCCEEDS`, by contrast, is oriented `from` = the later Artifact, so it does read as
+a sentence.
+
+The two are inconsistent, and consumers must not assume one direction from the other.
+Left as-is for now because `core/analysis/lineage.py` is built to it; worth settling
+before anything outside this repository reads the schema.
+
+### What lineage detection returns
+
+`core/graph.py` emits `DERIVES_FROM` from `core.analysis.lineage.candidates(artifacts)`:
+dicts of `{"from", "to", "confidence", "evidence"}`, already oriented. Until that module
+exists the graph emits no such edge — an inferred relationship with no detector behind it
+would be a claim nobody made.
 
 `EpochMarker` nodes have a date and a label and no edges; the timeline draws them across
 the axis. Declared, never inferred (FR-014).

@@ -14,6 +14,9 @@ import json
 from pathlib import Path
 
 from core import graph as graph_module
+from core import llms as llms_module
+from core import privacy
+from core import sqlite as sqlite_module
 from core import store
 
 MODE_PUBLIC = "public"
@@ -53,6 +56,11 @@ def emit(payload: dict, root: Path | str, mode: str) -> dict[str, Path]:
     )
     written = {"graph.json": json_path, "graph.js": js_path}
 
+    # Mesmo payload, três formas: JSON para programas, sqlite para quem
+    # prefere consultar, prosa para um agente que não vai parsear nada.
+    written[sqlite_module.FILENAME] = sqlite_module.write(payload, directory)
+    written[llms_module.FILENAME] = llms_module.write(payload, directory)
+
     # As views vão junto: um site que precisa que alguém copie três arquivos à
     # mão não é "autocontido e sem configuração" (FR-016).
     views = Path(__file__).resolve().parent.parent / "views"
@@ -66,13 +74,30 @@ def emit(payload: dict, root: Path | str, mode: str) -> dict[str, Path]:
 
 
 def build(root: Path | str = ".", *, mode: str = MODE_PUBLIC, config=None,
-          unreachable: list | None = None, generated_at: str | None = None) -> dict:
-    """Rebuild the derived outputs. Never touches the store."""
+          unreachable: list | None = None, generated_at: str | None = None,
+          report=None) -> dict:
+    """Rebuild the derived outputs. Never touches the store.
+
+    Privacy is applied here, not in the store (ADR-0005): `select` decides who
+    enters, and `redacted` mode carries only the withheld shape under
+    `aggregates.private_withheld`. A *report* is filled with what was left out,
+    so no build ever omits something silently.
+    """
     artifacts = store.load_all(root)
+    selection = privacy.select(artifacts, config=config, mode=mode)
+    if report is not None:
+        report.withheld = [
+            f"{artifact.name or artifact.id} ({reason})"
+            for artifact, reason in selection.withheld
+        ]
+    aggregates = (
+        privacy.aggregate(selection.withheld) if mode == MODE_REDACTED else None
+    )
     payload = graph_module.build(
-        artifacts,
+        selection.included,
         config=config,
         build_mode=mode,
+        aggregates=aggregates,
         unreachable=unreachable,
         generated_at=generated_at,
     )

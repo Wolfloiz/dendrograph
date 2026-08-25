@@ -168,12 +168,31 @@ def cmd_publish(args, config) -> RunReport:
 
 
 def cmd_suggest(args, config) -> RunReport:
-    raise CommandError("suggest is not wired yet — see task T074 (US5)")
+    """Proposes. Creates nothing (FR-011, FR-021, Principle I)."""
+    from core import suggest
+
+    artifacts = _stored_ids(args.root)
+    if not artifacts:
+        raise CommandError(
+            f"nothing in the store yet. Run `dendro scan` first."
+        )
+    print(suggest.propose(artifacts, config).render())
+    return RunReport()
 
 
 def cmd_prune(args, config) -> RunReport:
-    raise CommandError("prune is not wired yet — see task T076 (US5)")
+    """Prints candidates and the lines that would exclude them. Deletes nothing (FR-008)."""
+    from core import prune
 
+    artifacts = _stored_ids(args.root)
+    if not artifacts:
+        raise CommandError("nothing in the store yet. Run `dendro scan` first.")
+    print(prune.candidates(artifacts, config).render())
+    return RunReport()
+
+
+# Comandos que só leem. Ver contracts/cli.md: "Writes: Nothing — prints".
+READ_ONLY_COMMANDS = frozenset({"suggest", "prune"})
 
 COMMANDS = {
     "scan": cmd_scan,
@@ -205,7 +224,10 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_FAILURE
 
     report.dry_run = getattr(args, "dry_run", False)
-    print(report.render())
+    # `suggest` e `prune` não escrevem nada: "0 Artifact(s) added, 0 changed"
+    # depois deles é ruído que sugere que houve uma escrita a considerar.
+    if args.command not in READ_ONLY_COMMANDS:
+        print(report.render())
     return report.exit_code
 
 

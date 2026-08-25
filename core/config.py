@@ -61,6 +61,20 @@ class Collection:
 
 
 @dataclass(frozen=True)
+class Succession:
+    """One Artifact followed another. Confirmed here and nowhere else.
+
+    `dendro suggest` proposes pairs; a SUCCEEDS edge exists only because a line
+    in this file says so (FR-011, ADR-0009). The graph contract calls the edge
+    "Author-confirmed only, never inferred", and this is the confirmation.
+    """
+
+    earlier: str
+    later: str
+    note: str | None = None
+
+
+@dataclass(frozen=True)
 class EpochMarker:
     date: str
     label: str
@@ -79,6 +93,7 @@ class Config:
     merges: tuple[Merge, ...] = ()
     separations: tuple[Separate, ...] = ()
     collections: tuple[Collection, ...] = ()
+    successions: tuple[Succession, ...] = ()
     epoch_markers: tuple[EpochMarker, ...] = ()
 
     def alias_for(self, artifact_id: str) -> Alias | None:
@@ -96,6 +111,8 @@ class Config:
             ids |= set(merge.ids)
         for collection in self.collections:
             ids |= set(collection.artifacts)
+        for succession in self.successions:
+            ids |= {succession.earlier, succession.later}
         return ids
 
 
@@ -206,6 +223,7 @@ def parse(raw: dict) -> Config:
             "exclude",
             "identity",
             "collections",
+            "succession",
             "epoch_markers",
         ),
         "top level",
@@ -239,6 +257,18 @@ def parse(raw: dict) -> Config:
             )
         )
 
+    successions = []
+    for i, entry in enumerate(raw.get("succession", [])):
+        where = f"[[succession]] #{i + 1}"
+        _reject_unknown(entry, ("earlier", "later", "note"), where)
+        earlier = str(_require(entry, "earlier", where))
+        later = str(_require(entry, "later", where))
+        if earlier == later:
+            raise ConfigError(f"{where}: an Artifact cannot succeed itself.")
+        successions.append(
+            Succession(earlier=earlier, later=later, note=entry.get("note"))
+        )
+
     markers = []
     for i, entry in enumerate(raw.get("epoch_markers", [])):
         where = f"[[epoch_markers]] #{i + 1}"
@@ -256,6 +286,7 @@ def parse(raw: dict) -> Config:
         sources=tuple(sources),
         excluded=_strings(exclude.get("artifacts", []), "[exclude].artifacts"),
         collections=tuple(collections),
+        successions=tuple(successions),
         epoch_markers=tuple(markers),
         **_parse_publish(raw.get("publish", {})),
         **_parse_identity(raw.get("identity", {})),

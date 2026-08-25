@@ -151,9 +151,9 @@ given Tool are visible and traceable to specific Artifacts.
     *Whose dates a span reports* in `contracts/graph.md`.
 
 - [X] T052 [US3] Render Tool spans in `views/timeline.html` — first and last use, with every contributing Artifact traceable
-- [ ] T053 [P] [US3] Implement `graph.sqlite` emission in `core/sqlite.py` — one table per node type plus one `edges` table, mirroring `graph.json` exactly; a derived query surface, never a graph database (Principle III)
-- [ ] T054 [US3] Add the FTS5 virtual table over Artifact names and descriptions in `core/sqlite.py` — populated in v0.1 and never queried by it, because v0.2's search needs it and adding it later means every Author rebuilds
-- [ ] T055 [P] [US3] Implement `llms.txt` emission in `core/llms.py` — the schema in prose, the archive's shape, and how to read `graph.json` (FR-017)
+- [X] T053 [P] [US3] Implement `graph.sqlite` emission in `core/sqlite.py` — one table per node type plus one `edges` table, mirroring `graph.json` exactly; a derived query surface, never a graph database (Principle III)
+- [X] T054 [US3] Add the FTS5 virtual table over Artifact names and descriptions in `core/sqlite.py` — populated in v0.1 and never queried by it, because v0.2's search needs it and adding it later means every Author rebuilds
+- [X] T055 [P] [US3] Implement `llms.txt` emission in `core/llms.py` — the schema in prose, the archive's shape, and how to read `graph.json` (FR-017)
 - [ ] T056 [P] [US3] Unit test in `tests/test_tool_spans.py` — a Tool's first and last use trace to specific Artifacts; a span supported only by private Artifacts is **absent from a `public` build**, complete once those Artifacts are aliased, and complete in the Author's own `full` build (FR-027, US3 AS2, Principle IV)
 
 **Checkpoint**: The résumé question is answerable from output, not memory.
@@ -204,14 +204,14 @@ relationships the Author confirms.
 **Independent Test**: Declare a marker and confirm it appears on the timeline; run the
 suggestion command and confirm no edge is created without confirmation.
 
-- [ ] T075 [US5] Implement Epoch Marker nodes in `core/graph.py` — dated and labelled, read from `[[epoch_markers]]`, declared and never inferred (FR-014)
+- [X] T075 [US5] Implement Epoch Marker nodes in `core/graph.py` — dated and labelled, read from `[[epoch_markers]]`, declared and never inferred (FR-014)
 - [ ] T076 [US5] Render Epoch Markers in `views/timeline.html` — drawn across the axis, with Artifacts reading as before or after each one
 - [ ] T077 [P] [US5] Implement content-hash lineage in `core/analysis/lineage.py` — authored files only, excluding dependencies, lockfiles, generated output and files under 512 bytes; several identical non-trivial files required (FR-012)
-- [ ] T078 [US5] Emit `DERIVES_FROM` edges in `core/graph.py` — oriented older → newer, each carrying confidence and evidence
-- [ ] T079 [P] [US5] Implement `dendro suggest` in `core/suggest.py` — proposes `SUCCEEDS` pairs, candidate Collections, and identity merges where a rewritten history matches an existing Artifact; prints config lines and creates nothing (FR-011, FR-021, Principle I)
-- [ ] T080 [US5] Implement confirmed Collection membership in `core/graph.py` — `IN_COLLECTION` edges come only from `[[collections]]`, and an Artifact with an unanswered suggestion stays usable and ungrouped (FR-021)
-- [ ] T081 [P] [US5] Implement `dendro prune` in `core/prune.py` — prints candidates and the config lines that would exclude them, and deletes nothing (FR-008, ADR-0002)
-- [ ] T082 [P] [US5] Test in `tests/test_suggest.py` — no `SUCCEEDS` edge exists in the graph without a config confirmation (FR-011, SC-008)
+- [X] T078 [US5] Emit `DERIVES_FROM` edges in `core/graph.py` — oriented older → newer, each carrying confidence and evidence
+- [X] T079 [P] [US5] Implement `dendro suggest` in `core/suggest.py` — proposes `SUCCEEDS` pairs, candidate Collections, and identity merges where a rewritten history matches an existing Artifact; prints config lines and creates nothing (FR-011, FR-021, Principle I)
+- [X] T080 [US5] Implement confirmed Collection membership in `core/graph.py` — `IN_COLLECTION` edges come only from `[[collections]]`, and an Artifact with an unanswered suggestion stays usable and ungrouped (FR-021)
+- [X] T081 [P] [US5] Implement `dendro prune` in `core/prune.py` — prints candidates and the config lines that would exclude them, and deletes nothing (FR-008, ADR-0002)
+- [X] T082 [P] [US5] Test in `tests/test_suggest.py` — no `SUCCEEDS` edge exists in the graph without a config confirmation (FR-011, SC-008)
 - [ ] T083 [P] [US5] Test in `tests/test_lineage.py` — dependencies, lockfiles, generated output and trivial files produce no `DERIVES_FROM`
 
 **Checkpoint**: All five stories are independently functional.
