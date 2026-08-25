@@ -213,6 +213,15 @@ suggestion command and confirm no edge is created without confirmation.
 - [X] T081 [P] [US5] Implement `dendro prune` in `core/prune.py` — prints candidates and the config lines that would exclude them, and deletes nothing (FR-008, ADR-0002)
 - [X] T082 [P] [US5] Test in `tests/test_suggest.py` — no `SUCCEEDS` edge exists in the graph without a config confirmation (FR-011, SC-008)
 - [X] T083 [P] [US5] Test in `tests/test_lineage.py` — dependencies, lockfiles, generated output and trivial files produce no `DERIVES_FROM`
+  - Two findings from the first real run against tinygrad (2026-08-25), raised by agent B,
+    for agent A to judge. (1) The direction is unsupported at short intervals: `tinyos`
+    (first activity 2024-05-02) and `tinyturing` (2024-05-01) are one day apart, and the
+    detector still asserts which derives from which. At that distance "older → newer" is
+    noise, and SC-008 says no edge may assert what was not observed — a minimum interval,
+    or a confidence that degrades as the gap narrows, would settle it. (2) Evidence
+    volume: one edge carried 205 paths, and evidence was 7% of a 220 KB `graph.json` for
+    two edges alone. Harmless now; worth watching against SC-005's 1 MB target at 500
+    Artifacts.
 
 **Checkpoint**: All five stories are independently functional.
 
