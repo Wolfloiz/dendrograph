@@ -66,6 +66,27 @@ def node_id(node_type: str, label: str) -> str:
     return f"{node_type.lower()}:{slug(label)}"
 
 
+def dependency_id(ecosystem: str, name: str) -> str:
+    """`@babel/cli` e `babel-cli` são dois pacotes, e precisam de dois nós.
+
+    `slug` transforma `@` e `/` no mesmo hífen que já separa palavras, então o
+    escopo do npm evapora e nomes distintos disputam um id só. O guard de
+    rótulos recusa a fusão — corretamente —, mas o preço é o build inteiro cair
+    por causa de um `package.json`. Aqui cada segmento do nome é sluggado por
+    si, e a barra sobrevive como separador.
+
+    Um nome do qual o slug não deixa nada — só pontuação, ou escrita fora do
+    alfabeto latino — é derivado por digest, como um Author: ilegível, mas sem
+    arrastar o vizinho para o mesmo nó.
+    """
+    segments = [part for part in (slug(piece) for piece in name.split("/")) if part]
+    if not segments:
+        digest = hashlib.sha256(name.strip().encode("utf-8")).hexdigest()
+        return f"dependency:{ecosystem}/{digest[:16]}"
+    scope = "@" if name.startswith("@") else ""
+    return f"dependency:{ecosystem}/{scope}{'/'.join(segments)}"
+
+
 LINEAGE_EDGES = ("DERIVES_FROM", "SUCCEEDS")
 
 
@@ -292,7 +313,7 @@ def build(artifacts, *, config=None, build_mode: str = "public",
         for dependency in artifact.dependencies:
             label = dependency["name"]
             dependency_node = builder.node(
-                f"dependency:{dependency['ecosystem']}/{slug(label)}",
+                dependency_id(dependency["ecosystem"], label),
                 "Dependency",
                 label,
                 ecosystem=dependency["ecosystem"],
