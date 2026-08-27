@@ -14,24 +14,54 @@ from collectors.git import plumbing
 from core.store import Authorship
 
 
+def _key(email: str) -> str:
+    """A mesma normalização que `Authorship` aplica ao guardar.
+
+    Contar por e-mail cru parte uma pessoa em duas linhas quando ela escreve a
+    caixa diferente entre dois commits — `Cloud11665@gmail.com` e
+    `cloud11665@gmail.com` saíram do mesmo arquivo real —, e cada metade fica
+    com metade das contagens.
+    """
+    return email.strip().lower()
+
+
+def _chosen_name(spellings: dict[str, int] | None) -> str | None:
+    """O nome que aquele endereço mais usou para assinar.
+
+    Uma pessoa troca de nome ao longo dos anos e escreve o mesmo nome de dois
+    jeitos. O mais frequente é estável entre varreduras, e o desempate é
+    alfabético para que duas execuções nunca discordem.
+    """
+    if not spellings:
+        return None
+    return sorted(spellings.items(), key=lambda item: (-item[1], item[0]))[0][0]
+
+
 def counts(repository: Path | str) -> list[Authorship]:
     """Per-author commits, lines and date span for one repository."""
     tallies: dict[str, dict] = {}
+    # O nome vem junto porque é ele que o grafo publica: o endereço identifica,
+    # mas publicar endereço é entregar endereço (ADR-0012). `plumbing.log` já
+    # lia `%an` e o jogava fora.
+    spellings: dict[str, dict[str, int]] = {}
+
+    def blank() -> dict:
+        return {"commits": 0, "added": 0, "deleted": 0, "first": None, "last": None}
 
     for commit in plumbing.log(repository):
-        entry = tallies.setdefault(
-            commit.author_email,
-            {"commits": 0, "added": 0, "deleted": 0, "first": None, "last": None},
-        )
+        key = _key(commit.author_email)
+        entry = tallies.setdefault(key, blank())
         entry["commits"] += 1
         date = commit.date[:10]
         entry["first"] = min(entry["first"] or date, date)
         entry["last"] = max(entry["last"] or date, date)
+        written = (commit.author_name or "").strip()
+        if written:
+            seen = spellings.setdefault(key, {})
+            seen[written] = seen.get(written, 0) + 1
 
     for email, added, deleted in plumbing.numstat(repository):
-        entry = tallies.setdefault(
-            email, {"commits": 0, "added": 0, "deleted": 0, "first": None, "last": None}
-        )
+        entry = tallies.setdefault(_key(email), blank())
         entry["added"] += added
         entry["deleted"] += deleted
 
@@ -44,6 +74,7 @@ def counts(repository: Path | str) -> list[Authorship]:
                 lines_deleted=entry["deleted"],
                 first=entry["first"],
                 last=entry["last"],
+                name=_chosen_name(spellings.get(email)),
             )
             for email, entry in tallies.items()
         ),

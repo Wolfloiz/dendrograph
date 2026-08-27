@@ -125,12 +125,23 @@ def dependency_id(ecosystem: str, name: str) -> str:
 # `Authorship` tem só o endereço. Acrescentá-lo obriga todo Author a
 # reconstruir, e é decisão de quem cuida de `collectors/git/` (ADR-0012).
 _GITHUB_NUMERIC_PREFIX = re.compile(r"^\d+\+")
+_LOOKS_LIKE_ADDRESS = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
 
-def author_label(email: str, *, published: bool) -> str:
-    """Como um Author é chamado na saída, que não é como ele é identificado."""
+def author_label(email: str, name: str | None = None, *, published: bool) -> str:
+    """Como um Author é chamado na saída, que não é como ele é identificado.
+
+    O nome do commit é o rótulo certo quando existe: é o que a pessoa escolheu
+    e o que o GitHub já mostra em cada commit dela. Registros guardados antes de
+    o coletor passar a lê-lo não têm nome, e caem na parte local do endereço.
+    """
     if not published:
         return email
+    written = (name or "").strip()
+    # Muita gente põe o próprio endereço em `user.name`. Aí o nome não é melhor
+    # que o e-mail, e vale a mesma regra.
+    if written and not _LOOKS_LIKE_ADDRESS.search(written):
+        return written
     local = _GITHUB_NUMERIC_PREFIX.sub("", email.split("@", 1)[0].strip())
     if local:
         return local
@@ -386,7 +397,9 @@ def build(artifacts, *, config=None, build_mode: str = "public",
             author_node = builder.node(
                 node_id("Author", entry.author),
                 "Author",
-                author_label(entry.author, published=build_mode != "full"),
+                author_label(
+                    entry.author, entry.name, published=build_mode != "full"
+                ),
             )
             builder.edge(artifact_node, author_node, "AUTHORED_BY")
 

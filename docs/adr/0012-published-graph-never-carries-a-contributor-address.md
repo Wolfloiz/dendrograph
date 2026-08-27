@@ -46,3 +46,21 @@ this decision is about what must never be published, not about what the best lab
 - **`full` still shows addresses**, deliberately. Distinguishing two contributors called
   `john` is a real need for the Author reading their own archive, and that build never
   leaves the machine.
+
+## Update — the name landed the same day
+
+The paragraph above says the commit's author name is the right label and is not available.
+Half of that was wrong: `plumbing.log` had been reading `%an` all along and
+`authorship.counts` was discarding it. Only the store lacked the field.
+
+`Authorship` now carries `name`, chosen as the spelling that address signed with most often
+(ties broken alphabetically, so two scans never disagree), and `author_label` prefers it.
+Three things did not change and are worth naming:
+
+- **The local part is still the fallback**, because the store accumulates rather than
+  rebuilds (ADR-0002): a record written before the collector kept the name has none, and
+  gets one only when that repository is scanned again.
+- **A name that is itself an address is refused** and falls back to the local part. Setting
+  `user.name` to one's own email is common, and publishing it would undo this decision
+  through the front door.
+- **`full` still shows the address.** The name is a better label, not a better identifier.

@@ -58,6 +58,10 @@ class Authorship:
     lines_deleted: int = 0
     first: str | None = None
     last: str | None = None
+    # Como a pessoa assina, que não é como ela é identificada. Ausente nos
+    # registros escritos antes de o coletor guardá-lo, e é por isso que tem
+    # default: o store acumula, não reconstrói (ADR-0002).
+    name: str | None = None
 
     def __post_init__(self):
         # git grava o que a pessoa digitou, e a mesma pessoa digita
@@ -246,6 +250,9 @@ def _merge_authorship(
             lines_deleted=max(prior.lines_deleted, entry.lines_deleted),
             first=_min_date(prior.first, entry.first),
             last=_max_date(prior.last, entry.last),
+            # A varredura de agora sabe mais que a de antes sobre como a pessoa
+            # assina hoje; sem nome novo, o antigo permanece.
+            name=entry.name or prior.name,
         )
     return sorted(by_author.values(), key=lambda a: a.author)
 
@@ -278,6 +285,7 @@ def _authorship_to_dict(entry: Authorship) -> dict:
         "lines_deleted": entry.lines_deleted,
         "first": entry.first,
         "last": entry.last,
+        "name": entry.name,
     }
 
 
