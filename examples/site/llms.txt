@@ -1,12 +1,12 @@
 # dendrograph archive
 
-A knowledge graph of one person's body of work, built by dendrograph 0.1.0 on 2026-08-27T14:19:49Z.
+A knowledge graph of one person's body of work, built by dendrograph 0.1.0 on 2026-08-27T16:12:19Z.
 
 ## What this archive contains
 
 - 57 Artifact(s), spanning 2013-08-27 to 2026-08-19
 - 10 Tool(s), 3 Technique(s)
-- 2703 edges across 2432 nodes
+- 2702 edges across 2432 nodes
 
 ## What it deliberately does not contain
 
@@ -53,7 +53,7 @@ Each Technique is inferred from evidence, and every claim carries a pointer to w
 - APPLIES: 33
 - AUTHORED_BY: 1213
 - DEPENDS_ON: 1260
-- DERIVES_FROM: 8
+- DERIVES_FROM: 7
 - IN_PERIOD: 106
 - USES: 83
 

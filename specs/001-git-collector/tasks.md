@@ -320,6 +320,10 @@ suggestion command and confirm no edge is created without confirmation.
       `tests/test_no_addresses.py` sweeps every written file so it cannot come back.
   - Verified on the copy: no address, no local path, and none of the 40 withheld Artifacts
     named anywhere in `examples/site/`.
+  - Refreshed 2026-08-27 after the lineage and Author-label work: 2,432 nodes, 2,702 edges,
+    7 lineage edges instead of 8 — the dropped one was oriented by a hash tie-break — and
+    Author nodes labelled `Anant Prasad` and `Sean Wei` instead of `anantprsd5` and `me`.
+    Swept again on the copy: still no address, no local path, no withheld Artifact named.
 - [X] T086 Place a visualization above the fold in `README.md` — nobody stars a visualization tool without seeing it
 - [X] T087 [P] Add `LICENSE` (MIT) and `CONTRIBUTING.md` (ADR-0006)
 - [ ] T088 Validate SC-001b — a ~500-repository account completes a first full scan unattended within 30 minutes, with progress reported throughout
