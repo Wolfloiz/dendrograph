@@ -10,7 +10,7 @@ superestimar — a única direção que a ADR-0009 proíbe.
 import unittest
 
 from core import graph
-from core.analysis import tool_spans
+from core.analysis.spans import compute as compute_spans
 from core.config import Config
 from core.store import Artifact, Authorship
 
@@ -52,7 +52,7 @@ class TheSpanFollowsTheAuthorsOwnCommits(unittest.TestCase):
              entry(MINE, "2024-03-01", "2024-05-02", commits=3)],
             {"first": "2009-06-11", "last": "2024-05-02"},
         )
-        spans = tool_spans.compute([fork], (MINE,))
+        spans = compute_spans([fork], (MINE,))
         self.assertEqual(spans["Python"].first, "2024-03-01")
         self.assertEqual(spans["Python"].last, "2024-05-02")
 
@@ -69,7 +69,7 @@ class TheSpanFollowsTheAuthorsOwnCommits(unittest.TestCase):
             [entry(MINE, "2020-10-17", "2026-08-15")],
             {"first": "2020-10-17", "last": "2026-08-15"},
         )
-        spans = tool_spans.compute([untouched, own], (MINE,))
+        spans = compute_spans([untouched, own], (MINE,))
         self.assertEqual(spans["Python"].first, "2020-10-17")
         self.assertEqual(spans["Python"].artifact_count, 1)
 
@@ -84,7 +84,7 @@ class TheSpanFollowsTheAuthorsOwnCommits(unittest.TestCase):
             "own", ["Rust"], [entry(MINE, "2023-12-24", "2026-08-15")],
             {"first": "2023-12-24", "last": "2026-08-15"},
         )
-        spans = tool_spans.compute([untouched, own], (MINE,))
+        spans = compute_spans([untouched, own], (MINE,))
         self.assertEqual(spans["Rust"].artifact_count, 1)
         self.assertEqual(spans["Rust"].untouched_count, 1)
 
@@ -93,7 +93,7 @@ class TheSpanFollowsTheAuthorsOwnCommits(unittest.TestCase):
             "untouched", ["Fortran"], [entry(THEIRS, "1998-01-01", "1999-01-01")],
             {"first": "1998-01-01", "last": "1999-01-01"},
         )
-        spans = tool_spans.compute([untouched], (MINE,))
+        spans = compute_spans([untouched], (MINE,))
         self.assertEqual(spans["Fortran"].artifact_count, 0)
         self.assertIsNone(spans["Fortran"].first)
         self.assertEqual(spans["Fortran"].untouched_count, 1)
@@ -107,7 +107,7 @@ class TheSpanFollowsTheAuthorsOwnCommits(unittest.TestCase):
             "late", ["Python"], [entry(MINE, "2025-01-01", "2026-04-01")],
             {"first": "2025-01-01", "last": "2026-04-01"},
         )
-        spans = tool_spans.compute([early, late], (MINE,))
+        spans = compute_spans([early, late], (MINE,))
         self.assertEqual(spans["Python"].first, "2018-02-01")
         self.assertEqual(spans["Python"].last, "2026-04-01")
         self.assertEqual(spans["Python"].artifact_count, 2)
@@ -118,7 +118,7 @@ class TheSpanFollowsTheAuthorsOwnCommits(unittest.TestCase):
             "a", ["Go"], [entry(other, "2022-01-01", "2022-06-01")],
             {"first": "2022-01-01", "last": "2022-06-01"},
         )
-        spans = tool_spans.compute([art], (MINE, other))
+        spans = compute_spans([art], (MINE, other))
         self.assertEqual(spans["Go"].first, "2022-01-01")
 
 
@@ -128,7 +128,7 @@ class WithoutEmailsTheSpanSaysSo(unittest.TestCase):
             "a", ["Python"], [entry(THEIRS, "2009-06-11", "2023-01-01")],
             {"first": "2009-06-11", "last": "2023-01-01"},
         )
-        spans = tool_spans.compute([art])
+        spans = compute_spans([art])
         self.assertFalse(spans["Python"].attributed)
         # A janela observada continua valendo como observação; o que ela não
         # sustenta é a frase "anos de experiência" da SC-007.
@@ -139,7 +139,7 @@ class WithoutEmailsTheSpanSaysSo(unittest.TestCase):
             "a", ["Python"], [entry(MINE, "2020-10-17", "2026-08-15")],
             {"first": "2020-10-17", "last": "2026-08-15"},
         )
-        spans = tool_spans.compute([art], (MINE,))
+        spans = compute_spans([art], (MINE,))
         self.assertTrue(spans["Python"].attributed)
 
 
@@ -178,6 +178,89 @@ class TheGraphCarriesTheDistinction(unittest.TestCase):
         node = self._tool_node([untouched, own], config=Config(emails=(MINE,)))
         self.assertEqual(node["untouched_count"], 1)
         self.assertEqual(node["first"], "2020-10-17")
+
+
+class ATechniqueIsAskedTheSameQuestion(unittest.TestCase):
+    """"Desde quando eu faço teste automatizado" é a pergunta do README.
+
+    Para Rust a ferramenta respondia com uma data. Para uma Technique respondia
+    com pertencimento a um conjunto: o nó saía com id, tipo e rótulo e nada
+    mais. O módulo de span nunca soube o que é uma Tool — lê `{"name": ...}` —,
+    então a resposta já estava escrita, faltava perguntar.
+    """
+
+    def _applied(self, artifact_id, techniques, authorship, activity):
+        art = artifact(artifact_id, [], authorship, activity)
+        art.techniques = [{"name": t, "confidence": "high"} for t in techniques]
+        return art
+
+    def test_the_span_reads_techniques_when_asked_for_them(self):
+        art = self._applied(
+            "a", ["Automated Testing"],
+            [entry(MINE, "2020-10-05", "2024-02-01")],
+            {"first": "2019-01-01", "last": "2024-02-01"},
+        )
+        spans = compute_spans([art], (MINE,), of="techniques")
+        self.assertEqual(spans["Automated Testing"].first, "2020-10-05")
+        self.assertEqual(spans["Automated Testing"].last, "2024-02-01")
+        self.assertEqual(spans["Automated Testing"].artifact_count, 1)
+
+    def test_tools_and_techniques_do_not_leak_into_each_other(self):
+        art = self._applied(
+            "a", ["Static Typing"],
+            [entry(MINE, "2020-01-01", "2021-01-01")],
+            {"first": "2020-01-01", "last": "2021-01-01"},
+        )
+        art.tools = [{"name": "Python"}]
+        self.assertEqual(list(compute_spans([art], (MINE,))), ["Python"])
+        self.assertEqual(
+            list(compute_spans([art], (MINE,), of="techniques")), ["Static Typing"]
+        )
+
+    def test_a_fork_the_author_never_touched_counts_but_carries_no_dates(self):
+        # O mesmo trato da Tool: fica visível, não empresta data. Na varredura
+        # real, Automated Testing tinha oito forks intocados.
+        untouched = self._applied(
+            "fork", ["Automated Testing"],
+            [entry(THEIRS, "2009-01-01", "2015-01-01")],
+            {"first": "2009-01-01", "last": "2015-01-01"},
+        )
+        mine = self._applied(
+            "mine", ["Automated Testing"],
+            [entry(MINE, "2022-03-01", "2023-03-01")],
+            {"first": "2022-03-01", "last": "2023-03-01"},
+        )
+        span = compute_spans([untouched, mine], (MINE,), of="techniques")["Automated Testing"]
+        self.assertEqual((span.first, span.last), ("2022-03-01", "2023-03-01"))
+        self.assertEqual(span.artifact_count, 1)
+        self.assertEqual(span.untouched_count, 1)
+
+    def test_the_graph_node_carries_the_span(self):
+        early = self._applied(
+            "early", ["Continuous Integration"],
+            [entry(MINE, "2021-05-12", "2021-09-01")],
+            {"first": "2021-05-12", "last": "2021-09-01"},
+        )
+        late = self._applied(
+            "late", ["Continuous Integration"],
+            [entry(MINE, "2024-01-01", "2026-08-19")],
+            {"first": "2024-01-01", "last": "2026-08-19"},
+        )
+        payload = graph.build([early, late], config=Config(emails=(MINE,)),
+                              generated_at="2026-08-27T00:00:00Z")
+        [node] = [n for n in payload["nodes"] if n["type"] == "Technique"]
+        self.assertEqual(node["first"], "2021-05-12")
+        self.assertEqual(node["last"], "2026-08-19")
+        self.assertEqual(node["artifact_count"], 2)
+
+    def test_an_unattributed_span_says_so(self):
+        art = self._applied(
+            "a", ["Static Typing"], [entry(THEIRS, "2020-01-01", "2021-01-01")],
+            {"first": "2020-01-01", "last": "2021-01-01"},
+        )
+        payload = graph.build([art], generated_at="2026-08-27T00:00:00Z")
+        [node] = [n for n in payload["nodes"] if n["type"] == "Technique"]
+        self.assertIs(node["attributed"], False)
 
 
 if __name__ == "__main__":
@@ -275,7 +358,7 @@ class TheSameAuthorTypedTwoWaysIsOnePerson(unittest.TestCase):
             "a", ["Python"], [entry("Me@Example.com", "2020-01-01", "2021-01-01")],
             {"first": "2020-01-01", "last": "2021-01-01"},
         )
-        spans = tool_spans.compute([art], ("ME@EXAMPLE.COM",))
+        spans = compute_spans([art], ("ME@EXAMPLE.COM",))
         self.assertEqual(spans["Python"].first, "2020-01-01")
 
     def test_one_author_node_per_person(self):

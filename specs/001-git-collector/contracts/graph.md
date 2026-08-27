@@ -59,6 +59,7 @@ Author and Dependency nodes are shared rather than one set per Artifact.
 | `Tool.first` / `.last` / `.artifact_count` | The Tool's span, computed over **the Artifacts present in this build**. Under `public` that is public, aliased and opted-in Artifacts; a span there is deliberately narrower than the Author's own, because a visitor must not learn that private work existed in an interval (FR-027). See *Whose dates a span reports*. |
 | `Tool.untouched_count` | Artifacts using the Tool that the Author never committed to. Omitted when zero. They contribute no dates, but they are not hidden — the Author has to be able to explain why the count does not match what they see in the archive. |
 | `Tool.attributed` | Present and `false` when no `[archive].emails` are configured. Omitted otherwise. |
+| `Technique.first` / `.last` / `.artifact_count` / `.untouched_count` / `.attributed` | The same fields, computed the same way, over the Artifacts that applied the Technique in this build. See *What a Technique span does not say* — `first` is **not** an adoption date. |
 | `Artifact.description` | Omitted when absent, and **omitted entirely for an aliased Artifact** — a description names the client as plainly as the real name does (ADR-0011). |
 | `Artifact.aliased` | Present and `true` when the node is a private Artifact published under an alias. `label` is the Author's chosen or generated label, never the real name (FR-028, ADR-0011). |
 | `indexes.tool_to_artifacts` | Reverse index. **Present in v0.1, unrendered** — v0.2 needs it and adding it later means rebuilding every published archive. |
@@ -89,6 +90,27 @@ So:
 
 This is the one place where configuring `[archive].emails` changes what the output *means*
 rather than only what it contains.
+
+Technique spans count every Artifact whose `APPLIES` edge was published, aliased ones
+included. That is not a leniency: an aliased Artifact's `APPLIES` edge crosses by design —
+without its evidence pointer — and a span that counted fewer would give a Technique five
+edges and three Artifacts. A Tool span excludes aliased Artifacts for the mirror-image
+reason: their `USES` edge does not cross unless `reveal` names `tools`.
+
+### What a Technique span does not say
+
+A Technique is inferred from `tracked_files`, which is the tree at HEAD. So what was
+observed is that the marker is there **now**.
+
+- `first` is the earliest the Author worked on an Artifact that shows the marker **today**.
+  It is not the date the Technique was adopted, and a project that adopted it last month
+  reads as having had it from its first commit.
+- A Technique adopted and later abandoned leaves no trace, so it never appears at all.
+
+Both are consequences of observing a tree rather than a history, and neither is a defect to
+be fixed by widening the span — reading adoption dates would mean walking commits for the
+marker's first appearance, which is a collector change, not a graph one. Until then the
+field is what it is, said out loud, in the same spirit as `untouched_count`.
 
 ### `authorship.share`
 

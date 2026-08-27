@@ -25,16 +25,17 @@ def _date_range(artifacts: list[dict]) -> tuple[str | None, str | None]:
     return (min(firsts, default=None), max(lasts, default=None))
 
 
-def _tool_line(tool: dict) -> str:
+def _span_line(node: dict) -> str:
+    """Serve Tool e Technique: a linha nunca soube a diferença, só o nome sabia."""
     window = (
-        f"{tool.get('first')} to {tool.get('last')}"
-        if tool.get("first")
+        f"{node.get('first')} to {node.get('last')}"
+        if node.get("first")
         else "no dates the Author can claim"
     )
-    line = f"- {tool['label']}: {window}, in {tool.get('artifact_count', 0)} Artifact(s)"
-    if tool.get("untouched_count"):
-        line += f"; {tool['untouched_count']} more use it but the Author never committed to them"
-    if tool.get("attributed") is False:
+    line = f"- {node['label']}: {window}, in {node.get('artifact_count', 0)} Artifact(s)"
+    if node.get("untouched_count"):
+        line += f"; {node['untouched_count']} more use it but the Author never committed to them"
+    if node.get("attributed") is False:
         line += " (observed activity, NOT attributed to the Author — no emails configured)"
     return line
 
@@ -106,7 +107,7 @@ def render(payload: dict) -> str:
         )
         out.append("")
         for tool in sorted(tools, key=lambda t: (t.get("first") or "9999", t["label"])):
-            out.append(_tool_line(tool))
+            out.append(_span_line(tool))
         out.append("")
 
     if techniques:
@@ -118,8 +119,18 @@ def render(payload: dict) -> str:
             "Artifact ships without its pointer and is not independently verifiable."
         )
         out.append("")
-        for technique in sorted(techniques, key=lambda t: t["label"]):
-            out.append(f"- {technique['label']}")
+        out.append(
+            "The span is read the same way as a Tool's, with one difference that matters: "
+            "a Technique is inferred from the file tree as it stands now, so `first` is "
+            "the earliest the Author worked on an Artifact that shows the marker TODAY — "
+            "not the date the Technique was adopted. A Technique adopted and later "
+            "abandoned does not appear at all."
+        )
+        out.append("")
+        for technique in sorted(
+            techniques, key=lambda t: (t.get("first") or "9999", t["label"])
+        ):
+            out.append(_span_line(technique))
         out.append("")
 
     out.append("## How to read `graph.json`")

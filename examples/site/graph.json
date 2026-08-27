@@ -14440,7 +14440,7 @@
       "type": "USES"
     }
   ],
-  "generated_at": "2026-08-27T16:43:50Z",
+  "generated_at": "2026-08-27T19:24:20Z",
   "generator": "dendrograph 0.1.0",
   "indexes": {
     "tool_to_artifacts": {
@@ -28160,19 +28160,31 @@
       "type": "Period"
     },
     {
+      "artifact_count": 4,
+      "first": "2020-10-05",
       "id": "technique:automated-testing",
       "label": "Automated Testing",
-      "type": "Technique"
+      "last": "2026-08-19",
+      "type": "Technique",
+      "untouched_count": 8
     },
     {
+      "artifact_count": 3,
+      "first": "2021-05-12",
       "id": "technique:continuous-integration",
       "label": "Continuous Integration",
-      "type": "Technique"
+      "last": "2026-08-19",
+      "type": "Technique",
+      "untouched_count": 1
     },
     {
+      "artifact_count": 14,
+      "first": "2020-10-12",
       "id": "technique:static-typing",
       "label": "Static Typing",
-      "type": "Technique"
+      "last": "2026-08-19",
+      "type": "Technique",
+      "untouched_count": 3
     },
     {
       "artifact_count": 1,

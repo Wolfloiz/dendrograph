@@ -312,7 +312,8 @@ def build(artifacts, *, config=None, build_mode: str = "public",
           spans=None, lineage=None, aggregates: dict | None = None,
           unreachable: list | None = None, generated_at: str | None = None) -> dict:
     """Turn a list of store Artifacts into the graph a consumer reads."""
-    from core.analysis import tool_spans
+    # Importado como função: o parâmetro `spans` já ocupa o nome do módulo.
+    from core.analysis.spans import compute as compute_spans
 
     builder = GraphBuilder()
     emails = tuple(config.emails) if config else ()
@@ -331,7 +332,12 @@ def build(artifacts, *, config=None, build_mode: str = "public",
             span_view.append(replace(artifact, tools=[]))
         else:
             span_view.append(artifact)
-    spans = spans if spans is not None else tool_spans.compute(span_view, emails)
+    spans = spans if spans is not None else compute_spans(span_view, emails)
+    # Technique não passa pelo `span_view`: a aresta APPLIES de um Artifact sob
+    # alias é publicada de propósito, sem o ponteiro (contracts/graph.md), e um
+    # span tem que contar exatamente os Artifacts cuja aresta saiu. Contar
+    # menos daria a uma Technique cinco arestas e três Artifacts.
+    technique_spans = compute_spans(artifacts, emails, of="techniques")
     if unreachable is None:
         unreachable = unreachable_sources(artifacts, build_mode)
 
@@ -383,8 +389,24 @@ def build(artifacts, *, config=None, build_mode: str = "public",
             builder.edge(artifact_node, tool_node, "USES")
 
         for technique in artifact.techniques:
+            # "Faço teste automatizado desde quando" é a mesma pergunta que o
+            # README responde para Rust com uma data. Sem o span, a Technique
+            # respondia com pertencimento a um conjunto.
+            span = technique_spans.get(technique["name"])
+            attrs = {}
+            if span:
+                attrs = {
+                    "first": span.first,
+                    "last": span.last,
+                    "artifact_count": span.artifact_count,
+                }
+                if span.untouched_count:
+                    attrs["untouched_count"] = span.untouched_count
+                if not span.attributed:
+                    attrs["attributed"] = False
             technique_node = builder.node(
-                node_id("Technique", technique["name"]), "Technique", technique["name"]
+                node_id("Technique", technique["name"]), "Technique",
+                technique["name"], **attrs
             )
             # A evidência é um caminho de arquivo, e `clientname/api/deploy.yml`
             # desfaz o anonimato sem que ninguém tenha olhado. Sob alias a

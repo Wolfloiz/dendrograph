@@ -1,6 +1,6 @@
 # dendrograph archive
 
-A knowledge graph of one person's body of work, built by dendrograph 0.1.0 on 2026-08-27T16:43:50Z.
+A knowledge graph of one person's body of work, built by dendrograph 0.1.0 on 2026-08-27T19:24:20Z.
 
 ## What this archive contains
 
@@ -33,9 +33,11 @@ A span is the window of the **Author's own commits** in Artifacts using that Too
 
 Each Technique is inferred from evidence, and every claim carries a pointer to what it was derived from, on the APPLIES edge. A Technique on an aliased Artifact ships without its pointer and is not independently verifiable.
 
-- Automated Testing
-- Continuous Integration
-- Static Typing
+The span is read the same way as a Tool's, with one difference that matters: a Technique is inferred from the file tree as it stands now, so `first` is the earliest the Author worked on an Artifact that shows the marker TODAY — not the date the Technique was adopted. A Technique adopted and later abandoned does not appear at all.
+
+- Automated Testing: 2020-10-05 to 2026-08-19, in 4 Artifact(s); 8 more use it but the Author never committed to them
+- Static Typing: 2020-10-12 to 2026-08-19, in 14 Artifact(s); 3 more use it but the Author never committed to them
+- Continuous Integration: 2021-05-12 to 2026-08-19, in 3 Artifact(s); 1 more use it but the Author never committed to them
 
 ## How to read `graph.json`
 

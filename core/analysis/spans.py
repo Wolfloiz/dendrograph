@@ -1,4 +1,9 @@
-"""When a Tool was first and last used, and in how many Artifacts.
+"""When a named thing was first and last used, and in how many Artifacts.
+
+Tools and Techniques both answer to it. A Tool is what an Artifact is written
+in and a Technique is how it was built, but *since when, and in how many* is
+one question asked twice — and this module does not know which of the two it
+is holding. It reads `{"name": ...}` entries off the Artifact and counts.
 
 Computed over **the Artifacts present in the build being produced**, not over
 the whole store. A published span is therefore narrower than the Author's own
@@ -20,7 +25,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Span:
-    tool: str
+    name: str
     first: str | None
     last: str | None
     artifact_count: int
@@ -41,12 +46,22 @@ def _own_window(artifact, own_emails: frozenset) -> tuple[str | None, str | None
     return (min(firsts, default=None), max(lasts, default=None))
 
 
-def compute(artifacts, emails: tuple[str, ...] = ()) -> dict[str, Span]:
-    """Spans keyed by Tool name, over exactly the Artifacts handed in.
+def compute(artifacts, emails: tuple[str, ...] = (),
+            of: str = "tools") -> dict[str, Span]:
+    """Spans keyed by name, over exactly the Artifacts handed in.
+
+    `of` names the list to read — `tools` or `techniques`.
 
     Without `emails` the window falls back to each Artifact's whole activity and
     the Span is marked unattributed, so a caller can say what it is rather than
     pass a fork's dates off as the Author's.
+
+    A Technique span answers a narrower question than it looks like. Techniques
+    are read from the tree at HEAD, so what was observed is that the marker is
+    there *now*: `first` is the earliest the Author worked on an Artifact that
+    shows it today, not the date the Technique was adopted. Adopted and later
+    abandoned leaves no trace at all. The contract says this out loud rather
+    than letting the field be read as an adoption date.
     """
     attributed = bool(emails)
     # `Authorship` normaliza o e-mail gravado; o configurado tem que combinar.
@@ -65,8 +80,8 @@ def compute(artifacts, emails: tuple[str, ...] = ()) -> dict[str, Span]:
             last = artifact.activity.get("last")
             mine = True
 
-        for tool in artifact.tools:
-            name = tool["name"]
+        for item in getattr(artifact, of):
+            name = item["name"]
             counts.setdefault(name, 0)
             untouched.setdefault(name, 0)
             if not mine:
@@ -80,7 +95,7 @@ def compute(artifacts, emails: tuple[str, ...] = ()) -> dict[str, Span]:
 
     return {
         name: Span(
-            tool=name,
+            name=name,
             first=min(firsts.get(name, []), default=None),
             last=max(lasts.get(name, []), default=None),
             artifact_count=count,
