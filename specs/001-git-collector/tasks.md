@@ -96,7 +96,7 @@ credentials configured, and confirm a browsable timeline and graph are produced.
 - [X] T039 [P] [US1] Implement the timeline view in `views/timeline.html` — Artifacts placed by Period, no page dependencies
 - [X] T040 [US1] Implement the graph view in `views/graph.html` — force simulation against a 2D canvas, no CDN and no graph library (Principle III)
 - [X] T041 [US1] Make forks distinguishable in `views/graph.html` — a fork reads differently from authored work and does not inflate the Artifact count (US1 AS2, ADR-0003)
-- [ ] T042 [US1] Validate SC-005 as soon as the graph view renders, in `views/graph.html` — ~500 Artifacts and ~3,000 nodes reach first render under 2 seconds and sustain at least 30fps while panning, from a page opened with no network access. Barnes-Hut is deferred to v0.3, so a failure here is a redesign and must surface now rather than in polish
+- [X] T042 [US1] Validate SC-005 as soon as the graph view renders, in `views/graph.html` — ~500 Artifacts and ~3,000 nodes reach first render under 2 seconds and sustain at least 30fps while panning, from a page opened with no network access. Barnes-Hut is deferred to v0.3, so a failure here is a redesign and must surface now rather than in polish
   - Partially measured 2026-08-25 with a headless harness (no browser): 500 Artifacts
     produce **554 nodes**, not the ~3,000 assumed — Tool, Technique, Period, Author and
     Dependency nodes are shared across Artifacts. 4,454 edges; `graph.json` 858 KB.
@@ -105,6 +105,42 @@ credentials configured, and confirm a browsable timeline and graph are produced.
     validation is still outstanding. At the spec's assumed 3,000 nodes the O(n²)
     repulsion is ~30× more work and would exceed the budget — the assumption, not the
     measurement, is what carries the risk.
+  - Re-measured 2026-08-26 against a real archive — 96 Artifacts, scanned from a local
+    folder of 110 repositories and a GitHub account of 68: **2,307 nodes**, 3,158 edges,
+    `graph.json` 961 KB. The earlier estimate was low because it assumed node count
+    follows Artifact count. It does not: 1,437 of those nodes are Authors and 740 are
+    Dependencies, because a fork carries every contributor the upstream ever had. Roughly
+    120 real Artifacts reach the 3,000 the spec assumed of 500.
+  - **The redesign this task exists to surface was real — and it was not performance.**
+    The simulation diverged. `220 / d2` has no floor, so two nodes that touch exchange an
+    unbounded force; at 2,307 nodes the layout left the viewport by frame 5 and reached a
+    radius of 1e17 by frame 30. Every node was drawn, all of them off-screen: the page
+    looks like it renders and then empties. Reproduced in a DOM with a 1900x760 canvas:
+    **0 of 2,307 nodes on screen**.
+  - Fixed in `views/graph.html`: softening (`d2 + 400`), a 25 px/frame velocity ceiling,
+    centre gravity 0.0016 to 0.004, the view auto-fitting the layout's bounding box until
+    the reader pans, and the simulation stopping once it settles. Same harness after:
+    **2,307 of 2,307 on screen**, settled at frame 591, no ticks afterwards.
+  - Headless numbers (Node 22, no browser): parse + eval of a 961 KB `graph.js` 17.5 ms;
+    one tick 19.4 ms against the 33.3 ms budget at 30fps, 2.66M pairs per frame. Panning
+    after the layout settles costs no tick at all, which is what puts 30fps within reach
+    — while settling there is ~14 ms left for rasterisation, and rasterisation is exactly
+    what none of this measures.
+  - **Measured in a browser 2026-08-27** — Chromium, the 2,307-node archive, an fps probe
+    hooked to the one `clearRect` per drawn frame so the count is of frames actually
+    painted: **60fps, the vsync ceiling**, while settling and while panning at every zoom.
+    SC-005 is met. First render is not at risk either: parse and eval of a 961 KB
+    `graph.js` is 17.5 ms against a 2 s budget.
+  - The first browser run did not meet it — **20 to 30fps once zoomed in** — and the cause
+    was the label redesign, not the simulation. `strokeText` traces every glyph as a path,
+    outside the glyph cache, so ~190 haloed labels per frame cost more than all 2,307 nodes
+    together; each node was its own `fill` call, and `ctx.font` was reparsed once per
+    candidate label. Fixed by rasterising each label once into an offscreen tile and
+    blitting it, batching node fills by colour, caching text widths, and resolving the lit
+    neighbourhood when focus changes instead of per node per frame. Per frame at 1600x900:
+    `fill` 2,307 to under ten, `set font` and `measureText` 96-423 to zero, glyphs traced
+    64-376 to zero. The picture is unchanged — the `drawImage` count equals the old
+    `fillText` count exactly (32 / 73 / 188 / 95) and the arc count did not move.
 
 - [X] T043 [P] [US1] Integration test in `tests/test_dedup.py` — the same project present on two paths produces exactly one Artifact (SC-002, US1 AS3)
 - [X] T044 [P] [US1] Guard test in `tests/test_no_judgement.py` — no output in any build mode contains a quality score, a grade, a complexity proof, or an AI-authorship label (FR-015, Principle V)
