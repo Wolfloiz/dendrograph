@@ -114,12 +114,38 @@ class Orientation(FixtureCase):
         self.assertEqual((candidate["from"], candidate["to"]),
                          ("root-older", "root-newer"))
 
-    def test_equal_dates_break_on_the_id(self):
+    def test_equal_dates_produce_no_edge_at_all(self):
+        # Isto já foi o contrário: o desempate caía no id, e a seta apontava
+        # para onde um SHA mandou. Uma direção decidida por hash é uma
+        # afirmação que ninguém observou (SC-008).
         first = artifact("root-aaa", range(4), first="2021-01-01")
         second = artifact("root-zzz", range(4), first="2021-01-01")
-        [candidate] = lineage.candidates([second, first])
+        self.assertEqual(lineage.candidates([second, first]), [])
+
+    def test_a_gap_shorter_than_the_interval_produces_no_edge(self):
+        # `tinyos` e `tinyturing`, um dia de diferença: a essa distância a
+        # primeira atividade é fuso horário, não história.
+        older = artifact("root-older", range(4), first="2024-05-01")
+        newer = artifact("root-newer", range(4), first="2024-05-02")
+        self.assertEqual(lineage.candidates([older, newer]), [])
+
+    def test_the_interval_itself_is_enough(self):
+        older = artifact("root-older", range(4), first="2024-05-01")
+        newer = artifact(
+            "root-newer", range(4),
+            first=f"2024-05-{1 + lineage.MINIMUM_ORIENTING_INTERVAL_DAYS:02d}",
+        )
+        [candidate] = lineage.candidates([older, newer])
         self.assertEqual((candidate["from"], candidate["to"]),
-                         ("root-aaa", "root-zzz"))
+                         ("root-older", "root-newer"))
+
+    def test_an_artifact_with_no_observed_date_is_never_oriented(self):
+        # Sem data não há "mais antigo", e o par ia para o fim da ordenação e
+        # ganhava uma seta assim mesmo.
+        dated = artifact("root-dated", range(4), first="2020-01-01")
+        undated = artifact("root-undated", range(4))
+        undated.activity = {}
+        self.assertEqual(lineage.candidates([dated, undated]), [])
 
     def test_an_artifact_without_stored_hashes_never_produces_an_edge(self):
         plain = artifact("root-plain", range(8), first="2020-01-01")
@@ -160,10 +186,14 @@ class WhatNeverCounts(FixtureCase):
             target = second / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content)
+        # Datas bem separadas de propósito: sem elas o par cairia pelo
+        # intervalo de orientação, e o teste passaria sem testar o filtro.
         a = Artifact(id="root-a", identity={"method": "root_commit", "value": "a"},
-                     content_hashes=self._scanned(first))
+                     content_hashes=self._scanned(first),
+                     activity={"first": "2020-01-01", "last": "2020-01-01"})
         b = Artifact(id="root-b", identity={"method": "root_commit", "value": "b"},
-                     content_hashes=self._scanned(second))
+                     content_hashes=self._scanned(second),
+                     activity={"first": "2022-01-01", "last": "2022-01-01"})
         self.assertEqual(lineage.candidates([a, b]), [])
 
 

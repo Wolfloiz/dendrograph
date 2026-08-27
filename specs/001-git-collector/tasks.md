@@ -273,6 +273,26 @@ suggestion command and confirm no edge is created without confirmation.
     volume: one edge carried 205 paths, and evidence was 7% of a 220 KB `graph.json` for
     two edges alone. Harmless now; worth watching against SC-005's 1 MB target at 500
     Artifacts.
+  - **Judged by agent A, 2026-08-27.**
+    - **(1) Upheld, and it was live.** The orientation came from `activity.first`, and the
+      tie-break was the Artifact id — so at zero days apart the arrow pointed wherever a SHA
+      sent it. Not hypothetical: the published demo carried an edge between `selfcheck` and
+      `Alluna_air_Eugenio_challenge`, same first-activity date, direction decided by hash.
+      `lineage.candidates` now requires the two first activities to be at least
+      `MINIMUM_ORIENTING_INTERVAL_DAYS` (7) apart, and a pair the dates cannot separate
+      produces no candidate at all rather than a directed one. A pair with no observed date
+      on either side is dropped too — it used to sort to the end and get an arrow anyway.
+      Real archive: **8 lineage edges became 7**, and every survivor has real separation
+      (41 to 632 days). The week is judgement, not measurement, and the comment says so.
+      When the collector records a date per shared file the origin becomes observable, and
+      the interval stops being needed.
+    - **(2) Not upheld — measured, and closed without a change.** In the real public build
+      evidence is **24 KB of a 522 KB `graph.json`, 4.6%**, and the heaviest single edge
+      carries 145 paths, not 205. What the payload is actually made of: edges 59% (2,702
+      records at ~117 bytes, mostly the two long node ids), Dependency nodes 22%, Author
+      nodes 15%. Capping evidence would buy about 4% and cost SC-006 — every candidate
+      carrying the paths that prove it — which is a bad trade. If the 1 MB target ever
+      binds, the lever is the edge records, not the evidence.
 
 **Checkpoint**: All five stories are independently functional.
 

@@ -11,6 +11,8 @@ Every candidate carries its confidence and the paths that prove it (SC-006).
 
 from __future__ import annotations
 
+from datetime import date
+
 from core.analysis.evidence import (
     CONFIDENCE_HIGH,
     CONFIDENCE_MEDIUM,
@@ -24,6 +26,34 @@ MINIMUM_SHARED_FILES = 3
 
 # A partir do dobro do mínimo a sobreposição é grande demais para coincidência.
 HIGH_CONFIDENCE_AT = MINIMUM_SHARED_FILES * 2
+
+# Orientar por data só vale quando as datas separam os dois. `tinyos`
+# (2024-05-02) e `tinyturing` (2024-05-01) começaram com um dia de diferença, e
+# primeira atividade a essa distância é fuso horário e hábito de push, não
+# história. Abaixo do intervalo o desempate caía no id do Artifact: a seta
+# apontava para onde um SHA mandou, e SC-008 proíbe uma aresta afirmar o que
+# não foi observado.
+#
+# Uma semana é julgamento, não medida — é o que separa "os dois começaram como
+# um trabalho só" de "um veio depois do outro". Na varredura real derruba 1 dos
+# 9 pares, o único com zero dias entre eles.
+#
+# O par continua existindo: os dois Artifacts estão no grafo, só não recebem
+# entre si uma seta que ninguém observou. Quando o coletor guardar a data de
+# cada arquivo compartilhado, a origem passa a ser observável de verdade e este
+# intervalo deixa de ser necessário.
+MINIMUM_ORIENTING_INTERVAL_DAYS = 7
+
+
+def _orienting_interval(older, newer) -> int | None:
+    """Dias entre as duas primeiras atividades, ou `None` se não dá para saber."""
+    started, followed = older.activity.get("first"), newer.activity.get("first")
+    if not started or not followed:
+        return None
+    try:
+        return (date.fromisoformat(followed) - date.fromisoformat(started)).days
+    except ValueError:
+        return None
 
 
 def _authored_index(artifact) -> dict[str, str] | None:
@@ -45,7 +75,10 @@ def candidates(artifacts) -> list[dict]:
     """Candidate `DERIVES_FROM` edges over the Artifacts of one archive.
 
     Each is `{"from", "to", "confidence", "evidence"}`, oriented older → newer
-    by first observed activity, ties broken on the id so two runs agree. These
+    by first observed activity — and only when those activities are far enough
+    apart to say which came first. A pair the dates cannot separate produces no
+    candidate at all, rather than an edge pointing whichever way a tie-break
+    chose. These
     are proposals for the graph (T078), not Author-confirmed relationships:
     `SUCCEEDS` is declared in config and never appears here (FR-011).
     """
@@ -63,6 +96,9 @@ def candidates(artifacts) -> list[dict]:
                 continue
             shared_hashes = set(older_files) & set(newer_files)
             if len(shared_hashes) < MINIMUM_SHARED_FILES:
+                continue
+            interval = _orienting_interval(older, newer)
+            if interval is None or interval < MINIMUM_ORIENTING_INTERVAL_DAYS:
                 continue
             paths = sorted(older_files[digest] for digest in shared_hashes)
             confidence = (
