@@ -303,6 +303,32 @@ suggestion command and confirm no edge is created without confirmation.
 - [X] T086 Place a visualization above the fold in `README.md` — nobody stars a visualization tool without seeing it
 - [X] T087 [P] Add `LICENSE` (MIT) and `CONTRIBUTING.md` (ADR-0006)
 - [ ] T088 Validate SC-001b — a ~500-repository account completes a first full scan unattended within 30 minutes, with progress reported throughout
+  - **Progress and unattendedness: validated outright.** A cold scan of `github:Wolfloiz`
+    printed one line per repository — `[64/68]  204s  Wolfloiz/...` — with the elapsed
+    seconds running, then `scanned 68 in 210s`. No prompt, exit 0, and the one repository
+    that could not be identified was reported as unidentifiable rather than taken as fatal.
+    That is the difference between a run that finished and a run that hung, which is the
+    whole point of the criterion.
+  - **The 30 minutes: measured in parts, because no ~500-repository account is available.**
+    - Real scan, 68 repositories cloned from scratch: **210 s**, mean **3.06 s/repo**,
+      median **1 s**, p90 **7 s**, worst **24 s**.
+    - 500 synthetic local repositories, which skip the clone and isolate analysis and store:
+      **58 s**, peak RSS **40 MB**. Cost per repository across the run: 0.111 s over the
+      first hundred, 0.130 s over the middle hundred, 0.110 s over the last. **Flat — there
+      is no super-linear term**, which is the only thing that would make the extrapolation
+      dishonest.
+    - Derived outputs at 500 Artifacts: full build **0.71 s**, publish **0.38 s**, 507 nodes
+      and 2,660 edges. Not a factor.
+    - So ~96% of a GitHub scan is the clone, and it is network-bound. 500 × 3.06 s =
+      **25.5 min** — inside the budget, with about 15% of headroom.
+  - **What carries the risk is the size distribution, not the count.** This account's median
+    repository costs 1 s and its worst costs 24. An account of 500 with a heavier tail, or a
+    slower link, exceeds 30 minutes without anything in the code being wrong. A token is also
+    assumed: unauthenticated discovery is capped at 60 requests an hour, which cannot reach
+    500 repositories at all (ADR-0008, and `discover` says so in its docstring).
+  - **Still open**: an account of that size to run it against. Everything measurable without
+    one has been measured, and the projection rests on measured linearity rather than on
+    assumption.
 - [X] T089 [P] Validate SC-001 — a stranger opens the demo archive and sees a rendered graph in under five minutes without creating any credential
   - Measured 2026-08-27 from a clean clone of this repository. **Nothing on the path asks
     for an account**: a clone or a zip download, then a double-click. No server, no install,
