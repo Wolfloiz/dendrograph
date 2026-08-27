@@ -31,5 +31,6 @@ Single-context: one `CONTEXT.md` at the repo root plus `docs/adr/`. See `docs/ag
 | 0009 | The machine proposes, the Author disposes — coverage traded for trust, deliberately |
 | 0010 | The tool repository and the Author's archive repository are separate; the tool holds no private Author data |
 | 0011 | Private Artifacts can be published under an alias, revealing nothing beyond the node and its dates until the Author names each field |
+| 0012 | A published graph never carries a contributor's email address; the Author node is labelled by the local part, and the address survives only in `full` |
 
 Feature-level interface contracts live in `specs/NNN-<slug>/contracts/`. Where a contract and an ADR disagree, the ADR wins.

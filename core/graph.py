@@ -108,6 +108,36 @@ def dependency_id(ecosystem: str, name: str) -> str:
     return f"dependency:{ecosystem}/{digest[:16]}"
 
 
+# Um endereço de e-mail publicado é um endereço colhido. O grafo já derivava o
+# id de Author por digest para manter o endereço fora dele (`node_id`), mas o
+# rótulo saía inteiro: numa varredura real, 1.165 contribuintes de repositórios
+# públicos alheios, cada um com o e-mail legível, num site que a Princípio III
+# manda abrir de qualquer lugar. O GitHub esconde o endereço atrás de `noreply`
+# exatamente por isso, e nada aqui autoriza a ferramenta a desfazer isso.
+#
+# Publicado, o rótulo é a parte local do endereço, sem o prefixo numérico que o
+# GitHub antepõe: `57202004+kshitija7@users.noreply.github.com` vira
+# `kshitija7`, que já é o nome de usuário público. O modo `full`, que nunca sai
+# da máquina do Author (`core/build.py`), mantém o endereço — distinguir dois
+# `john` é problema de quem olha o próprio arquivo.
+#
+# O rótulo certo seria o nome do commit, e o coletor ainda não o guarda:
+# `Authorship` tem só o endereço. Acrescentá-lo obriga todo Author a
+# reconstruir, e é decisão de quem cuida de `collectors/git/` (ADR-0012).
+_GITHUB_NUMERIC_PREFIX = re.compile(r"^\d+\+")
+
+
+def author_label(email: str, *, published: bool) -> str:
+    """Como um Author é chamado na saída, que não é como ele é identificado."""
+    if not published:
+        return email
+    local = _GITHUB_NUMERIC_PREFIX.sub("", email.split("@", 1)[0].strip())
+    if local:
+        return local
+    digest = hashlib.sha256(email.encode("utf-8")).hexdigest()
+    return f"author-{digest[:8]}"
+
+
 LINEAGE_EDGES = ("DERIVES_FROM", "SUCCEEDS")
 
 
@@ -354,7 +384,9 @@ def build(artifacts, *, config=None, build_mode: str = "public",
             # O e-mail de um Author identifica tanto quanto o nome: sob alias,
             # AUTORED_BY só cruza quando `reveal` o nomeia.
             author_node = builder.node(
-                node_id("Author", entry.author), "Author", entry.author
+                node_id("Author", entry.author),
+                "Author",
+                author_label(entry.author, published=build_mode != "full"),
             )
             builder.edge(artifact_node, author_node, "AUTHORED_BY")
 
