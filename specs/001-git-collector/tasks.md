@@ -303,7 +303,24 @@ suggestion command and confirm no edge is created without confirmation.
 - [X] T086 Place a visualization above the fold in `README.md` — nobody stars a visualization tool without seeing it
 - [X] T087 [P] Add `LICENSE` (MIT) and `CONTRIBUTING.md` (ADR-0006)
 - [ ] T088 Validate SC-001b — a ~500-repository account completes a first full scan unattended within 30 minutes, with progress reported throughout
-- [ ] T089 [P] Validate SC-001 — a stranger opens the demo archive and sees a rendered graph in under five minutes without creating any credential
+- [X] T089 [P] Validate SC-001 — a stranger opens the demo archive and sees a rendered graph in under five minutes without creating any credential
+  - Measured 2026-08-27 from a clean clone of this repository. **Nothing on the path asks
+    for an account**: a clone or a zip download, then a double-click. No server, no install,
+    no Python — the demo is HTML.
+  - What has to arrive: **4.2 MB** packed (9.7 MB checked out). Local clone 0.4 s; over a
+    10 Mbit link the download is a handful of seconds, and the five-minute budget is not
+    close to being the constraint.
+  - What happens on open, measured on the cloned copy: parse and eval of the 716 KB
+    `graph.js` **18 ms**, first frame at **182 ms**, layout settled at frame 563 — about
+    nine seconds of visible convergence at 60fps — with **2,432 of 2,432 nodes on screen**.
+    Rasterisation is not in these numbers; T042 covers it in a real browser at 60fps on the
+    same page.
+  - **No file in `examples/site/` names an absolute URL**, so the page renders with the
+    network unplugged (FR-016, ADR-0004). `tests/test_view_assets.py` holds that for the
+    views the build copies.
+  - The remaining risk is not technical: a stranger has to find the thing. `README.md` names
+    `examples/site/` immediately after the quickstart, which is the only reason the five
+    minutes is spent looking at a graph instead of looking for one.
 - [X] T090 [P] Record any vocabulary resolved during implementation in `CONTEXT.md`, not in a backlog
 - [X] T091 [P] Confirm the public surface is English — node and edge identifiers, CLI, file and directory names, docs — and that code comments are Portuguese (ADR-0001)
 - [X] T092 Review the Constitution Check table in `plan.md` against the built system, and record any deviation as a new ADR rather than silently accepting it
