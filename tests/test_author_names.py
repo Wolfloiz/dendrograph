@@ -92,6 +92,50 @@ class TheCollectorRecordsHowEachAddressSigns(FixtureCase):
         return target
 
 
+class OnePersonSignsDifferentlyInDifferentRepositories(unittest.TestCase):
+    """`Luiz` num repositório, `loiz` noutro, um endereço só.
+
+    O primeiro build depois de o nome virar rótulo caiu exatamente aqui:
+    `CollidingLabels` entre 'Luiz' e 'loiz' no mesmo id. O guard estava certo —
+    dois rótulos num id é o que ele existe para recusar —, e o erro era escolher
+    o nome por Artifact quando o id vale para o arquivo inteiro.
+    """
+
+    def _artifact(self, artifact_id, name, commits):
+        from core.store import Artifact
+
+        return Artifact(
+            id=artifact_id,
+            identity={"method": "root_commit", "value": artifact_id},
+            activity={"first": "2020-01-01", "last": "2021-01-01"},
+            authorship=[
+                Authorship(author="l@example.com", commits=commits, name=name)
+            ],
+        )
+
+    def test_the_two_spellings_land_on_one_node(self):
+        from core.graph import build
+
+        payload = build(
+            [self._artifact("root-a", "Luiz", 40),
+             self._artifact("root-b", "loiz", 2)],
+            generated_at="2026-08-27T00:00:00Z",
+        )
+        authors = [n for n in payload["nodes"] if n["type"] == "Author"]
+        self.assertEqual(len(authors), 1, authors)
+
+    def test_the_spelling_with_the_most_commits_behind_it_wins(self):
+        from core.graph import build
+
+        payload = build(
+            [self._artifact("root-a", "Luiz", 40),
+             self._artifact("root-b", "loiz", 2)],
+            generated_at="2026-08-27T00:00:00Z",
+        )
+        [author] = [n for n in payload["nodes"] if n["type"] == "Author"]
+        self.assertEqual(author["label"], "Luiz")
+
+
 class AScanWithoutANameDoesNotEraseOne(unittest.TestCase):
     def test_the_prior_name_survives_a_nameless_observation(self):
         prior = [Authorship(author="a@example.com", commits=3, name="Ana")]

@@ -283,6 +283,31 @@ def unreachable_sources(artifacts, build_mode: str = "public") -> list[dict]:
     return sorted(rows, key=lambda r: (r["kind"], r.get("locator") or "", r["last_seen"] or ""))
 
 
+def _signatures(artifacts) -> dict[str, str]:
+    """A grafia com que cada endereço mais assinou, sobre o build inteiro.
+
+    A mesma pessoa assina diferente em repositórios diferentes — `Luiz` num,
+    `loiz` noutro — e o id é o mesmo endereço nos dois. Escolher por Artifact
+    faz o guard acusar de colisão uma fusão correta, e foi o que aconteceu na
+    primeira varredura depois que o nome virou rótulo. É a regra de
+    `authorship._chosen_name` um nível acima, pesada por commits: a grafia do
+    repositório onde a pessoa mais trabalhou, desempate alfabético para que
+    duas execuções não discordem.
+    """
+    tally: dict[str, dict[str, int]] = {}
+    for artifact in artifacts:
+        for entry in artifact.authorship:
+            written = (entry.name or "").strip()
+            if not written:
+                continue
+            seen = tally.setdefault(entry.author, {})
+            seen[written] = seen.get(written, 0) + max(entry.commits, 1)
+    return {
+        author: sorted(seen.items(), key=lambda item: (-item[1], item[0]))[0][0]
+        for author, seen in tally.items()
+    }
+
+
 def build(artifacts, *, config=None, build_mode: str = "public",
           spans=None, lineage=None, aggregates: dict | None = None,
           unreachable: list | None = None, generated_at: str | None = None) -> dict:
@@ -292,6 +317,7 @@ def build(artifacts, *, config=None, build_mode: str = "public",
     builder = GraphBuilder()
     emails = tuple(config.emails) if config else ()
     stored = {a.id for a in artifacts}
+    signatures = _signatures(artifacts)
 
     # O span é computado sobre os Artifacts presentes NESTE build — e um
     # Artifact sob alias só contribui para o span de uma Tool cuja aresta USES
@@ -398,7 +424,9 @@ def build(artifacts, *, config=None, build_mode: str = "public",
                 node_id("Author", entry.author),
                 "Author",
                 author_label(
-                    entry.author, entry.name, published=build_mode != "full"
+                    entry.author,
+                    signatures.get(entry.author),
+                    published=build_mode != "full",
                 ),
             )
             builder.edge(artifact_node, author_node, "AUTHORED_BY")
