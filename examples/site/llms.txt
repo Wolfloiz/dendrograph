@@ -1,12 +1,12 @@
 # dendrograph archive
 
-A knowledge graph of one person's body of work, built by dendrograph 0.1.0 on 2026-08-27T19:24:20Z.
+A knowledge graph of one person's body of work, built by dendrograph 0.1.0 on 2026-08-27T20:09:32Z.
 
 ## What this archive contains
 
-- 57 Artifact(s), spanning 2013-08-27 to 2026-08-19
-- 10 Tool(s), 3 Technique(s)
-- 2702 edges across 2432 nodes
+- 57 Artifact(s), spanning 2013-08-27 to 2026-08-27
+- 10 Tool(s), 4 Technique(s)
+- 2714 edges across 2433 nodes
 
 ## What it deliberately does not contain
 
@@ -19,8 +19,8 @@ This is a published build. Private Artifacts are excluded unless the Author opte
 A span is the window of the **Author's own commits** in Artifacts using that Tool — not the Artifacts' whole history. A fork carries its upstream's past, and counting that would overstate experience.
 
 - JavaScript: 2020-07-15 to 2026-08-19, in 9 Artifact(s); 8 more use it but the Author never committed to them
-- TypeScript: 2020-10-12 to 2026-08-19, in 14 Artifact(s); 5 more use it but the Author never committed to them
-- Ruby: 2022-07-05 to 2026-07-23, in 11 Artifact(s); 1 more use it but the Author never committed to them
+- TypeScript: 2020-10-12 to 2026-08-27, in 14 Artifact(s); 5 more use it but the Author never committed to them
+- Ruby: 2022-07-05 to 2026-08-27, in 11 Artifact(s); 1 more use it but the Author never committed to them
 - C++: 2024-09-02 to 2026-07-14, in 1 Artifact(s); 6 more use it but the Author never committed to them
 - C: 2026-07-09 to 2026-07-09, in 1 Artifact(s); 9 more use it but the Author never committed to them
 - Java: 2026-07-09 to 2026-07-09, in 1 Artifact(s); 1 more use it but the Author never committed to them
@@ -35,9 +35,10 @@ Each Technique is inferred from evidence, and every claim carries a pointer to w
 
 The span is read the same way as a Tool's, with one difference that matters: a Technique is inferred from the file tree as it stands now, so `first` is the earliest the Author worked on an Artifact that shows the marker TODAY — not the date the Technique was adopted. A Technique adopted and later abandoned does not appear at all.
 
-- Automated Testing: 2020-10-05 to 2026-08-19, in 4 Artifact(s); 8 more use it but the Author never committed to them
-- Static Typing: 2020-10-12 to 2026-08-19, in 14 Artifact(s); 3 more use it but the Author never committed to them
-- Continuous Integration: 2021-05-12 to 2026-08-19, in 3 Artifact(s); 1 more use it but the Author never committed to them
+- Automated Testing: 2020-10-05 to 2026-08-19, in 9 Artifact(s); 9 more use it but the Author never committed to them
+- Static Typing: 2020-10-12 to 2026-08-27, in 14 Artifact(s); 4 more use it but the Author never committed to them
+- Continuous Integration: 2021-05-12 to 2026-08-19, in 3 Artifact(s); 2 more use it but the Author never committed to them
+- Linting: 2021-08-03 to 2021-08-03, in 1 Artifact(s); 3 more use it but the Author never committed to them
 
 ## How to read `graph.json`
 
@@ -52,7 +53,7 @@ The span is read the same way as a Tool's, with one difference that matters: a T
 
 ## Edge counts
 
-- APPLIES: 33
+- APPLIES: 45
 - AUTHORED_BY: 1213
 - DEPENDS_ON: 1260
 - DERIVES_FROM: 7

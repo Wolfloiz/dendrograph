@@ -14,6 +14,30 @@
       "type": "APPLIES"
     },
     {
+      "confidence": "high",
+      "evidence": [
+        {
+          "detail": "src/__tests__/routes.spec.ts",
+          "kind": "path"
+        }
+      ],
+      "from": "root-0f3d3519321ae53a7f2b617ecd025f88ee406714",
+      "to": "technique:automated-testing",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "high",
+      "evidence": [
+        {
+          "detail": ".eslintrc.json",
+          "kind": "path"
+        }
+      ],
+      "from": "root-0f3d3519321ae53a7f2b617ecd025f88ee406714",
+      "to": "technique:linting",
+      "type": "APPLIES"
+    },
+    {
       "confidence": "medium",
       "evidence": [
         {
@@ -149,6 +173,18 @@
       "confidence": "high",
       "evidence": [
         {
+          "detail": "app/tests/test_adb_parser.c",
+          "kind": "path"
+        }
+      ],
+      "from": "root-54d9148a36decdf0dcc412560ae50870a7790fde",
+      "to": "technique:automated-testing",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "high",
+      "evidence": [
+        {
           "detail": ".github/workflows/release.yml",
           "kind": "path"
         }
@@ -197,6 +233,18 @@
       "confidence": "high",
       "evidence": [
         {
+          "detail": "tools/sdk/include/bluedroid/oi_bt_spec.h",
+          "kind": "path"
+        }
+      ],
+      "from": "root-668acc2c08ee823fd851ccc6ffdf3c9b4dc273ba",
+      "to": "technique:automated-testing",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "high",
+      "evidence": [
+        {
           "detail": "test/README",
           "kind": "path"
         }
@@ -209,11 +257,23 @@
       "confidence": "high",
       "evidence": [
         {
-          "detail": "14_c_and_cpp_extensions/07_test.py",
+          "detail": "07_async_io/test_echo_server.py",
           "kind": "path"
         }
       ],
       "from": "root-7548713d615764ad518a6bbecd014aeb5975c3fc",
+      "to": "technique:automated-testing",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "high",
+      "evidence": [
+        {
+          "detail": "src/__tests__/likes.spec.js",
+          "kind": "path"
+        }
+      ],
+      "from": "root-7a42c570cf3ef77922e85a3884e894a545f80a90",
       "to": "technique:automated-testing",
       "type": "APPLIES"
     },
@@ -227,6 +287,18 @@
       ],
       "from": "root-7b423cc5c0ebcf5e6d281712d474e61132926ca6",
       "to": "technique:automated-testing",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "high",
+      "evidence": [
+        {
+          "detail": "firebase/functions/.eslintrc.json",
+          "kind": "path"
+        }
+      ],
+      "from": "root-7b423cc5c0ebcf5e6d281712d474e61132926ca6",
+      "to": "technique:linting",
       "type": "APPLIES"
     },
     {
@@ -245,6 +317,18 @@
       "confidence": "high",
       "evidence": [
         {
+          "detail": "src/__tests__/middlewares/checksCreateTodosUserAvailability.spec.js",
+          "kind": "path"
+        }
+      ],
+      "from": "root-88a2f4712d5ae82bd2b2cfc8c4890903becc0240",
+      "to": "technique:automated-testing",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "high",
+      "evidence": [
+        {
           "detail": ".github/workflows/main.yml",
           "kind": "path"
         }
@@ -257,12 +341,24 @@
       "confidence": "high",
       "evidence": [
         {
-          "detail": "src/test/suite/extension.test.ts",
+          "detail": "src/test/runTest.ts",
           "kind": "path"
         }
       ],
       "from": "root-8fb62af0c28972b8b34768f79e91a2d37dabb41a",
       "to": "technique:automated-testing",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "high",
+      "evidence": [
+        {
+          "detail": ".eslintrc.json",
+          "kind": "path"
+        }
+      ],
+      "from": "root-8fb62af0c28972b8b34768f79e91a2d37dabb41a",
+      "to": "technique:linting",
       "type": "APPLIES"
     },
     {
@@ -275,6 +371,18 @@
       ],
       "from": "root-8fb62af0c28972b8b34768f79e91a2d37dabb41a",
       "to": "technique:static-typing",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "high",
+      "evidence": [
+        {
+          "detail": "Library/PackageCache/com.unity.ext.nunit@1.0.6/.gitlab-ci.yml",
+          "kind": "path"
+        }
+      ],
+      "from": "root-9282fb64212a62f173e6b4061764baf1f9f897d6",
+      "to": "technique:continuous-integration",
       "type": "APPLIES"
     },
     {
@@ -329,11 +437,47 @@
       "confidence": "high",
       "evidence": [
         {
+          "detail": ".eslintrc",
+          "kind": "path"
+        }
+      ],
+      "from": "root-a8acffd81c520b83027eebedc45543f14c5a8059",
+      "to": "technique:linting",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "medium",
+      "evidence": [
+        {
+          "detail": "typings/tsconfig.json",
+          "kind": "path"
+        }
+      ],
+      "from": "root-a8acffd81c520b83027eebedc45543f14c5a8059",
+      "to": "technique:static-typing",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "high",
+      "evidence": [
+        {
           "detail": "control/sumd_test.c",
           "kind": "path"
         }
       ],
       "from": "root-abbb0db7a74673342c4d7fcf3971b6bea1930c1c",
+      "to": "technique:automated-testing",
+      "type": "APPLIES"
+    },
+    {
+      "confidence": "high",
+      "evidence": [
+        {
+          "detail": "src/__tests__/todos.spec.js",
+          "kind": "path"
+        }
+      ],
+      "from": "root-bc4e0f97a2b46f7631a9ab334df245cef3feb097",
       "to": "technique:automated-testing",
       "type": "APPLIES"
     },
@@ -14440,7 +14584,7 @@
       "type": "USES"
     }
   ],
-  "generated_at": "2026-08-27T19:24:20Z",
+  "generated_at": "2026-08-27T20:09:32Z",
   "generator": "dendrograph 0.1.0",
   "indexes": {
     "tool_to_artifacts": {
@@ -14742,7 +14886,7 @@
       "first": "2025-11-06",
       "id": "root-3aaac41bd9f16a93b2fadcd60f9764539c9704ef",
       "label": "project-microbit-tutorial",
-      "last": "2026-07-23",
+      "last": "2026-08-27",
       "type": "Artifact"
     },
     {
@@ -28160,13 +28304,13 @@
       "type": "Period"
     },
     {
-      "artifact_count": 4,
+      "artifact_count": 9,
       "first": "2020-10-05",
       "id": "technique:automated-testing",
       "label": "Automated Testing",
       "last": "2026-08-19",
       "type": "Technique",
-      "untouched_count": 8
+      "untouched_count": 9
     },
     {
       "artifact_count": 3,
@@ -28175,16 +28319,25 @@
       "label": "Continuous Integration",
       "last": "2026-08-19",
       "type": "Technique",
-      "untouched_count": 1
+      "untouched_count": 2
+    },
+    {
+      "artifact_count": 1,
+      "first": "2021-08-03",
+      "id": "technique:linting",
+      "label": "Linting",
+      "last": "2021-08-03",
+      "type": "Technique",
+      "untouched_count": 3
     },
     {
       "artifact_count": 14,
       "first": "2020-10-12",
       "id": "technique:static-typing",
       "label": "Static Typing",
-      "last": "2026-08-19",
+      "last": "2026-08-27",
       "type": "Technique",
-      "untouched_count": 3
+      "untouched_count": 4
     },
     {
       "artifact_count": 1,
@@ -28236,7 +28389,7 @@
       "first": "2022-07-05",
       "id": "tool:ruby",
       "label": "Ruby",
-      "last": "2026-07-23",
+      "last": "2026-08-27",
       "type": "Tool",
       "untouched_count": 1
     },
@@ -28271,7 +28424,7 @@
       "first": "2020-10-12",
       "id": "tool:typescript",
       "label": "TypeScript",
-      "last": "2026-08-19",
+      "last": "2026-08-27",
       "type": "Tool",
       "untouched_count": 5
     }
