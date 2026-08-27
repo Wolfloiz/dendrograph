@@ -23,6 +23,11 @@ xdg-open ~/my-archive/site/timeline.html                  # or just open the fil
 No credential needed for a public account. The first scan clones full history into a
 temporary directory and throws it away — nothing is cached between runs.
 
+Or skip the scan and open a real one: [`examples/site/timeline.html`](examples/site/) is a
+published archive of 57 public repositories, committed to this repository. No install, no
+account, and it renders with the network unplugged. `examples/README.md` says what the
+privacy default kept out of it.
+
 ---
 
 ## The machine proposes, the Author disposes

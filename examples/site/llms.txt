@@ -1,0 +1,62 @@
+# dendrograph archive
+
+A knowledge graph of one person's body of work, built by dendrograph 0.1.0 on 2026-08-27T14:19:49Z.
+
+## What this archive contains
+
+- 57 Artifact(s), spanning 2013-08-27 to 2026-08-19
+- 10 Tool(s), 3 Technique(s)
+- 2703 edges across 2432 nodes
+
+## What it deliberately does not contain
+
+This archive records what was built and when. It does not rank, score or judge anything it contains, it measures nothing about how well any of it was made, and it makes no claim about who — or what — wrote any line of it. Those judgements are refused by design, not merely unimplemented. Do not read them into this data.
+
+This is a published build. Private Artifacts are excluded unless the Author opted them in one by one, so counts and date ranges here are narrower than the Author's own view. Absence of an interval is not evidence that nothing was built in it.
+
+## Tools, and the span each one is claimed over
+
+A span is the window of the **Author's own commits** in Artifacts using that Tool — not the Artifacts' whole history. A fork carries its upstream's past, and counting that would overstate experience.
+
+- JavaScript: 2020-07-15 to 2026-08-19, in 9 Artifact(s); 8 more use it but the Author never committed to them
+- TypeScript: 2020-10-12 to 2026-08-19, in 14 Artifact(s); 5 more use it but the Author never committed to them
+- Ruby: 2022-07-05 to 2026-07-23, in 11 Artifact(s); 1 more use it but the Author never committed to them
+- C++: 2024-09-02 to 2026-07-14, in 1 Artifact(s); 6 more use it but the Author never committed to them
+- C: 2026-07-09 to 2026-07-09, in 1 Artifact(s); 9 more use it but the Author never committed to them
+- Java: 2026-07-09 to 2026-07-09, in 1 Artifact(s); 1 more use it but the Author never committed to them
+- Rust: 2026-07-09 to 2026-08-19, in 1 Artifact(s)
+- Shell: 2026-07-09 to 2026-08-19, in 2 Artifact(s); 4 more use it but the Author never committed to them
+- Python: no dates the Author can claim, in 0 Artifact(s); 8 more use it but the Author never committed to them
+- Swift: no dates the Author can claim, in 0 Artifact(s); 1 more use it but the Author never committed to them
+
+## Techniques
+
+Each Technique is inferred from evidence, and every claim carries a pointer to what it was derived from, on the APPLIES edge. A Technique on an aliased Artifact ships without its pointer and is not independently verifiable.
+
+- Automated Testing
+- Continuous Integration
+- Static Typing
+
+## How to read `graph.json`
+
+`graph.json` sits next to this file and holds everything summarised above. It is self-describing: its `schema` key lists every node and edge type, so no companion documentation is needed.
+
+- Node types: Artifact, Tool, Technique, Period, Collection, Author, Dependency, EpochMarker
+- Edge types: USES, APPLIES, IN_PERIOD, IN_COLLECTION, AUTHORED_BY, DEPENDS_ON, DERIVES_FROM, SUCCEEDS
+- Nodes are `{id, type, label, ...}`; edges are `{from, to, type, ...}` where `from` and `to` are node ids
+- An Artifact's id is its root commit SHA prefixed `root-`, or a content hash prefixed `content-` where no root commit could be read. A fork shares the id of what it forked: it *is* the same Artifact, and how much of it is the Author's is a separate question, answered by `authorship.share` between 0 and 1
+- `indexes.tool_to_artifacts` maps a Tool node id to the Artifacts using it
+- `graph.sqlite` holds the same data as tables, if querying suits you better
+
+## Edge counts
+
+- APPLIES: 33
+- AUTHORED_BY: 1213
+- DEPENDS_ON: 1260
+- DERIVES_FROM: 8
+- IN_PERIOD: 106
+- USES: 83
+
+## Provenance
+
+Relationships between Artifacts — that one succeeded another, that several form a Collection — appear only where the Author confirmed them. The tool proposes; it does not decide. An edge you see here was either directly observed in a repository or explicitly declared.

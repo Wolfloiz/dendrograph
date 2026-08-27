@@ -1,0 +1,267 @@
+/* dendrograph views — design system
+ *
+ * Fonte: IBM Plex, empacotada em ./fonts. A página precisa funcionar sem
+ * rede, de um pendrive, então nada vem de CDN (ADR-0004, FR-016). A Mono é
+ * que fornece os números tabulares: datas e contagens alinham no pôster.
+ *
+ * Temas: claro e escuro por `prefers-color-scheme`, com override manual via
+ * [data-theme] persistido pelo theme.js. Transparência nenhuma: a página é
+ * estática, e camadas são painéis, não vidro.
+ */
+
+@font-face { font-family: "IBM Plex Sans"; src: url("fonts/IBMPlexSans-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("fonts/IBMPlexSans-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("fonts/IBMPlexSans-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("fonts/IBMPlexSans-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("fonts/IBMPlexMono-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("fonts/IBMPlexMono-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("fonts/IBMPlexMono-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+
+:root {
+  color-scheme: light;
+  --surface-0: #f6f5f2;
+  --surface-1: #fcfcfb;
+  --border: #e2e1dc;
+  --grid: #e9e7e1;
+  --text-primary: #131311;
+  --text-secondary: #53514c;
+  --text-muted: #85837b;
+  --accent: #2f6f4f;
+  --accent-soft: #eef3ef;
+  --fork: #9b968c;
+  --marker: #a33d3d;
+  --shadow: 0 1px 2px rgba(30, 29, 26, .05), 0 10px 30px rgba(30, 29, 26, .07);
+  /* Cores semânticas dos nós do grafo, por tipo. O grafo as lê daqui. */
+  --c-artifact: #2f6f4f;
+  --c-tool: #2a78d6;
+  --c-technique: #eb6834;
+  --c-period: #8a8a84;
+  --c-collection: #7a5ba8;
+  --c-author: #198a79;
+  --c-dependency: #a08f50;
+  --c-marker: #a33d3d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-0: #111110;
+    --surface-1: #1a1a19;
+    --border: #333330;
+    --grid: #2a2a27;
+    --text-primary: #fbfaf7;
+    --text-secondary: #c4c3b8;
+    --text-muted: #918f86;
+    --accent: #89c3a0;
+    --accent-soft: #1e2b24;
+    --fork: #5e5a52;
+    --marker: #d97a7a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .45);
+    --c-artifact: #89c3a0;
+    --c-tool: #3987e5;
+    --c-technique: #d95926;
+    --c-period: #8a8a84;
+    --c-collection: #9d84c7;
+    --c-author: #19a58f;
+    --c-dependency: #c2ad63;
+    --c-marker: #d97a7a;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #111110;
+  --surface-1: #1a1a19;
+  --border: #333330;
+  --grid: #2a2a27;
+  --text-primary: #fbfaf7;
+  --text-secondary: #c4c3b8;
+  --text-muted: #918f86;
+  --accent: #89c3a0;
+  --accent-soft: #1e2b24;
+  --fork: #5e5a52;
+  --marker: #d97a7a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .45);
+  --c-artifact: #89c3a0;
+  --c-tool: #3987e5;
+  --c-technique: #d95926;
+  --c-period: #8a8a84;
+  --c-collection: #9d84c7;
+  --c-author: #19a58f;
+  --c-dependency: #c2ad63;
+  --c-marker: #d97a7a;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font: 400 0.9375rem/1.55 "IBM Plex Sans", ui-sans-serif, -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.wrap { max-width: 72rem; margin: 0 auto; padding: 2rem 1.25rem 4.5rem; }
+
+/* ---------- cabeçalho ---------- */
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.55rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;   /* cresceu: apertou (tracking é específico do tamanho) */
+  line-height: 1.15;
+}
+
+/* Marca acima do título: diz de que site é a página antes de dizer que
+ * página é. Texto pequeno pede tracking positivo — o contrário do h1. */
+.eyebrow {
+  margin: 0 0 0.15rem;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sub, .meta {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+nav { display: flex; gap: 0.5rem; align-items: center; }
+
+nav a, .btn {
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: border-color 120ms ease, color 120ms ease, transform 100ms ease-out;
+}
+
+nav a:hover, .btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+/* Feedback no pressionar, não no soltar: responder no pointer-down é o que
+ * separa uma interface que reage de uma que confirma. */
+nav a:active, .btn:active { transform: scale(0.97); }
+
+nav a[aria-current="page"], .tema-btn[aria-pressed="true"] {
+  background: var(--text-primary);
+  color: var(--surface-1);
+  border-color: var(--text-primary);
+}
+
+/* Números: sempre a Mono, tabulares por construção. */
+.num, .tile .v, td.n, .axis span {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- cartões de resumo ---------- */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.tile {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  padding: 1rem 1.1rem;
+}
+
+.tile .v {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.tile .k {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- avisos ---------- */
+
+.notice {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--marker);
+  border-radius: 0 0.55rem 0.55rem 0;
+  padding: 0.65rem 0.95rem;
+  margin: 0 0 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* ---------- painel ---------- */
+
+.panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  padding: 1.25rem 1.4rem;
+  box-shadow: var(--shadow);
+}
+
+/* ---------- tabelas ---------- */
+
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+
+th, td {
+  text-align: left;
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+td.n { text-align: right; }
+
+tr:last-child td { border-bottom: 0; }
+
+/* ---------- movimento ------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  nav a, .btn { transition: opacity 120ms ease; }
+  nav a:active, .btn:active { transform: none; }
+}

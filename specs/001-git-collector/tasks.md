@@ -281,7 +281,25 @@ suggestion command and confirm no edge is created without confirmation.
 ## Phase 8: Polish & Cross-Cutting Concerns
 
 - [X] T084 [P] Write `README.md` — Principle I stated explicitly, exactly what the published site does and does not contain, and the create-your-archive-from-template steps (ADR-0010)
-- [ ] T085 [P] Build the demo archive in `examples/` from the Author's public repositories only — real data, and automatically safe because it is what the privacy default produces
+- [X] T085 [P] Build the demo archive in `examples/` from the Author's public repositories only — real data, and automatically safe because it is what the privacy default produces
+  - `examples/site/` — 57 Artifacts, 2,432 nodes, 2,703 edges, 3.2 MB, published 2026-08-27
+    from the Author's own archive with nothing configured but `[archive].emails`. The store
+    stays out: it holds the 40 withheld Artifacts, and the tool repository holds no private
+    Author data (ADR-0010).
+  - **"Automatically safe" turned out to be a claim worth testing, and it failed twice.**
+    Building the demo from real public data is what surfaced both:
+    - `LiveScript` and `livescript` are two npm packages differing only in case, and the
+      Dependency id lowercased both into one. It had been worked around with an `[exclude]`
+      on the repository that carried them — a workaround that would have shipped in this
+      repository. Fixed properly: identity now follows each registry's own rule. PyPI
+      normalises (PEP 503), so `Django` and `django` are one project; npm does not, so they
+      are two packages. `tests/test_dependency_ids.py`.
+    - The published site carried the readable email address of **1,165 contributors**,
+      harvested from the history of public repositories and forks. The Author node id was
+      already a digest to keep the address out of it; the label was not. ADR-0012, and
+      `tests/test_no_addresses.py` sweeps every written file so it cannot come back.
+  - Verified on the copy: no address, no local path, and none of the 40 withheld Artifacts
+    named anywhere in `examples/site/`.
 - [X] T086 Place a visualization above the fold in `README.md` — nobody stars a visualization tool without seeing it
 - [X] T087 [P] Add `LICENSE` (MIT) and `CONTRIBUTING.md` (ADR-0006)
 - [ ] T088 Validate SC-001b — a ~500-repository account completes a first full scan unattended within 30 minutes, with progress reported throughout
