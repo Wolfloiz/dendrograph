@@ -500,6 +500,36 @@ existing, so the safe behaviour ships with the first *publishable* version, not 
 
 ---
 
+## v0.1 closed — 2026-08-27
+
+91 of 92 tasks done. **T088 ships with a named gap rather than a claim**: SC-001b asks
+for a ~500-repository account and none exists to point at. Everything measurable without
+one was measured — a cold scan of 68 real repositories at 3.06 s each, 500 synthetic local
+ones showing the per-repository cost flat across the run (0.111 / 0.130 / 0.110 s over the
+first, middle and last hundred), derived outputs at 500 Artifacts under a second. That puts
+500 repositories at 25.5 minutes against a 30-minute budget, and the projection rests on
+measured linearity rather than assumption. Progress reporting and unattendedness needed no
+extrapolation and are validated outright.
+
+Checking the box would be deciding that a projection counts as the validation. It does not,
+so the box stays open and **the item carries into v0.2** as a validation still owed.
+
+Three defects surfaced late and are worth naming, because each was found by using the tool
+on real data rather than by reading the code:
+
+- **The graph diverged and then went blank** (T042). Fixed, and the browser measurement
+  that closed it also caught a 20–30fps regression introduced by the fix's own label pass.
+- **Identity collapsed three different things into one node** — an npm scope, an npm
+  package's own capitalisation, and one contributor who signed two ways. The label guard
+  caught all three; the ids were wrong, not the guard.
+- **The published site carried 1,165 contributors' email addresses** (ADR-0012). The id was
+  already a digest to keep the address out; the label had never been given the same thought.
+
+The line those three share: the store, the ids and the privacy default were all correct in
+the abstract and wrong against a real archive. Nothing in the plan would have caught them.
+
+---
+
 ## Notes
 
 - **Nothing infers into the graph without confirmation.** `SUCCEEDS` and `IN_COLLECTION`
