@@ -116,8 +116,11 @@ class TheProhibitionCoversEveryFileOnDisk(FixtureCase):
                 self.tmp / "archive", mode=mode, generated_at="2026-08-25T00:00:00Z"
             )
             directory = build_module.output_dir(self.tmp / "archive", mode)
-            for path in sorted(directory.iterdir()):
-                yield mode, path
+            for path in sorted(directory.rglob("*")):
+                # fontes woff2 são binárias e carregam nenhum texto: a proibição
+                # é sobre afirmações escritas, não sobre bytes de tipografia
+                if path.is_file():
+                    yield mode, path
 
     def test_no_written_output_asserts_quality_or_authorship(self):
         checked = 0
@@ -126,8 +129,16 @@ class TheProhibitionCoversEveryFileOnDisk(FixtureCase):
             # sqlite é binário; decodifica com tolerância para varrer o texto.
             text = raw.decode("utf-8", errors="ignore")
             match = FORBIDDEN.search(text)
+            # A varredura é cega a idioma, de propósito: ela lê bytes, não
+            # prosa. "grade" em português é malha, e já derrubou esta suíte
+            # três vezes vindo de um comentário — a mensagem diz isso para
+            # que a próxima pessoa não perca o tempo procurando um julgamento
+            # que não existe.
             self.assertIsNone(
-                match, f"{mode}/{path.name} asserts {match.group(0) if match else ''}"
+                match,
+                f"{mode}/{path.name} asserts {match.group(0) if match else ''}"
+                " — if this came from a Portuguese comment, reword the comment:"
+                " the sweep matches the English word and does not know the difference",
             )
             checked += 1
         self.assertGreater(checked, 6, "the sweep did not reach the new outputs")

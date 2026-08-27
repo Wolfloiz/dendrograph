@@ -62,14 +62,23 @@ def emit(payload: dict, root: Path | str, mode: str) -> dict[str, Path]:
     written[llms_module.FILENAME] = llms_module.write(payload, directory)
 
     # As views vão junto: um site que precisa que alguém copie três arquivos à
-    # mão não é "autocontido e sem configuração" (FR-016).
+    # mão não é "autocontido e sem configuração" (FR-016). As fontes viajam
+    # junto pelo mesmo motivo: empacotar a IBM Plex é o que protege o design
+    # de depender de uma CDN (ADR-0004).
     views = Path(__file__).resolve().parent.parent / "views"
-    for asset in ("loader.js", "style.css", "timeline.html", "graph.html"):
-        source = views / asset
-        if source.exists():
-            destination = directory / asset
-            destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
-            written[asset] = destination
+    assets = list(views.glob("*.html")) + list(views.glob("*.js")) + list(views.glob("*.css"))
+    fonts_dir = views / "fonts"
+    if fonts_dir.exists():
+        assets.extend(fonts_dir.glob("*.woff2"))
+        # A licença viaja com a fonte porque a OFL exige isso de quem
+        # redistribui, e cada site publicado é uma redistribuição.
+        assets.extend(fonts_dir.glob("LICENSE*"))
+    for source in assets:
+        relative = source.relative_to(views)
+        destination = directory / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(source.read_bytes())
+        written[str(relative)] = destination
     return written
 
 
