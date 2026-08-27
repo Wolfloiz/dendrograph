@@ -1,6 +1,6 @@
 # dendrograph archive
 
-A knowledge graph of one person's body of work, built by dendrograph 0.1.0 on 2026-08-27T16:12:19Z.
+A knowledge graph of one person's body of work, built by dendrograph 0.1.0 on 2026-08-27T16:43:50Z.
 
 ## What this archive contains
 

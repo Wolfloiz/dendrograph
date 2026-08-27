@@ -14442,7 +14442,7 @@ window.DENDROGRAPH_GRAPH = {
       "type": "USES"
     }
   ],
-  "generated_at": "2026-08-27T16:12:19Z",
+  "generated_at": "2026-08-27T16:43:50Z",
   "generator": "dendrograph 0.1.0",
   "indexes": {
     "tool_to_artifacts": {
