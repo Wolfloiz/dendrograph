@@ -33,7 +33,8 @@ _Avoid_: Technology, stack, dependency (means something else here)
 
 **Technique**:
 How an Artifact was built — a pattern, a method, an approach. Always carries a
-confidence and the evidence it was inferred from.
+confidence and the evidence it was inferred from. **The names are a closed set**,
+listed under *Technique names* below.
 _Avoid_: Skill, practice, pattern
 
 **Period**:
@@ -101,11 +102,44 @@ recorded, never a deletion, and it does not advance `last_seen` — nothing was 
 _Avoid_: Missing, deleted, gone, stale
 
 **Span**:
-A Tool's window: the first and last of **the Author's own commits** in Artifacts
-using it. Not the Artifacts' whole activity — a fork carries its upstream's past,
+The window of **the Author's own commits** in the Artifacts that use a Tool or apply
+a Technique. Not the Artifacts' whole activity — a fork carries its upstream's past,
 and counting it read as seventeen years of a language for an account four years
 old. A span states experience, so it must understate rather than overstate.
+
+A Technique span carries one caveat a Tool span does not: Techniques are inferred
+from the file tree as it stands, so `first` is the earliest the Author worked on an
+Artifact that shows the marker **today**, never the date it was adopted.
 _Avoid_: Range, usage, experience, years
+
+**Technique names**:
+A closed set, not free text. A Technique name is a node label and a node id, which
+makes it public surface (ADR-0001) — and `Static Typing` alongside `static-typing`
+would be two nodes for one thing. That is the same identity defect that cost a
+build over `@babel/cli`, an npm package over its own capitalisation, and one
+contributor over signing two ways; a free-text name is the fourth door into it.
+
+The set, and what each one is inferred from:
+
+| Name | Marker |
+|---|---|
+| Continuous Integration | a workflow or pipeline definition |
+| Containerisation | a Dockerfile or compose file |
+| Infrastructure as Code | Terraform, Ansible, Helm, Kubernetes manifests |
+| Automated Testing | a test directory or test-named file |
+| Database Migrations | a migrations directory |
+| Documented Decisions | an ADR or decisions directory |
+| Static Typing | a type-checker configuration |
+| Pre-commit Hooks | a pre-commit or husky configuration |
+| Linting | a linter configuration |
+| Reproducible Environments | a Nix flake, devcontainer, or Vagrantfile |
+
+Adding one is a deliberate act: it must name something observable from a marker that
+means nothing else, it must read as a phrase a person would put on a CV, and it must
+not be a judgement — "has tests" is observable, "well tested" is not (Principle V).
+`tests/test_techniques.py` holds the table and this list to each other, so the
+documentation cannot drift from the code without a test failing.
+_Avoid_: Tag, label, category
 
 **Untouched fork**:
 An Artifact the Author never committed to. It is the same Artifact as its upstream
