@@ -66,25 +66,46 @@ def node_id(node_type: str, label: str) -> str:
     return f"{node_type.lower()}:{slug(label)}"
 
 
-def dependency_id(ecosystem: str, name: str) -> str:
-    """`@babel/cli` e `babel-cli` são dois pacotes, e precisam de dois nós.
+# npm e PyPI discordam sobre quando dois nomes são o mesmo pacote, e um id só
+# para os dois responde errado para um dos lados. O PyPI normaliza (PEP 503):
+# `Django`, `django` e `Django_REST` designam um projeto só, e a caixa ali é
+# grafia, não identidade. O npm não normaliza: nome novo tem que ser minúsculo,
+# mas `LiveScript`, publicado antes dessa regra, segue sendo um pacote distinto
+# de `livescript`. Dobrar a caixa dos dois funde dois pacotes num nó; não dobrar
+# a de nenhum parte um projeto em dois.
+_PEP503 = re.compile(r"[-_.]+")
+_NORMALISING = frozenset({"pypi"})
 
-    `slug` transforma `@` e `/` no mesmo hífen que já separa palavras, então o
-    escopo do npm evapora e nomes distintos disputam um id só. O guard de
-    rótulos recusa a fusão — corretamente —, mas o preço é o build inteiro cair
-    por causa de um `package.json`. Aqui cada segmento do nome é sluggado por
-    si, e a barra sobrevive como separador.
 
-    Um nome do qual o slug não deixa nada — só pontuação, ou escrita fora do
-    alfabeto latino — é derivado por digest, como um Author: ilegível, mas sem
-    arrastar o vizinho para o mesmo nó.
+def dependency_name(ecosystem: str, name: str) -> str:
+    """O nome sob o qual o ecossistema reconhece o pacote.
+
+    É também o rótulo do nó: escrever `Django` num `requirements.txt` e
+    `django` noutro não são dois projetos, e o guard de rótulos recusaria os
+    dois nomes no mesmo id — corretamente, se os nomes fossem mesmo distintos.
     """
-    segments = [part for part in (slug(piece) for piece in name.split("/")) if part]
-    if not segments:
-        digest = hashlib.sha256(name.strip().encode("utf-8")).hexdigest()
-        return f"dependency:{ecosystem}/{digest[:16]}"
-    scope = "@" if name.startswith("@") else ""
-    return f"dependency:{ecosystem}/{scope}{'/'.join(segments)}"
+    stripped = name.strip()
+    if ecosystem in _NORMALISING:
+        return _PEP503.sub("-", stripped).lower()
+    return stripped
+
+
+# O nome do pacote já é o identificador dele dentro do ecossistema; sluggar por
+# cima inventa um segundo, e um que perde informação. `@babel/cli` e `babel-cli`
+# caíam no mesmo id porque `@` e `/` viram o hífen que separa palavras, e o
+# build inteiro caía por causa de um `package.json`.
+#
+# O que não couber no conjunto seguro sai por digest, como um Author: ilegível,
+# mas sem arrastar o vizinho para o seu nó.
+_SAFE_NAME = re.compile(r"^@?[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$")
+
+
+def dependency_id(ecosystem: str, name: str) -> str:
+    canonical = dependency_name(ecosystem, name)
+    if canonical and _SAFE_NAME.match(canonical):
+        return f"dependency:{ecosystem}/{canonical}"
+    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return f"dependency:{ecosystem}/{digest[:16]}"
 
 
 LINEAGE_EDGES = ("DERIVES_FROM", "SUCCEEDS")
@@ -311,12 +332,13 @@ def build(artifacts, *, config=None, build_mode: str = "public",
             )
 
         for dependency in artifact.dependencies:
-            label = dependency["name"]
+            ecosystem = dependency["ecosystem"]
+            label = dependency_name(ecosystem, dependency["name"])
             dependency_node = builder.node(
-                dependency_id(dependency["ecosystem"], label),
+                dependency_id(ecosystem, dependency["name"]),
                 "Dependency",
                 label,
-                ecosystem=dependency["ecosystem"],
+                ecosystem=ecosystem,
             )
             builder.edge(artifact_node, dependency_node, "DEPENDS_ON")
 
