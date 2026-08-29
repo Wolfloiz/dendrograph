@@ -94,42 +94,42 @@ the selected node survived. Then unplug the network and do it again.
 
 ### Implementation
 
-- [ ] T007 [US1] Create `views/index.html` — the shell: header, view selector, a slot for the
+- [X] T007 [US1] Create `views/index.html` — the shell: header, view selector, a slot for the
       search field, and the view container. Loads `graph.js`, `loader.js`, `theme.js` and the
       view modules; carries no rendering logic of its own.
-- [ ] T008 [US1] Create `views/screen.js` — the view registry, activation and suspension, and
+- [X] T008 [US1] Create `views/screen.js` — the view registry, activation and suspension, and
       the selection that lives in the shell rather than in any view (per
       [contracts/screen.md](./contracts/screen.md)). Views are told what is selected; they do
       not decide it.
-- [ ] T009 [US1] Add fragment routing to `views/screen.js` — parse and serialise
+- [X] T009 [US1] Add fragment routing to `views/screen.js` — parse and serialise
       `#graph`, `#graph/<node id>`, `#tool/<node id>`, `#timeline?q=<query>` per the grammar
       in [data-model.md](./data-model.md#address-grammar). Pan, zoom and the layout seed stay
       out on purpose: a shared address lands on the same subject, not the same pixels.
-- [ ] T010 [US1] Stop the graph's animation loop in `views/view-graph.js` when the view is
+- [X] T010 [US1] Stop the graph's animation loop in `views/view-graph.js` when the view is
       suspended, keeping the settled layout so returning resumes rather than re-settles. This
       is the SC-007 regression the single screen is most likely to introduce — the loop is
       dirty-gated, which costs nothing on a page with one view and keeps costing behind a
       timeline at ~70 ms a frame while settling.
-- [ ] T011 [US1] Carry the selection across a view switch in `views/screen.js` and
+- [X] T011 [US1] Carry the selection across a view switch in `views/screen.js` and
       `views/view-timeline.js` — an Artifact selected in the graph is highlighted in the
       timeline. A view that cannot render the current selection shows its normal state, never
       an error.
-- [ ] T012 [P] [US1] Extend `views/style.css` with the shell: view selector, layout, and the
+- [X] T012 [P] [US1] Extend `views/style.css` with the shell: view selector, layout, and the
       narrow-screen rule where the timeline is the view that survives. Extend, do not rewrite
       — the design tokens and the `.eyebrow` rule are shared with what exists.
-- [ ] T013 [US1] Delete `views/graph.html` and `views/timeline.html`. `core/build.py` needs no
+- [X] T013 [US1] Delete `views/graph.html` and `views/timeline.html`. `core/build.py` needs no
       change: the glob added in v0.1 already carries whatever is in `views/`. State the broken
       addresses in the commit rather than adding redirect stubs (R8).
-- [ ] T014 [US1] Update `README.md` and `examples/README.md` to name `site/index.html`
+- [X] T014 [US1] Update `README.md` and `examples/README.md` to name `site/index.html`
       instead of `site/timeline.html`. **Not parallel**: T031 rewrites `README.md` too, and
       US4 is invited to run at any time — the two must not be open at once.
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Add `tests/test_screen.py` — the emitted file set is exactly what
+- [X] T015 [P] [US1] Add `tests/test_screen.py` — the emitted file set is exactly what
       [contracts/screen.md](./contracts/screen.md) lists, and `graph.html` / `timeline.html`
       are gone. Catches a build that quietly keeps shipping the old pages.
-- [ ] T016 [US1] Extend the jsdom harness to prove the graph's loop draws **zero frames** while
+- [X] T016 [US1] Extend the jsdom harness to prove the graph's loop draws **zero frames** while
       the timeline is active, and that returning to the graph does not re-settle. Catches the
       one regression that would break SC-007 without breaking anything visible.
 
@@ -148,18 +148,18 @@ The Artifact comes back.
 
 ### Implementation
 
-- [ ] T017 [US2] Create `views/search.js` — an index over Artifact, Tool and Technique names
+- [X] T017 [US2] Create `views/search.js` — an index over Artifact, Tool and Technique names
       plus Artifact descriptions, built from the payload already in memory. **46 of the 57
       published Artifacts carry a description today**, so this needs no new build output and no
       rescan (FR-020). Prefix matches rank above substring matches, better-connected first.
-- [ ] T018 [US2] Wire search into `views/index.html` and `views/screen.js` — the field, the
+- [X] T018 [US2] Wire search into `views/index.html` and `views/screen.js` — the field, the
       results, and selecting a result moving the current view rather than replacing the screen
       (FR-010). Each result names its kind and why it matched: name or description.
-- [ ] T019 [P] [US2] Create `core/search.py` — FTS5 queries over `artifact_search` in
+- [X] T019 [P] [US2] Create `core/search.py` — FTS5 queries over `artifact_search` in
       `graph.sqlite`, ordered by rank then name. Ordering must stay mechanical and explainable
       in one sentence; anything that looks like a judgement about which Artifact matters more
       is an inference the tool does not make (Principle I).
-- [ ] T020 [US2] Add the `search` command to `cli.py` per
+- [X] T020 [US2] Add the `search` command to `cli.py` per
       [contracts/search.md](./contracts/search.md), and record it in
       `specs/001-git-collector/contracts/cli.md`. With no FTS5 table it refuses with exit `2`
       and says how to get one — it never falls back to a scan that answers a different
@@ -167,21 +167,26 @@ The Artifact comes back.
 
 ### Tests for User Story 2
 
-- [ ] T021 [P] [US2] Add `tests/test_search.py` — CLI results carry the kind, the subject and
+- [X] T021 [P] [US2] Add `tests/test_search.py` — CLI results carry the kind, the subject and
       why each matched; a query matching nothing exits `0` and says so.
-- [ ] T022 [US2] **The privacy guard** in `tests/test_search.py` — a term appearing only in a
+- [X] T022 [US2] **The privacy guard** in `tests/test_search.py` — a term appearing only in a
       withheld Artifact's description is findable from the CLI and appears **nowhere** in the
       published payload, and the page's index returns nothing at all for it. Not "1 result
       hidden": a withheld count discloses that private work matches that word (FR-009,
       Principle IV).
-- [ ] T023 [P] [US2] In `tests/test_search.py`, simulate an archive built without FTS5 and
+- [X] T023 [P] [US2] In `tests/test_search.py`, simulate an archive built without FTS5 and
       assert the command refuses rather than degrading. `sqlite.has_search()` exists for this
       and has had no caller until now.
-- [ ] T024 [US2] Measure search latency against the real archive at 3,283 nodes with the
+- [X] T024 [US2] Measure search latency against the real archive at 3,283 nodes with the
       jsdom harness and hold it under the 50 ms per keystroke SC-005 asks for. The index is
       bigger than it looks — 46 of the 57 published Artifacts carry prose — and a scan per
       keystroke across all of it is exactly the cost that is invisible in a demo and felt in
       a real archive.
+  - Measured 2026-08-29 against the full build, 3,286 nodes, 50 of 97 Artifacts carrying
+    prose: index built in **2.3 ms**, mean **0.13 ms** per keystroke over 42 queries typed
+    letter by letter, worst **2.96 ms** on `m` with 56 results. SC-005 asks for under 50 ms;
+    the margin is seventeen-fold. The scan is linear over a payload that is already in
+    memory, and at this size linear is simply cheap.
 
 **Checkpoint**: The archive is answerable, from both sides, without either side telling the
 other's secrets.
@@ -198,32 +203,38 @@ count and the untouched count are both there and cannot be confused for each oth
 
 ### Implementation
 
-- [ ] T025 [US3] Create `views/view-tool.js` — the profile, reading `first`, `last`,
+- [X] T025 [US3] Create `views/view-tool.js` — the profile, reading `first`, `last`,
       `artifact_count`, `untouched_count` and `attributed` from the Tool node and the member
       list from `indexes.tool_to_artifacts`, which v0.1 shipped unrendered.
-- [ ] T026 [US3] Render the three states that are not a normal span: no claimable dates says
+- [X] T026 [US3] Render the three states that are not a normal span: no claimable dates says
       *claims no dates* rather than an empty range (FR-013); `attributed: false` labels the
       window as observed activity, not the Author's (FR-012); and a subject that does not
       exist renders **the same** not-found as one that was withheld, because telling them
       apart is a disclosure.
-- [ ] T027 [US3] Make the profile reachable from a search result and from a Tool node in any
+- [X] T027 [US3] Make the profile reachable from a search result and from a Tool node in any
       view, via `#tool/<node id>` (FR-014), in `views/screen.js` and `views/view-graph.js`.
 
 ### Tests for User Story 3
 
-- [ ] T028 [US3] **The R7 guard** in `tests/test_tool_profile.py` — for every Tool in the real
+- [X] T028 [US3] **The R7 guard** in `tests/test_tool_profile.py` — for every Tool in the real
       archive, the rows marked untouched (from each Artifact's published `authorship.share`)
       agree with the Tool's own `untouched_count`. They are two different measurements that
       should coincide and nothing enforces it. A profile showing four rows under a heading
       saying three is worse than one showing neither.
-- [ ] T029 [P] [US3] In `tests/test_tool_profile.py`, assert a Tool whose every use was
+- [X] T029 [P] [US3] In `tests/test_tool_profile.py`, assert a Tool whose every use was
       withheld is absent from the published payload entirely, so its profile cannot be reached
       by guessing its address.
-- [ ] T030 [US3] **Only if T028 fails**: publish `indexes.tool_to_untouched` from the same pass
+- [X] T030 [US3] **Only if T028 fails**: publish `indexes.tool_to_untouched` from the same pass
       that computes the span in `core/graph.py`, and write it into
       `specs/001-git-collector/contracts/graph.md`. Derived at build time, so no rescan and no
       store change (FR-020) — but a contract addition, and it gets documented rather than
       quietly reconciled.
+  - **R7 resolved against the derivation, on the real archive.** JavaScript listed 13 rows
+    against its own `untouched_count` of 12. The two are different questions and one
+    Artifact answers them differently: the Author committed to it without adding lines, so
+    it has a date window and a `share` that rounds to nothing. `indexes.tool_to_untouched`
+    is published from the same pass that computes the span, documented in
+    `contracts/graph.md`, and `tests/test_tool_profile.py` holds the count to the list.
 
 **Checkpoint**: The résumé question is browsable, and the number that is claimed is
 distinguishable from the number that is not.

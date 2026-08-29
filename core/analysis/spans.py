@@ -33,6 +33,12 @@ class Span:
     # fora das datas, mas não somem: esconder um fork seria mentir na outra
     # direção, e o Author precisa ver por que a conta não fecha.
     untouched_count: int = 0
+    # Quais são, não só quantos. `untouched` e "não contribuiu material" são
+    # duas medidas diferentes: um Artifact onde o Author commitou sem somar
+    # linhas tem janela de datas e `share` zero, e derivar a lista do `share`
+    # dá uma contagem que não fecha com esta. Medido no arquivo real: 13 contra
+    # 12 em JavaScript (ADR-0009 manda a saída dizer, não conciliar).
+    untouched_ids: tuple = ()
     # Falso quando não há e-mails configurados: sem eles não existe "meu" para
     # medir, e a janela é só o que foi observado. SC-007 fala em anos de
     # experiência — uma janela não atribuída não sustenta essa frase.
@@ -70,6 +76,7 @@ def compute(artifacts, emails: tuple[str, ...] = (),
     lasts: dict[str, list[str]] = {}
     counts: dict[str, int] = {}
     untouched: dict[str, int] = {}
+    untouched_of: dict[str, list] = {}
 
     for artifact in artifacts:
         if attributed:
@@ -86,6 +93,7 @@ def compute(artifacts, emails: tuple[str, ...] = (),
             untouched.setdefault(name, 0)
             if not mine:
                 untouched[name] += 1
+                untouched_of.setdefault(name, []).append(artifact.id)
                 continue
             counts[name] += 1
             if first:
@@ -100,6 +108,7 @@ def compute(artifacts, emails: tuple[str, ...] = (),
             last=max(lasts.get(name, []), default=None),
             artifact_count=count,
             untouched_count=untouched[name],
+            untouched_ids=tuple(sorted(untouched_of.get(name, ()))),
             attributed=attributed,
         )
         for name, count in counts.items()

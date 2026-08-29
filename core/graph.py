@@ -207,7 +207,8 @@ class GraphBuilder:
         return rows
 
     def to_dict(self, *, build_mode: str, aggregates: dict | None = None,
-                unreachable: list | None = None, generated_at: str | None = None) -> dict:
+                unreachable: list | None = None, generated_at: str | None = None,
+                untouched: dict | None = None) -> dict:
         nodes = self._ordered_nodes()
         tool_index: dict[str, list[str]] = {}
         for edge in self._ordered_edges():
@@ -226,7 +227,21 @@ class GraphBuilder:
             "edges": self._ordered_edges(),
             # Presente na v0.1 e não renderizado por ela: a v0.2 precisa dele, e
             # acrescentá-lo depois obriga todo Author a reconstruir.
-            "indexes": {"tool_to_artifacts": {k: sorted(v) for k, v in sorted(tool_index.items())}},
+            # `tool_to_artifacts` entrou na v0.1 sem quem o renderizasse: a v0.2
+            # precisa dele, e acrescentá-lo depois obrigaria todo Author a
+            # reconstruir. `tool_to_untouched` entrou pelo motivo oposto — a v0.2
+            # tentou derivá-lo de `authorship.share` e a conta não fechou. São
+            # duas medidas diferentes: `share` é quanto material é do Author,
+            # `untouched` é se ele commitou. Um repositório onde ele commitou sem
+            # somar linhas tem janela de datas e `share` zero, e apareceu no
+            # arquivo real (13 contra 12 em JavaScript). Publicar a lista é dizer
+            # qual das duas o span usou, em vez de deixar quem lê adivinhar.
+            "indexes": {
+                "tool_to_artifacts": {k: sorted(v) for k, v in sorted(tool_index.items())},
+                "tool_to_untouched": {
+                    k: sorted(v) for k, v in sorted((untouched or {}).items()) if v
+                },
+            },
         }
         if aggregates:
             payload["aggregates"] = aggregates
@@ -504,6 +519,11 @@ def build(artifacts, *, config=None, build_mode: str = "public",
 
     return builder.to_dict(
         build_mode=build_mode,
+        untouched={
+            node_id("Tool", name): list(span.untouched_ids)
+            for name, span in spans.items()
+            if span.untouched_ids
+        },
         aggregates=aggregates,
         unreachable=unreachable,
         generated_at=generated_at,

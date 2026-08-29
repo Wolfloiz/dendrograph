@@ -22,7 +22,11 @@
     { id: "graph", label: "Graph", title: "Knowledge graph",
       factory: global.DendroViewGraph },
     { id: "timeline", label: "Timeline", title: "Archive timeline",
-      factory: global.DendroViewTimeline }
+      factory: global.DendroViewTimeline },
+    // Sem botão: não é uma vista do arquivo inteiro, é a vista de um assunto.
+    // Chega-se a ela por um resultado de busca ou por um nó, nunca por
+    // navegação vazia.
+    { id: "tool", label: null, title: "Tool", factory: global.DendroViewTool }
   ];
 
   var live = {};        // id → o punhado que a view devolveu
@@ -48,7 +52,8 @@
       meta: meta,
       // Um tipo desligado no grafo sai também dos resultados: oferecer um nó
       // que a vista não desenha é oferecer um beco.
-      onFilterChange: function () { if (find && find.value) rerun(); }
+      onFilterChange: function () { if (find && find.value) rerun(); },
+      onPick: function (nodeId) { selection = nodeId; show(VIEWS[0].id); tell(VIEWS[0].id); }
     });
     return live[id];
   }
@@ -139,6 +144,7 @@
   }
 
   VIEWS.forEach(function (def) {
+    if (!def.label) return;
     var button = document.createElement("button");
     button.type = "button";
     button.textContent = def.label;
@@ -218,11 +224,21 @@
   }
 
   function selectResult(m) {
-    setSelection(m.id);
+    // Uma Tool tem uma vista própria e é onde a pergunta dela se responde.
+    if (m.type === "Tool") {
+      selection = m.id;
+      show("tool");
+      tell("tool");
+    } else {
+      if (current === "tool") show(VIEWS[0].id);
+      setSelection(m.id);
+    }
     find.value = "";
+    query = "";
     matches = [];
     cursor = -1;
     renderResults();
+    writeAddress();
   }
 
   function rerun() {
