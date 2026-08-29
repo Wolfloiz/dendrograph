@@ -85,10 +85,10 @@ class Report(unittest.TestCase):
 
 
 class Surface(unittest.TestCase):
-    def test_exactly_the_six_commands_fr020_requires(self):
+    def test_exactly_the_seven_commands_fr020_requires(self):
         self.assertEqual(
             sorted(cli.COMMANDS),
-            ["build", "login", "prune", "publish", "scan", "suggest"],
+            ["build", "login", "prune", "publish", "scan", "search", "suggest"],
         )
 
     def test_dry_run_is_offered_by_every_command_that_writes(self):

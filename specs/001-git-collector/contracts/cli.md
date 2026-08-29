@@ -16,6 +16,7 @@ product's home (ADR-0007). Every command runs from the archive repository's root
 | `dendro publish` | Produces the publishable site | `site/` |
 | `dendro suggest` | Proposes relationships and Collections for confirmation | Nothing — prints |
 | `dendro prune` | Lists Artifacts that look prunable | Nothing — prints |
+| `dendro search QUERY` | Searches Artifact names and descriptions across the whole archive | Nothing — prints |
 
 ## `dendro scan [SOURCE]`
 
@@ -90,6 +91,32 @@ in the store, and is reversed by deleting the line — its data returns intact.
 
 A tool built because human memory is unreliable must not offer one-command amnesia
 (ADR-0002).
+
+## `dendro search QUERY`
+
+```text
+usage: dendro search [-h] [--root ROOT] [--limit N] QUERY
+```
+
+Added in v0.2. Queries the FTS5 `artifact_search` table that v0.1 populated on every
+build and never read. Scope is **the whole archive, including Artifacts the published
+site withholds** — it runs on the Author's machine against their own build, and that is
+the difference from the search on the published page.
+
+Ordering is the FTS5 rank, then the name. Mechanical and explainable in one sentence,
+because an ordering that looked like a judgement about which Artifact matters more would
+be an inference this tool does not make (Principle I).
+
+Each row names the subject, its kind, and **why** it matched — the name or the
+description — so a visitor who searched a word that only appears in prose can tell that
+is what happened.
+
+A query beginning with a dash is text, not an option: `dendro search ---` answers rather
+than blaming whoever typed it.
+
+**With no search index**, the command refuses and says how to get one. It never falls
+back to a scan, which would answer a different question without saying so; `has_search()`
+in `core/sqlite.py` exists so the difference is knowable. Exit code `2`.
 
 ## Common behaviour
 

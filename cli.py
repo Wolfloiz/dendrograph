@@ -17,6 +17,10 @@ from core.report import EXIT_FAILURE, EXIT_USAGE, RunReport
 
 BUILD_MODES = ("public", "redacted", "full")
 
+# Quantas linhas `search` imprime antes de dizer que cortou. O total continua
+# verdadeiro na última linha: cortar a lista não pode encolher a contagem.
+SEARCH_LIMIT = 20
+
 
 class CommandError(Exception):
     """A command could not complete. Exits `1`."""
@@ -65,6 +69,20 @@ def build_parser() -> argparse.ArgumentParser:
 
     prune = commands.add_parser("prune", help="list Artifacts that look prunable")
     _add_common(prune, writes=False)
+
+    # A ordem das linhas é a da usage do contrato: --root, --limit, QUERY.
+    search = commands.add_parser(
+        "search", help="search Artifact names and descriptions"
+    )
+    _add_common(search, writes=False)
+    search.add_argument(
+        "--limit",
+        type=int,
+        default=SEARCH_LIMIT,
+        metavar="N",
+        help=f"most results to print (default: {SEARCH_LIMIT})",
+    )
+    search.add_argument("query", metavar="QUERY", help="words to look for")
 
     return parser
 
@@ -253,8 +271,38 @@ def cmd_prune(args, config) -> RunReport:
     return RunReport()
 
 
+def cmd_search(args, config) -> RunReport:
+    """Queries the build's FTS5 index. Prints. Writes nothing (FR-007).
+
+    O escopo é o build inteiro, inclusive os Artifacts que o site retém: isto
+    roda na máquina do Author, contra o arquivo dele (contracts/search.md).
+    """
+    from core import search as search_module
+
+    try:
+        path = search_module.index_path(args.root)
+    except search_module.NoArchive as exc:
+        raise CommandError(str(exc)) from exc
+
+    connection = search_module.connect(path)
+    try:
+        results, total = search_module.search(
+            connection, args.query, limit=args.limit
+        )
+    except search_module.NoSearchIndex:
+        # Recusa, não degrada: uma varredura linear responderia a outra
+        # pergunta sem avisar que trocou de pergunta (R6).
+        print(search_module.NO_INDEX_MESSAGE, file=sys.stderr)
+        return search_module.RefusedReport()
+    finally:
+        connection.close()
+
+    print(search_module.render(results, total))
+    return RunReport()
+
+
 # Comandos que só leem. Ver contracts/cli.md: "Writes: Nothing — prints".
-READ_ONLY_COMMANDS = frozenset({"suggest", "prune"})
+READ_ONLY_COMMANDS = frozenset({"suggest", "prune", "search"})
 
 COMMANDS = {
     "scan": cmd_scan,
@@ -263,11 +311,43 @@ COMMANDS = {
     "publish": cmd_publish,
     "suggest": cmd_suggest,
     "prune": cmd_prune,
+    "search": cmd_search,
 }
+
+
+# Flags de `search` que consomem o argumento seguinte.
+_SEARCH_VALUE_FLAGS = ("--root", "--limit")
+
+
+def _protect_query(argv: list[str]) -> list[str]:
+    """Uma consulta que começa com traço é texto, não opção.
+
+    `dendro search ---` e `dendro search -v` são coisas que uma pessoa digita,
+    e o argparse as lê como flags desconhecidas e culpa quem digitou. O `--`
+    entra sozinho, antes do primeiro token que não é flag nem valor de flag.
+    """
+    if not argv or argv[0] != "search" or "--" in argv:
+        return argv
+    i = 1
+    while i < len(argv):
+        token = argv[i]
+        if token in _SEARCH_VALUE_FLAGS:
+            i += 2
+            continue
+        if token.startswith("-") and token not in ("-h", "--help"):
+            # Ou é uma flag que o parser conhece e ele reclama, ou é a consulta.
+            if token.split("=")[0] in _SEARCH_VALUE_FLAGS:
+                i += 1
+                continue
+            return argv[:i] + ["--"] + argv[i:]
+        return argv
+    return argv
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
+    if argv is not None:
+        argv = _protect_query(list(argv))
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help(sys.stderr)
