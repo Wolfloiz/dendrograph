@@ -518,7 +518,14 @@
     }
   }
 
+  // Numa página com uma vista só, um laço sempre agendado e desenhando só
+  // quando algo muda não custa nada. Atrás de outra vista, custa: com 3.283
+  // nós um quadro de assentamento leva ~70 ms, e ninguém está olhando. Parar
+  // guarda o layout onde parou, então voltar retoma em vez de reassentar.
+  var running = false;
+
   function frame() {
+    if (!running) return;
     if (!settled) { tick(); dirty = true; }
     if (!userMoved && !settled) fitToLayout();
     if (glide) {
@@ -548,8 +555,18 @@
     }
     requestAnimationFrame(frame);
   }
+
+  function start() {
+    if (running) return;
+    running = true;
+    dirty = true;
+    requestAnimationFrame(frame);
+  }
+
+  function stop() { running = false; }
+
   recolour();
-  frame();
+  start();
 
   // O botão de tema é cromo da página; o módulo só sabe se repintar.
   function retheme() {
@@ -773,7 +790,9 @@
         else hiddenTypes[type] = true;
         row.setAttribute("aria-pressed", hiddenTypes[type] ? "false" : "true");
         applyFilters();
-        if (find.value) search(find.value);
+        // Desligar um tipo tira os nós dele dos resultados também, e quem
+        // guarda a busca é a casca. O grafo avisa; não conhece o campo.
+        if (options.onFilterChange) options.onFilterChange(hiddenTypes);
       });
       legend.appendChild(row);
     });
@@ -792,94 +811,12 @@
     legend.appendChild(hint);
   }
 
-  // ---------- busca ----------
-  var find = el("find");
-  var results = el("results");
-  var matches = [], cursor = -1;
-  var SHOWN = 12;
-
-  function search(query) {
-    var needle = query.trim().toLowerCase();
-    matches = [];
-    if (needle) {
-      // Quem começa com o que foi digitado vem antes de quem só contém, e
-      // entre iguais o mais conectado: é o que se estava procurando.
-      var starts = [], contains = [];
-      for (var i = 0; i < nodes.length; i++) {
-        var n = nodes[i];
-        if (n.off) continue;
-        var at = n.ref.label.toLowerCase().indexOf(needle);
-        if (at === 0) starts.push(n);
-        else if (at > 0) contains.push(n);
-      }
-      function rank(a, b) {
-        return b.degree - a.degree || (a.ref.label < b.ref.label ? -1 : 1);
-      }
-      starts.sort(rank);
-      contains.sort(rank);
-      matches = starts.concat(contains);
-    }
-    cursor = matches.length ? 0 : -1;
-    renderResults();
-  }
-
-  function renderResults() {
-    results.innerHTML = "";
-    matches.slice(0, SHOWN).forEach(function (n, i) {
-      var row = document.createElement("li");
-      row.setAttribute("role", "option");
-      row.setAttribute("aria-selected", i === cursor ? "true" : "false");
-      var dot = document.createElement("i");
-      dot.style.background = n.colour;
-      var name = document.createElement("span");
-      name.textContent = n.ref.label;
-      var kind = document.createElement("span");
-      kind.className = "kind";
-      kind.textContent = n.ref.type;
-      row.appendChild(dot);
-      row.appendChild(name);
-      row.appendChild(kind);
-      // `mousedown`, não `click`: o blur do campo fecharia a lista antes de o
-      // clique chegar.
-      row.addEventListener("mousedown", function (event) {
-        event.preventDefault();
-        reveal(n);
-      });
-      results.appendChild(row);
-    });
-    if (matches.length > SHOWN) {
-      var more = document.createElement("li");
-      more.className = "more";
-      more.textContent = "+" + (matches.length - SHOWN) + " more — keep typing";
-      results.appendChild(more);
-    }
-  }
-
-  function reveal(n) {
-    select(n);
-    centreOn(n);
-    placeChipOnNode(n);
-  }
-
-  find.addEventListener("input", function () { search(find.value); });
-  find.addEventListener("focus", function () { if (find.value) search(find.value); });
-  find.addEventListener("blur", function () { results.innerHTML = ""; });
-  find.addEventListener("keydown", function (e) {
-    var limit = Math.min(matches.length, SHOWN);
-    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && limit) {
-      e.preventDefault();
-      cursor = (cursor + (e.key === "ArrowDown" ? 1 : limit - 1)) % limit;
-      renderResults();
-      return;
-    }
-    if (e.key === "Enter" && cursor >= 0) { e.preventDefault(); reveal(matches[cursor]); return; }
-    if (e.key === "Escape") { find.value = ""; search(""); find.blur(); }
-  });
+  // A busca agora é da casca (search.js). O grafo não busca: ele recebe
+  // seleção por DendroScreen.select() e desenha o que lhe pedem.
 
   document.addEventListener("keydown", function (e) {
     var active = document.activeElement;
     var typing = active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName);
-    if (e.key === "/" && !typing) { e.preventDefault(); find.focus(); find.select(); return; }
     // Escape solta o nó preso, que é a mesma saída do clique no vazio.
     if (e.key === "Escape" && !typing && selected) select(null);
   });
@@ -888,10 +825,11 @@
   buildLegend();
 
     return {
-      // `suspend` ainda não para o laço: isso é a T010, e fazê-lo aqui seria
-      // mudar comportamento numa extração que promete não mudar nenhum.
-      activate: function () { dirty = true; },
-      suspend: function () {},
+      activate: start,
+      suspend: stop,
+      // Quais tipos estão desligados agora — a busca da casca não pode
+      // oferecer um nó que esta vista não desenha.
+      hidden: function () { return hiddenTypes; },
       select: function (nodeId) {
         var node = null;
         for (var i = 0; i < nodes.length; i++) {
@@ -901,7 +839,6 @@
         if (node) centreOn(node);
       },
       selected: function () { return selected ? selected.ref.id : null; },
-      search: function (query) { find.value = query || ""; search(find.value); },
       retheme: retheme
     };
   }

@@ -211,9 +211,23 @@
     return out;
   }
 
+  // O que o grafo selecionou aparece aqui: a seleção é da casca, não da vista,
+  // e trocar de vista não pode custar o lugar onde a pessoa estava.
+  var chosen = null;
+
+  function markChosen() {
+    var rows = lanes.querySelectorAll(".row.chosen");
+    for (var i = 0; i < rows.length; i++) rows[i].classList.remove("chosen");
+    if (!chosen) return null;
+    var row = lanes.querySelector('.row[data-id="' + chosen.replace(/"/g, '\\"') + '"]');
+    if (row) row.classList.add("chosen");
+    return row;
+  }
+
   function render() {
     var out = groups.map(groupSection).join("") + groupSection(rest);
     lanes.innerHTML = markerHtml + out;
+    markChosen();
     var shown = artifacts.filter(isVisible).length;
     el("note").textContent =
       "Each bar runs from the first to the last observed date. " + shown + " of " + artifacts.length +
@@ -281,10 +295,19 @@
   });
 
     return {
-      activate: function () {},
+      activate: function () { markChosen(); },
       suspend: function () {},
-      select: function (nodeId) { return nodeId; },
-      selected: function () { return null; },
+      select: function (nodeId) {
+        chosen = nodeId || null;
+        // Um Artifact selecionado no grafo tem uma linha aqui; uma Tool não.
+        // A vista mostra o seu estado normal nesse caso — a seleção não se
+        // perde por não caber nela.
+        var row = markChosen();
+        if (row && row.scrollIntoView) {
+          row.scrollIntoView({ block: "center", behavior: "auto" });
+        }
+      },
+      selected: function () { return chosen; },
       search: function () {},
       retheme: function () {}
     };

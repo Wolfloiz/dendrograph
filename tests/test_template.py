@@ -39,7 +39,7 @@ class TheTemplateWorksUntouched(unittest.TestCase):
 
     def test_a_build_on_the_empty_template_produces_a_site(self):
         build.build(self.archive, config=config.load(self.archive))
-        for name in ("graph.json", "graph.js", "llms.txt", "timeline.html"):
+        for name in ("graph.json", "graph.js", "llms.txt", "index.html"):
             self.assertTrue((self.archive / "site" / name).exists(), name)
 
     def test_every_commented_example_would_parse_if_uncommented(self):

@@ -77,8 +77,10 @@ class EveryReferenceShipsWithTheSite(unittest.TestCase):
             licences, "fonts ship without the licence that permits redistributing them"
         )
 
-    def test_the_two_views_ship_at_all(self):
-        for name in ("timeline.html", "graph.html", "loader.js", "style.css"):
+    def test_the_screen_and_its_views_ship_at_all(self):
+        # Eram duas páginas até a v0.2; agora é uma casca e dois módulos.
+        for name in ("index.html", "screen.js", "search.js", "view-graph.js",
+                     "view-timeline.js", "loader.js", "style.css"):
             self.assertTrue((self.site / name).exists(), name)
 
 

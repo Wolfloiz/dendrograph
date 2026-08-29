@@ -79,7 +79,34 @@ def emit(payload: dict, root: Path | str, mode: str) -> dict[str, Path]:
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(source.read_bytes())
         written[str(relative)] = destination
+
+    _remove_stale_views(directory, written)
     return written
+
+
+# Extensões que as views possuem neste diretório. Tudo o mais é dado ou fonte.
+_VIEW_SUFFIXES = frozenset({".html", ".js", ".css"})
+
+
+def _remove_stale_views(directory: Path, written: dict) -> None:
+    """Apaga a view que este build não escreveu.
+
+    Copiar por glob resolve acrescentar um arquivo e não resolve tirar um. A
+    v0.2 juntou `graph.html` e `timeline.html` numa tela só, e um arquivo
+    publicado antes disso continuava servindo as duas páginas antigas ao lado da
+    nova: meio comportamento, nenhuma navegação de volta, e nada no build
+    dizendo que elas não deviam mais existir.
+
+    Só o que as views possuem, e só neste diretório — que é derivado por inteiro
+    (ADR-0002). O dado e o store não são tocados.
+    """
+    keep = {str(name) for name in written}
+    for path in sorted(directory.rglob("*")):
+        if not path.is_file() or path.suffix not in _VIEW_SUFFIXES:
+            continue
+        relative = str(path.relative_to(directory))
+        if relative not in keep:
+            path.unlink()
 
 
 def build(root: Path | str = ".", *, mode: str = MODE_PUBLIC, config=None,

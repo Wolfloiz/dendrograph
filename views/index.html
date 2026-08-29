@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Archive — dendrograph</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+
+<div class="wrap">
+<header>
+  <div>
+    <p class="eyebrow">dendrograph</p>
+    <h1 id="title">Archive</h1>
+    <p class="sub" id="meta"></p>
+  </div>
+  <nav>
+    <div class="views" id="views" role="group" aria-label="View"></div>
+    <button class="btn" id="theme" type="button" title="Toggle light/dark">Theme</button>
+  </nav>
+</header>
+
+<!-- As duas views vivem no mesmo documento e são mostradas uma de cada vez. A
+     marcação é da página; os módulos só encontram os seus elementos dentro
+     dela e desenham. -->
+
+<!-- Busca compartilhada: vive na casca, não em nenhuma view. -->
+<div class="finder" id="finder-global">
+  <input id="find" type="search" placeholder="Search nodes  /" autocomplete="off"
+         spellcheck="false" aria-label="Search nodes">
+  <ul class="results" id="results" role="listbox" aria-label="Search results"></ul>
+</div>
+
+<section class="view" id="view-graph" hidden>
+  <main><canvas id="canvas"></canvas></main>
+  <div class="legend" id="legend"></div>
+  <div class="chip" id="chip" role="status" aria-live="polite"></div>
+</section>
+
+<section class="view" id="view-timeline" hidden>
+  <div class="tiles" id="tiles"></div>
+  <div id="notices"></div>
+  <div class="controls" id="controls"></div>
+
+  <div class="panel">
+    <div class="axis" id="axis"></div>
+    <div class="lanes" id="lanes"></div>
+    <p class="note" id="note"></p>
+  </div>
+
+  <section class="tools">
+    <h2>Tools, and how long</h2>
+    <table id="tools"><thead><tr>
+      <th>Tool</th><th>First</th><th>Last</th><th class="n">Years</th><th class="n">Artifacts</th><th>Basis</th>
+    </tr></thead><tbody></tbody></table>
+  </section>
+  <div id="tip" role="tooltip"></div>
+</section>
+</div>
+
+<script src="graph.js"></script>
+<script src="loader.js"></script>
+<script src="search.js"></script>
+<script src="view-graph.js"></script>
+<script src="view-timeline.js"></script>
+<script src="screen.js"></script>

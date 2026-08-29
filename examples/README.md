@@ -7,10 +7,10 @@ nothing else.
 Open it with no server, no install and no account:
 
 ```bash
-xdg-open examples/site/timeline.html   # or open the file however your desktop does
+xdg-open examples/site/index.html   # or open the file however your desktop does
 ```
 
-Unplug the network first if you want to check the claim. Everything the two pages need —
+Unplug the network first if you want to check the claim. Everything the page needs —
 the graph, the fonts, the stylesheet — is in this folder.
 
 ## What is in it

@@ -17,13 +17,13 @@ a folder you can open from a pen drive with the network unplugged.
 cd dendrograph
 python3 cli.py scan github:tinygrad --root ~/my-archive   # any public account
 python3 cli.py build --root ~/my-archive
-xdg-open ~/my-archive/site/timeline.html                  # or just open the file
+xdg-open ~/my-archive/site/index.html                     # or just open the file
 ```
 
 No credential needed for a public account. The first scan clones full history into a
 temporary directory and throws it away — nothing is cached between runs.
 
-Or skip the scan and open a real one: [`examples/site/timeline.html`](examples/site/) is a
+Or skip the scan and open a real one: [`examples/site/index.html`](examples/site/) is a
 published archive of 57 public repositories, committed to this repository. No install, no
 account, and it renders with the network unplugged. `examples/README.md` says what the
 privacy default kept out of it.
