@@ -32,21 +32,26 @@ Structure per [plan.md](./plan.md#project-structure).
 **Purpose**: Put the two guards in place that the rest of the release leans on. Both are
 cheap now and expensive to add after something has already gone wrong.
 
-- [ ] T001 [P] Extend `tests/test_view_assets.py` — assert no file in `views/` is named after
+- [X] T001 [P] Extend `tests/test_view_assets.py` — assert no file in `views/` is named after
       a build output (`graph.js`, `graph.json`, `graph.sqlite`, `llms.txt`). Catches the
       silent overwrite in R3: `emit` writes the data then copies `views/*.js` over it, so
       `views/graph.js` would replace the archive with a renderer and fail as an empty graph
       rather than a build error.
-- [ ] T002 [P] Add a guard in `tests/test_derived_outputs.py` pinning the graph's node
+- [X] T002 [P] Add a guard in `tests/test_derived_outputs.py` pinning the graph's node
       and edge type sets to a literal list. FR-019 makes *no new node type, edge type or
       inference* a requirement of this release, and the nearest existing test only asserts
       that `llms.txt` mentions each type — it would not notice a new one arriving. This is
       what keeps v0.2 honest about being a reach release rather than a collection one.
-- [ ] T003 Capture the pre-extraction baseline with the jsdom op-counting harness against
+- [X] T003 Capture the pre-extraction baseline with the jsdom op-counting harness against
       `views/graph.html` and `views/timeline.html` at 3,283 nodes: frames to settle, nodes on
       screen once settled, labels drawn at rest and zoomed, and per-frame `fill` / `drawImage`
       / `arc` / `set font` counts. Record it in the scratchpad and quote it in the T006 commit
       — it is the only thing that can prove the extraction changed nothing.
+  - Measured 2026-08-29 against the full build (3,283 nodes). **Graph**: settles at frame 619,
+    3,286 arcs in the last frame, 31 labels at rest and 55 / 200 at eight and sixteen wheel
+    steps, canvas trace hash `f16700aaba5c31b9`, DOM hash `d8e474689c0d082a`. **Timeline**:
+    709 elements, DOM hash over the same data. Op totals across the settle:
+    `fill=1270 stroke=1270 arc=2063728 drawImage=20993 set font=647 clearRect=635`.
 
 **Checkpoint**: The naming trap is closed and there is a number to hold the refactor to.
 
@@ -60,16 +65,20 @@ invisibly — which is exactly why it ships before anything that would mask it.
 
 **⚠️ CRITICAL**: No user story work begins until T006 proves equivalence.
 
-- [ ] T004 Extract the graph renderer from `views/graph.html` into `views/view-graph.js`,
+- [X] T004 Extract the graph renderer from `views/graph.html` into `views/view-graph.js`,
       exposing `DendroViewGraph.create(container, graph, options)` returning
       `{ activate, suspend, select, search }`. `views/graph.html` loads the module and keeps
       working; behaviour is unchanged, `suspend` may be a stub until T010.
-- [ ] T005 [P] Extract the timeline renderer from `views/timeline.html` into
+- [X] T005 [P] Extract the timeline renderer from `views/timeline.html` into
       `views/view-timeline.js` with the same factory shape. `views/timeline.html` loads it and
       keeps working.
-- [ ] T006 Re-run the T003 harness against the extracted modules and confirm every number is
+- [X] T006 Re-run the T003 harness against the extracted modules and confirm every number is
       identical. A difference here is a behaviour change nobody asked for; fix it rather than
       re-baseline it.
+  - **Every number identical**, including both hashes. Compared the pre-extraction views out
+    of git against the post-extraction ones over the *same* data, because a rebuild moves
+    `generated_at` and the timeline prints it — the only diff that ever appeared was that
+    timestamp, and pinning the data made it vanish.
 
 **Checkpoint**: Two working pages, two modules, identical output. Bisectable from here.
 

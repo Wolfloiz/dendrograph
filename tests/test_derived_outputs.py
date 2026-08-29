@@ -216,5 +216,46 @@ class EveryOutputIsWritten(unittest.TestCase):
             self.assertFalse((Path(tmp) / "site").exists())
 
 
+class TheGraphVocabularyIsClosed(unittest.TestCase):
+    """FR-019 da v0.2: nenhum tipo de nó, de aresta ou de inferência novo.
+
+    A v0.2 alcança o que a v0.1 registra — é uma versão de alcance, não de
+    coleta. O teste mais próximo disto só verifica que o `llms.txt` menciona
+    cada tipo, e não notaria um tipo novo chegando. Este nota.
+
+    Acrescentar um tipo é decisão de constituição ("collectors know about
+    repositories and commits; the graph does not"), então a lista aqui é
+    literal de propósito: mudá-la exige mudar um teste, e mudar um teste é um
+    lugar onde se pensa.
+    """
+
+    NODE_TYPES = (
+        "Artifact", "Tool", "Technique", "Period",
+        "Collection", "Author", "Dependency", "EpochMarker",
+    )
+    EDGE_TYPES = (
+        "USES", "APPLIES", "IN_PERIOD", "IN_COLLECTION",
+        "AUTHORED_BY", "DEPENDS_ON", "DERIVES_FROM", "SUCCEEDS",
+    )
+
+    def test_the_node_types_are_exactly_these(self):
+        self.assertEqual(graph.NODE_TYPES, self.NODE_TYPES)
+
+    def test_the_edge_types_are_exactly_these(self):
+        self.assertEqual(graph.EDGE_TYPES, self.EDGE_TYPES)
+
+    def test_only_two_edge_types_are_ever_inferred(self):
+        # As outras seis são observadas ou confirmadas em config. Uma sétima
+        # inferida seria a máquina dispondo no lugar do Author (Princípio I).
+        self.assertEqual(graph.LINEAGE_EDGES, ("DERIVES_FROM", "SUCCEEDS"))
+
+    def test_the_published_schema_says_the_same_thing(self):
+        # O `graph.json` é autodescritivo (FR-017): se o schema publicado
+        # divergir das constantes, quem lê o arquivo lê a lista errada.
+        payload = graph.build([], generated_at="2026-08-27T00:00:00Z")
+        self.assertEqual(tuple(payload["schema"]["node_types"]), self.NODE_TYPES)
+        self.assertEqual(tuple(payload["schema"]["edge_types"]), self.EDGE_TYPES)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -82,5 +82,38 @@ class EveryReferenceShipsWithTheSite(unittest.TestCase):
             self.assertTrue((self.site / name).exists(), name)
 
 
+class NoViewMayBeNamedAfterABuildOutput(unittest.TestCase):
+    """`emit` escreve os dados e só depois copia `views/*`, sobre o mesmo diretório.
+
+    Um arquivo chamado `views/graph.js` substituiria o arquivo inteiro por um
+    renderizador, e a falha apareceria como um grafo vazio — não como erro de
+    build. A conveniência do glob que carrega qualquer view nova tem esse preço,
+    e ele não pode ser cobrado de quem só quis nomear um módulo.
+    """
+
+    # O que `core.build.emit` escreve antes de copiar as views.
+    RESERVED = frozenset({"graph.js", "graph.json", "graph.sqlite", "llms.txt"})
+
+    def test_no_view_file_collides_with_a_build_output(self):
+        for path in sorted(VIEWS.rglob("*")):
+            if path.is_file():
+                self.assertNotIn(
+                    path.name, self.RESERVED,
+                    f"views/{path.relative_to(VIEWS)} would be overwritten by the build,"
+                    " or would overwrite it — rename it (view-graph.js, not graph.js)",
+                )
+
+    def test_the_reserved_names_are_the_ones_emit_actually_writes(self):
+        # Sem isto a lista acima envelhece em silêncio: um nome novo de saída
+        # deixa de ser reservado e a guarda passa a proteger contra o passado.
+        source = (ROOT / "core" / "build.py").read_text(encoding="utf-8")
+        for name in self.RESERVED - {"graph.sqlite", "llms.txt"}:
+            self.assertIn(f'"{name}"', source, name)
+        from core import llms, sqlite
+
+        self.assertIn(sqlite.FILENAME, self.RESERVED)
+        self.assertIn(llms.FILENAME, self.RESERVED)
+
+
 if __name__ == "__main__":
     unittest.main()
