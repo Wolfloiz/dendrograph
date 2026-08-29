@@ -242,8 +242,10 @@ Two entities exist in the interface only, and neither is stored:
   one screen without opening a second document or a file.
 - **SC-004**: A stranger with a GitHub account and no prior knowledge reaches their own
   published archive in under 10 minutes, following the README and asking nothing.
-- **SC-005**: A search over an archive of 3,000 nodes returns its results while the visitor
-  is still typing — no perceptible wait, no spinner.
+- **SC-005**: A search over an archive of 3,000 nodes returns its results in under 50 ms per
+  keystroke — fast enough that they appear while the visitor is still typing, with no spinner
+  and no delay they can feel. The number is here because *no perceptible wait* cannot fail a
+  test, and a criterion that cannot fail is not a criterion.
 - **SC-006**: The published archive still opens from a file with the network unplugged, with
   no account and no install, and every view works. *(v0.1's SC-001, non-negotiable.)*
 - **SC-007**: First render of the single screen stays within 2 seconds at 3,000 nodes, and

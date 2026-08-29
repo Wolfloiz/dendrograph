@@ -45,7 +45,9 @@ stopping for ten seconds, then `__fps.stop()`:
 On the page:
 
 - [ ] A word that appears only in a description, in no name, returns its Artifact.
-- [ ] Results appear while typing — no perceptible wait.
+- [ ] Results appear while typing, under 50 ms per keystroke at 3,000 nodes (SC-005).
+- [ ] A visitor who knows a name reaches it in under 15 seconds from opening the archive,
+      without scrolling a list (SC-001). Time it with someone who has not seen it.
 - [ ] A result says whether it matched a name or a description.
 - [ ] Selecting a result moves the current view; the screen is not replaced.
 - [ ] A search matching nothing says so and offers no guess.
@@ -94,7 +96,10 @@ The only check that cannot be automated:
 - [ ] Hand the README to someone who has never seen the repository. Time them. They reach a
       published archive of their own public repositories in under 10 minutes, asking nothing.
 - [ ] They never open a source file.
-- [ ] Stopping after step one leaves them with a working thing, not a broken half.
+- [ ] Stopping after step one leaves them with a working thing, not a broken half — build an
+      archive of a single Artifact and confirm every view renders it: a graph of one node, a
+      one-row timeline, a search with nothing to find. It is the first thing every adopter
+      sees, and the only state nothing else in this release exercises.
 - [ ] At the point where it first publishes, the README states exactly what the published
       site does and does not contain (Principle IV).
 
@@ -104,7 +109,7 @@ The only check that cannot be automated:
 python3 -m unittest discover -s tests -q
 ```
 
-- [ ] All tests pass — 310 at the close of v0.1.
+- [ ] All tests pass, and no fewer than at the close of v0.1 — 310 then, more now.
 - [ ] `dendro build` requires no rescan to produce everything above (FR-020). Verify by
       building from a store that has not been scanned since v0.1.
 
