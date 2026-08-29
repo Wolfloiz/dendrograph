@@ -250,41 +250,17 @@ Two entities exist in the interface only, and neither is stored:
   no account and no install, and every view works. *(v0.1's SC-001, non-negotiable.)*
 - **SC-007**: First render of the single screen stays within 2 seconds at 3,000 nodes, and
   panning holds at least 30fps — no worse than v0.1 measured. *(Carried from v0.1's SC-005.)*
-- **SC-008**: **Owed from v0.1**: a ~500-repository account completes a first full scan
-  unattended within 30 minutes, with progress reported throughout. v0.1 projected 25.5
-  minutes from measured linearity across 68 real repositories and 500 synthetic ones, and
-  never observed it. It closes when an account of that size is scanned, or it is restated
-  as a projection and the criterion is rewritten to match what can be observed.
+- **SC-008**: **Rewritten, not inherited a second time.** A first full scan reports progress
+  throughout and completes unattended, at a cost that stays linear in the number of
+  repositories: **under 4 seconds per repository on a warm link**, with no super-linear term
+  as the count grows. At that rate 500 repositories land inside 30 minutes, and the sentence
+  is one that can be observed instead of one that waits for an account nobody here has.
 
-## Assumptions
-
-- **Search on the page and search in the CLI are two mechanisms, one vocabulary.** ADR-0004
-  forbids a library on the page, so the page cannot query SQLite; it searches what it has
-  already loaded. The FTS5 table v0.1 populates is what the command line queries. Both
-  answer the same question over different scopes, and the spec treats them as one feature
-  because a visitor and an Author asking the same thing should get the same shape of answer.
-- **The single screen replaces the two pages rather than joining them.** The build stops
-  emitting a separate graph page and timeline page. An Author republishes to get the new
-  shape; nothing in the store changes. Addresses shared before the change are the reason
-  FR-003 exists.
-- **The Tool profile is a view on the single screen, not a page per Tool.** A page per Tool
-  would mean one file per Tool in the published output, which contradicts the single-screen
-  story and grows the site with the archive.
-- **The fork path targets GitHub and GitHub Pages**, because that is what the tool already
-  authenticates against and publishes to (ADR-0007, ADR-0008). Other hosts are v0.3.
-- **Technique profiles are out of scope**, even though Techniques now carry the same span
-  fields as Tools. The roadmap names a Tool profile; a Technique profile is the same view
-  with a different subject and can follow once the shape is proven.
-- **Barnes-Hut is out of scope** and stays in v0.3, despite the Author's own archive having
-  crossed 3,000 nodes. v0.2 must not regress the frame budget; it is not required to fix it.
-
-## Out of Scope
-
-Named explicitly, because each is a plausible reading of "usable by a stranger":
-
-- Barnes-Hut or any change to the layout simulation (v0.3).
-- GitLab and Bitbucket collectors (v0.3).
-- AST-based Technique detection (v0.3).
-- An MCP server over the SQLite (v0.4).
-- Any server, hosted component or account (Principle III, permanently).
-- Any new inference, score or judgement (Principle V, permanently).
+  *Why it changed*: v0.1 wrote SC-001b as "a ~500-repository account completes a first full
+  scan within 30 minutes" and could not test it — the largest account available holds 68.
+  Everything else was measured: 68 real repositories at 3.06 s each, 500 synthetic ones flat
+  at 0.111 / 0.130 / 0.110 s per repository across the run, and derived outputs at 500
+  Artifacts under a second. Carrying the criterion unchanged into v0.3 would make it
+  decoration — a line nobody can pass or fail. The rewritten one keeps what the original was
+  protecting (an unattended run that does not silently hang or degrade) and drops the part
+  that was never about the software.

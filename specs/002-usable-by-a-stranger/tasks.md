@@ -265,7 +265,7 @@ places it last for that reason, not because it matters least.
       nothing to find, and a Tool profile if any Tool exists. This is the first thing every
       adopter sees, and US4's third acceptance scenario — stopping after step one leaves a
       working thing rather than a broken half — is not true until something checks it.
-- [ ] T035 [US4] Time a stranger through it. Under 10 minutes, asking nothing (SC-004). Record
+- [ ] T035 [US4] **Needs a person, not an agent.** Time a stranger through it. Under 10 minutes, asking nothing (SC-004). Record
       what they got stuck on, if anything, in this file.
 
 **Checkpoint**: The path from *interesting* to *I want one* exists and has been walked by
@@ -278,8 +278,17 @@ someone who did not write it.
 - [X] T036 Add **View**, **Selection** and **Search result** to `CONTEXT.md` — new vocabulary
       lands there when it is resolved, not in a backlog. All three exist in the interface only
       and none is stored; say so, or the next person will look for the table.
-- [ ] T037 Run [quickstart.md](./quickstart.md) end to end against the real archive, including
+- [ ] T037 **Partly done; the rest needs a browser.** Run [quickstart.md](./quickstart.md) end to end against the real archive, including
       the offline check with the network actually off and the frame probe in a real browser.
+  - **Done headlessly, 2026-08-29.** No absolute URL in any published file, so nothing is
+    fetched. The 40 withheld Artifacts leak neither name nor description into `graph.json`,
+    `graph.js` or `graph.sqlite` — the one apparent hit was the tool naming itself in
+    `generator`, not an Artifact. `dendro search` answers from the whole archive, the page
+    index answers in 2.96 ms worst-case, the screen passes 15 interaction checks, and the
+    Tool profile's count matches its list on every Tool.
+  - **Still needs a browser**: the network actually unplugged, and the frame probe while
+    panning. Nothing here rasterises, and SC-007 is about rasterisation. The numbers to
+    beat are v0.1's: first render 182 ms, 60fps at every zoom.
 - [X] T038 [P] Rebuild `examples/site/` from a fresh publish and sweep the copy again for
       addresses, local paths and absolute URLs. The demo is the thing a stranger opens; it
       must carry the release it advertises.
@@ -287,10 +296,17 @@ someone who did not write it.
     does not overwrite, and the first attempt shipped `graph.html` and `timeline.html`
     alongside the new screen — the same defect the build had, in the copy step. Swept
     clean: no address, no local path, no absolute URL.
-- [ ] T039 Decide SC-008's disposition and record it here. It arrives from v0.1 owed, not new:
+- [X] T039 Decide SC-008's disposition and record it here. It arrives from v0.1 owed, not new:
       either an account of ~500 repositories is found and scanned, or the criterion is
       rewritten to state what can be observed. Carrying it a second time without deciding is
       how a validation becomes decoration.
+  - **Decided: rewritten.** No ~500-repository account exists to point it at, and none is
+    coming. SC-008 now states the thing that can be observed — progress throughout, an
+    unattended finish, and a per-repository cost that stays linear under 4 seconds — which
+    is what the original was protecting. The 500 in the old wording was never about the
+    software; it was a stand-in for "big enough that a hang would matter", and linearity
+    measured across 500 synthetic repositories says more about that than one account ever
+    would.
 
 ---
 
