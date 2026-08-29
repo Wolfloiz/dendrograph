@@ -141,6 +141,28 @@ not be a judgement — "has tests" is observable, "well tested" is not (Principl
 documentation cannot drift from the code without a test failing.
 _Avoid_: Tag, label, category
 
+**View**:
+One way of reading the same archive — the graph, the timeline, a Tool profile. A
+view renders and nothing else: it does not fetch, does not own the selection, and
+does not know the other views exist. It is told what is selected. Exists in the
+interface only; nothing about it is stored or published.
+_Avoid_: Page, tab, screen (the screen is the one thing that holds the views)
+
+**Selection**:
+The subject the reader is looking at — a node id, or nothing. It lives in the
+screen, survives a change of view, and is what the address carries. A view that
+cannot render the current selection shows its normal state; the selection is not
+lost by failing to fit in one.
+_Avoid_: Focus (means the node under the cursor), highlight, active node
+
+**Search result**:
+A subject, its kind, and **why** it matched — the name or the description. Never a
+copy of the record: a result carries a node id, so choosing one moves the view
+that is open rather than replacing the screen. Two searches answer over different
+scopes — the page over what was published, the command line over the whole store —
+and say the same things by the same names.
+_Avoid_: Hit, match (used for the reason, not the row), suggestion
+
 **Untouched fork**:
 An Artifact the Author never committed to. It is the same Artifact as its upstream
 (identity is the root commit) and it stays in the archive, but it contributes no

@@ -109,26 +109,78 @@ lineage edges.
 a project from its dates and Tools. An alias is for the reader who does not already know —
 it is not anonymity against a determined guess. See `docs/adr/0011`.
 
-## Your archive is a separate repository
+## Three steps to your own archive
 
 The tool holds no data of yours. Your Artifacts, your config and your decisions live in an
 archive repository that is yours, which can be private while the site it publishes is
 public (ADR-0010).
 
-1. **Create a repository from `templates/archive/`.** It works untouched — an absent
-   config is valid, and `dendro scan <path>` needs none of it.
-2. **Edit `dendrograph.toml`.** Every example in it is commented out and every one of them
-   is valid if you uncomment it. Set `[archive].emails` to the addresses you commit under:
-   without them there is no "yours" to measure, and Tool spans say so rather than passing
-   a fork's dates off as your experience.
-3. **Scan.** `dendro scan` locally, or let the included Actions workflow refresh
-   GitHub-sourced Artifacts on a schedule. Interactive auth is `dendro login`, an OAuth
-   device flow — no personal access token to mint or store. CI uses a PAT because there is
-   no browser there, and that is the only place one is supported (ADR-0008).
-4. **Build.** `dendro build` rebuilds `site/` from the store. It is a derived directory;
-   deleting it costs nothing, and deleting the store costs everything.
-5. **Publish.** `dendro publish` pushes `site/` to `[publish].target_repository`, or serve
-   `site/` with GitHub Pages, or just open it from disk.
+You do not need to read any source file to do this. Each step says what you will see when
+it worked, so a failure shows up where it happened instead of at the end.
+
+**1. Take the template.**
+
+```bash
+gh repo create my-archive --private --template <this repo>/templates/archive
+cd my-archive
+```
+
+Or copy `templates/archive/` by hand. It works untouched: an absent config is valid.
+
+*You should see* a repository with `store/`, `site/` and a `dendrograph.toml` whose every
+example is commented out — and every one of them is valid the moment you uncomment it.
+
+**2. Point it at your work.**
+
+```bash
+python3 /path/to/dendrograph/cli.py scan github:<your-account> --root .
+python3 /path/to/dendrograph/cli.py build --root .
+```
+
+No credential is needed for public repositories. `dendro login` — an OAuth device flow, no
+token to mint or store — adds your private ones to the store, and they stay out of the
+published site unless you opt each one in.
+
+Set `[archive].emails` to the addresses you commit under before you build. Without them
+there is no "yours" to measure, and every Tool span says so rather than passing a fork's
+dates off as your experience.
+
+*You should see* a line saying how many Artifacts were added, one progress line per
+repository while it scans, and a `site/` directory afterwards.
+
+**3. Open it, then publish it.**
+
+```bash
+xdg-open site/index.html          # it works from disk, offline
+```
+
+**Before you publish, this is what the site contains and what it does not.** It is the
+only claim in this README that costs something to get wrong:
+
+- **Private Artifacts are not in it.** Not the name, not the description, not the URL, not
+  the source locator, not the Technique evidence path. They are in your `store/`, which is
+  the repository you can keep private.
+- **No contributor's email address is in it.** An Author node is labelled by the name they
+  sign commits with, or by the local part of the address when the collector has no name —
+  never the address itself (ADR-0012).
+- **No path from your machine is in it.** Local source locators do not cross into a
+  published build.
+- **What is in it**: every repository you scanned that was observed public, its dates, the
+  Tools and Techniques inferred from its files with a pointer to the file each came from,
+  and the people who committed to it.
+
+If some of your private work should be visible as *shape* without being named, alias it —
+see [Publishing private work without naming it](#publishing-private-work-without-naming-it).
+
+```bash
+python3 /path/to/dendrograph/cli.py publish --root .
+```
+
+Then serve `site/` with GitHub Pages, or push it to `[publish].target_repository`, or
+leave it on disk. It is a folder of static files with no server behind it.
+
+*You should see* `Site ready in site/.` and, once Pages picks it up, your archive at a URL
+you can put on a CV.
 
 ## What ends up in the archive
 

@@ -1,205 +1,38 @@
-<!doctype html>
-<html lang="en">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Knowledge graph — dendrograph</title>
-<link rel="stylesheet" href="style.css">
-<script src="theme.js"></script>
-<style>
-  body { overflow: hidden; }
-  .wrap { max-width: none; padding: 0; }
-  header { padding: 1.25rem 2rem 0.9rem; margin-bottom: 0; }
-  canvas { display: block; width: 100vw; height: calc(100vh - 8.75rem);
-           cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent; }
-  canvas.grabbing { cursor: grabbing; }
-  canvas.pointing { cursor: pointer; }
-
-  /* Camada flutuante translúcida: o grafo corre por baixo dela, em vez de
-   * perder uma faixa opaca da tela. */
-  .legend, .chip {
-    background: color-mix(in srgb, var(--surface-1) 72%, transparent);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-  }
-  .legend {
-    position: fixed; right: 1rem; bottom: 1rem;
-    font-size: 0.78rem; line-height: 1.7;
-    color: var(--text-secondary);
-    border-radius: 0.75rem;
-    padding: 0.6rem 0.8rem;
-  }
-  .legend i { display: inline-block; width: 0.6rem; height: 0.6rem;
-              border-radius: 50%; margin-right: 0.4rem; vertical-align: middle; }
-  .legend .hint {
-    display: block; margin-top: 0.45rem; padding-top: 0.45rem;
-    border-top: 1px solid var(--border);
-    color: var(--text-muted); font-size: 0.72rem; max-width: 15rem;
-  }
-
-  /* Ficha do nó sob o cursor. Ancorada no ponteiro, some com ele. */
-  .chip {
-    position: fixed; z-index: 5; pointer-events: none;
-    border-radius: 0.7rem; padding: 0.5rem 0.7rem;
-    max-width: 20rem;
-    opacity: 0; transform: scale(0.97);
-    transition: opacity 140ms ease-out, transform 140ms ease-out;
-  }
-  .chip.on { opacity: 1; transform: scale(1); }
-  .chip .name {
-    font-weight: 600; font-size: 0.86rem; letter-spacing: -0.005em;
-    color: var(--text-primary);
-    overflow-wrap: anywhere;
-  }
-  .chip .kind {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--text-muted); margin-top: 0.1rem;
-  }
-  .chip .fact {
-    font-size: 0.76rem; color: var(--text-secondary); margin-top: 0.3rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .chip .rel {
-    font-size: 0.76rem; color: var(--text-secondary);
-    margin-top: 0.25rem; overflow-wrap: anywhere;
-  }
-  .chip .rel:first-of-type { margin-top: 0.45rem; padding-top: 0.45rem;
-                             border-top: 1px solid var(--border); }
-  .chip .verb {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: 0.64rem; letter-spacing: 0.06em;
-    color: var(--text-muted); margin-right: 0.4rem;
-  }
-
-  /* Uma ficha presa por clique fica; a do cursor some com ele. A borda diz
-   * qual das duas está na tela. */
-  .chip.pinned { border-color: var(--accent); }
-
-  /* Busca no canto oposto ao da legenda: o que se procura de um lado, o que
-   * se está vendo do outro. */
-  /* Logo abaixo do cabeçalho, que ocupa 8.75rem. */
-  .finder { position: fixed; left: 1rem; top: 9.2rem; z-index: 6; width: 15rem; }
-  .finder input {
-    width: 100%; font: inherit; font-size: 0.8rem;
-    padding: 0.42rem 0.6rem;
-    color: var(--text-primary);
-    background: color-mix(in srgb, var(--surface-1) 72%, transparent);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--border); border-radius: 0.6rem;
-    box-shadow: var(--shadow);
-  }
-  .finder input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .results {
-    list-style: none; margin: 0.35rem 0 0; padding: 0.25rem;
-    max-height: 15rem; overflow-y: auto;
-    border-radius: 0.6rem;
-    background: color-mix(in srgb, var(--surface-1) 72%, transparent);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--border); box-shadow: var(--shadow);
-  }
-  .results:empty { display: none; }
-  .results li {
-    display: flex; align-items: center; gap: 0.4rem;
-    padding: 0.28rem 0.4rem; border-radius: 0.4rem;
-    font-size: 0.78rem; color: var(--text-secondary);
-    cursor: pointer; overflow-wrap: anywhere;
-  }
-  .results li[aria-selected="true"], .results li:hover {
-    background: var(--accent-soft); color: var(--text-primary);
-  }
-  .results i { flex: none; width: 0.55rem; height: 0.55rem;
-               border-radius: 50%; margin: 0; }
-  .results .kind {
-    margin-left: auto; flex: none;
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: 0.62rem; letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--text-muted);
-  }
-  .results .more { display: block; cursor: default; color: var(--text-muted);
-                   font-size: 0.72rem; }
-  .results .more:hover { background: none; }
-
-  /* Cada linha da legenda é o interruptor do seu tipo. */
-  .legend button {
-    display: flex; align-items: center; width: 100%;
-    font: inherit; font-size: 0.78rem; text-align: left;
-    background: none; border: 0; padding: 0.05rem 0.2rem;
-    border-radius: 0.35rem; color: var(--text-secondary); cursor: pointer;
-  }
-  .legend button:hover { background: var(--accent-soft); color: var(--text-primary); }
-  .legend button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .legend button[aria-pressed="false"] { color: var(--text-muted); }
-  .legend button[aria-pressed="false"] span { text-decoration: line-through; }
-  .legend button[aria-pressed="false"] i { opacity: 0.25; }
-  .legend .count { margin-left: auto; padding-left: 0.6rem;
-                   font-variant-numeric: tabular-nums; color: var(--text-muted);
-                   font-size: 0.7rem; text-decoration: none !important; }
-  .legend .fork { padding: 0.05rem 0.2rem; }
-
-  /* Sem translucidez: o material vira superfície sólida, nunca texto sobre
-   * fundo indefinido. */
-  @media (prefers-reduced-transparency: reduce) {
-    .legend, .chip, .finder input, .results {
-      background: var(--surface-1); backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-    }
-  }
-  @media (prefers-contrast: more) {
-    .legend, .chip, .finder input, .results {
-      background: var(--surface-1); border-color: var(--text-primary);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .chip { transition: opacity 100ms linear; transform: none; }
-    .chip.on { transform: none; }
-  }
-</style>
-
-<header>
-  <div>
-    <p class="eyebrow">dendrograph</p>
-    <h1>Knowledge graph</h1>
-    <p class="sub" id="meta"></p>
-  </div>
-  <nav>
-    <a href="timeline.html">Timeline</a>
-    <a href="graph.html" aria-current="page">Graph</a>
-    <button class="btn" id="theme" type="button" title="Toggle light/dark">Theme</button>
-  </nav>
-</header>
-<main><canvas id="canvas"></canvas></main>
-<div class="finder">
-  <input id="find" type="search" placeholder="Search nodes  /" autocomplete="off"
-         spellcheck="false" aria-label="Search nodes">
-  <ul class="results" id="results" role="listbox" aria-label="Search results"></ul>
-</div>
-<div class="legend" id="legend"></div>
-<div class="chip" id="chip" role="status" aria-live="polite"></div>
-
-<script src="graph.js"></script>
-<script src="loader.js"></script>
-<script>
-(function () {
+/* A view do grafo, fora da página que a hospeda.
+ *
+ * O nome tem prefixo porque `core/build.emit` escreve os dados como `graph.js`
+ * e só então copia `views/*.js` por cima: um arquivo chamado `graph.js` aqui
+ * substituiria o arquivo inteiro por este renderizador, e a falha apareceria
+ * como um grafo vazio em vez de um erro de build (tests/test_view_assets.py).
+ *
+ * `create` recebe a raiz onde os elementos da view vivem — um documento hoje,
+ * um contêiner quando a tela única chegar — e devolve o punhado de coisas que
+ * quem hospeda precisa: ligar, desligar, selecionar, buscar e repintar.
+ */
+(function (global) {
   "use strict";
-  var g = DendroLoader.load();
-  document.getElementById("meta").textContent =
-    g.nodes.length + " nodes · " + g.edges.length +
-    " edges · hover or click a node, search by name, filter by type";
 
-  // Movimento reduzido desliga o que é decoração — o enquadramento
-  // interpolado e a transição do foco. O assentamento do layout fica: ele é o
-  // conteúdo sendo calculado, não um enfeite, e congelar a página por oito
-  // segundos para escondê-lo seria pior do que mostrá-lo.
-  var calm = window.matchMedia
+  function create(root, g, options) {
+    options = options || {};
+    function el(id) { return root.querySelector("#" + id); }
+
+    // A legenda vai para quem tem cabeçalho — o módulo desenha, não titula.
+    if (options.meta) {
+    options.meta.textContent =
+      g.nodes.length + " nodes · " + g.edges.length +
+      " edges · hover or click a node, search by name, filter by type";
+    }
+
+    // Movimento reduzido desliga o que é decoração — o enquadramento
+    // interpolado e a transição do foco. O assentamento do layout fica: ele é o
+    // conteúdo sendo calculado, não um enfeite, e congelar a página por oito
+    // segundos para escondê-lo seria pior do que mostrá-lo.
+    var calm = window.matchMedia
     && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Paleta por variável CSS: o botão de tema troca os tokens e o canvas
-  // é redesenhado com a mesma fonte de verdade das outras views.
-  function palette() {
+    // Paleta por variável CSS: o botão de tema troca os tokens e o canvas
+    // é redesenhado com a mesma fonte de verdade das outras views.
+    function palette() {
     var css = getComputedStyle(document.documentElement);
     function v(name) { return css.getPropertyValue(name).trim(); }
     return {
@@ -217,9 +50,9 @@
     };
   }
 
-  var canvas = document.getElementById("canvas");
+  var canvas = el("canvas");
   var ctx = canvas.getContext("2d");
-  var chip = document.getElementById("chip");
+  var chip = el("chip");
   var view = { x: 0, y: 0, k: 1 };
   var pal = palette();
   var COLOUR = pal.COLOUR;
@@ -685,7 +518,14 @@
     }
   }
 
+  // Numa página com uma vista só, um laço sempre agendado e desenhando só
+  // quando algo muda não custa nada. Atrás de outra vista, custa: com 3.283
+  // nós um quadro de assentamento leva ~70 ms, e ninguém está olhando. Parar
+  // guarda o layout onde parou, então voltar retoma em vez de reassentar.
+  var running = false;
+
   function frame() {
+    if (!running) return;
     if (!settled) { tick(); dirty = true; }
     if (!userMoved && !settled) fitToLayout();
     if (glide) {
@@ -715,18 +555,28 @@
     }
     requestAnimationFrame(frame);
   }
-  recolour();
-  frame();
 
-  document.getElementById("theme").onclick = function () {
-    DendroTheme.toggle();
+  function start() {
+    if (running) return;
+    running = true;
+    dirty = true;
+    requestAnimationFrame(frame);
+  }
+
+  function stop() { running = false; }
+
+  recolour();
+  start();
+
+  // O botão de tema é cromo da página; o módulo só sabe se repintar.
+  function retheme() {
     pal = palette();
     COLOUR = pal.COLOUR;
     FORK = pal.FORK;
     recolour();
     buildLegend();
     dirty = true;
-  };
+  }
 
   // ---------- ponteiro ----------
   // Pointer Events com captura: o arrasto continua quando o cursor sai do
@@ -913,7 +763,7 @@
   // ---------- filtros: a legenda já dizia o que cada cor é ----------
   // Um segundo painel de tipos repetiria a legenda inteira. A linha que
   // nomeia o tipo é o lugar óbvio para desligá-lo.
-  var legend = document.getElementById("legend");
+  var legend = el("legend");
   function buildLegend() {
     legend.innerHTML = "";
     Object.keys(COLOUR).forEach(function (type) {
@@ -940,7 +790,9 @@
         else hiddenTypes[type] = true;
         row.setAttribute("aria-pressed", hiddenTypes[type] ? "false" : "true");
         applyFilters();
-        if (find.value) search(find.value);
+        // Desligar um tipo tira os nós dele dos resultados também, e quem
+        // guarda a busca é a casca. O grafo avisa; não conhece o campo.
+        if (options.onFilterChange) options.onFilterChange(hiddenTypes);
       });
       legend.appendChild(row);
     });
@@ -959,99 +811,37 @@
     legend.appendChild(hint);
   }
 
-  // ---------- busca ----------
-  var find = document.getElementById("find");
-  var results = document.getElementById("results");
-  var matches = [], cursor = -1;
-  var SHOWN = 12;
-
-  function search(query) {
-    var needle = query.trim().toLowerCase();
-    matches = [];
-    if (needle) {
-      // Quem começa com o que foi digitado vem antes de quem só contém, e
-      // entre iguais o mais conectado: é o que se estava procurando.
-      var starts = [], contains = [];
-      for (var i = 0; i < nodes.length; i++) {
-        var n = nodes[i];
-        if (n.off) continue;
-        var at = n.ref.label.toLowerCase().indexOf(needle);
-        if (at === 0) starts.push(n);
-        else if (at > 0) contains.push(n);
-      }
-      function rank(a, b) {
-        return b.degree - a.degree || (a.ref.label < b.ref.label ? -1 : 1);
-      }
-      starts.sort(rank);
-      contains.sort(rank);
-      matches = starts.concat(contains);
-    }
-    cursor = matches.length ? 0 : -1;
-    renderResults();
-  }
-
-  function renderResults() {
-    results.innerHTML = "";
-    matches.slice(0, SHOWN).forEach(function (n, i) {
-      var row = document.createElement("li");
-      row.setAttribute("role", "option");
-      row.setAttribute("aria-selected", i === cursor ? "true" : "false");
-      var dot = document.createElement("i");
-      dot.style.background = n.colour;
-      var name = document.createElement("span");
-      name.textContent = n.ref.label;
-      var kind = document.createElement("span");
-      kind.className = "kind";
-      kind.textContent = n.ref.type;
-      row.appendChild(dot);
-      row.appendChild(name);
-      row.appendChild(kind);
-      // `mousedown`, não `click`: o blur do campo fecharia a lista antes de o
-      // clique chegar.
-      row.addEventListener("mousedown", function (event) {
-        event.preventDefault();
-        reveal(n);
-      });
-      results.appendChild(row);
-    });
-    if (matches.length > SHOWN) {
-      var more = document.createElement("li");
-      more.className = "more";
-      more.textContent = "+" + (matches.length - SHOWN) + " more — keep typing";
-      results.appendChild(more);
-    }
-  }
-
-  function reveal(n) {
-    select(n);
-    centreOn(n);
-    placeChipOnNode(n);
-  }
-
-  find.addEventListener("input", function () { search(find.value); });
-  find.addEventListener("focus", function () { if (find.value) search(find.value); });
-  find.addEventListener("blur", function () { results.innerHTML = ""; });
-  find.addEventListener("keydown", function (e) {
-    var limit = Math.min(matches.length, SHOWN);
-    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && limit) {
-      e.preventDefault();
-      cursor = (cursor + (e.key === "ArrowDown" ? 1 : limit - 1)) % limit;
-      renderResults();
-      return;
-    }
-    if (e.key === "Enter" && cursor >= 0) { e.preventDefault(); reveal(matches[cursor]); return; }
-    if (e.key === "Escape") { find.value = ""; search(""); find.blur(); }
-  });
+  // A busca agora é da casca (search.js). O grafo não busca: ele recebe
+  // seleção por DendroScreen.select() e desenha o que lhe pedem.
 
   document.addEventListener("keydown", function (e) {
     var active = document.activeElement;
     var typing = active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName);
-    if (e.key === "/" && !typing) { e.preventDefault(); find.focus(); find.select(); return; }
     // Escape solta o nó preso, que é a mesma saída do clique no vazio.
     if (e.key === "Escape" && !typing && selected) select(null);
   });
 
   applyFilters();
   buildLegend();
-})();
-</script>
+
+    return {
+      activate: start,
+      suspend: stop,
+      // Quais tipos estão desligados agora — a busca da casca não pode
+      // oferecer um nó que esta vista não desenha.
+      hidden: function () { return hiddenTypes; },
+      select: function (nodeId) {
+        var node = null;
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].ref.id === nodeId) { node = nodes[i]; break; }
+        }
+        select(node);
+        if (node) centreOn(node);
+      },
+      selected: function () { return selected ? selected.ref.id : null; },
+      retheme: retheme
+    };
+  }
+
+  global.DendroViewGraph = { create: create };
+})(window);

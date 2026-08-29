@@ -251,16 +251,16 @@ them. This is the one check that cannot be automated.
 **Note**: Depends on nothing else in this release and can move if anything slips. The spec
 places it last for that reason, not because it matters least.
 
-- [ ] T031 [US4] Write the three-step path in `README.md` — each step an action, each stating
+- [X] T031 [US4] Write the three-step path in `README.md` — each step an action, each stating
       what the person will see when it worked, so a failure is visible at the step that caused
       it rather than at the end (FR-017).
-- [ ] T032 [US4] At the step that first publishes anything, state exactly what the published
+- [X] T032 [US4] At the step that first publishes anything, state exactly what the published
       site does and does not contain — private Artifacts excluded by default, contributor
       addresses never published, local paths never crossing (Principle IV, FR-018).
-- [ ] T033 [P] [US4] Verify `templates/archive/` still matches the three steps: a fork of it
+- [X] T033 [P] [US4] Verify `templates/archive/` still matches the three steps: a fork of it
       produces a working archive without editing a source file (FR-016), and stopping after
       step one leaves a working thing rather than a broken half.
-- [ ] T034 [US4] Build an archive from `templates/archive/` holding a single Artifact and
+- [X] T034 [US4] Build an archive from `templates/archive/` holding a single Artifact and
       confirm every view renders it: a graph of one node, a one-row timeline, a search with
       nothing to find, and a Tool profile if any Tool exists. This is the first thing every
       adopter sees, and US4's third acceptance scenario — stopping after step one leaves a
@@ -275,14 +275,18 @@ someone who did not write it.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T036 Add **View**, **Selection** and **Search result** to `CONTEXT.md` — new vocabulary
+- [X] T036 Add **View**, **Selection** and **Search result** to `CONTEXT.md` — new vocabulary
       lands there when it is resolved, not in a backlog. All three exist in the interface only
       and none is stored; say so, or the next person will look for the table.
 - [ ] T037 Run [quickstart.md](./quickstart.md) end to end against the real archive, including
       the offline check with the network actually off and the frame probe in a real browser.
-- [ ] T038 [P] Rebuild `examples/site/` from a fresh publish and sweep the copy again for
+- [X] T038 [P] Rebuild `examples/site/` from a fresh publish and sweep the copy again for
       addresses, local paths and absolute URLs. The demo is the thing a stranger opens; it
       must carry the release it advertises.
+  - Replaced rather than copied over: `cp -r` into an existing directory leaves whatever it
+    does not overwrite, and the first attempt shipped `graph.html` and `timeline.html`
+    alongside the new screen — the same defect the build had, in the copy step. Swept
+    clean: no address, no local path, no absolute URL.
 - [ ] T039 Decide SC-008's disposition and record it here. It arrives from v0.1 owed, not new:
       either an account of ~500 repositories is found and scanned, or the criterion is
       rewritten to state what can be observed. Carrying it a second time without deciding is

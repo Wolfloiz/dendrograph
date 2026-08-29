@@ -14584,7 +14584,7 @@
       "type": "USES"
     }
   ],
-  "generated_at": "2026-08-27T20:09:32Z",
+  "generated_at": "2026-08-29T23:55:01Z",
   "generator": "dendrograph 0.1.0",
   "indexes": {
     "tool_to_artifacts": {
@@ -14690,6 +14690,69 @@
         "root-c1a8791cda9b6e8c6373d313ea975854e1ed3b29",
         "root-d306bcb9f7419dd33186230ca126f04f89c4bfbc",
         "root-ed968cbafaeab1127b97abbfd5cdfa219240d250"
+      ]
+    },
+    "tool_to_untouched": {
+      "tool:c": [
+        "root-668acc2c08ee823fd851ccc6ffdf3c9b4dc273ba",
+        "root-7548713d615764ad518a6bbecd014aeb5975c3fc",
+        "root-7b423cc5c0ebcf5e6d281712d474e61132926ca6",
+        "root-8a03da8e8825490a21e8c7c4048e418030ed9f97",
+        "root-9aad078bed8ec7c551a3897f9d09282f060e829e",
+        "root-a63c293421b3ae9560447a5d0e75184896d19bb6",
+        "root-abbb0db7a74673342c4d7fcf3971b6bea1930c1c",
+        "root-ac54096055bcfcaaed233711e96a16034610f90b",
+        "root-c704cb023661720901c8685f7688f451f7705a44"
+      ],
+      "tool:c-plus-plus": [
+        "root-668acc2c08ee823fd851ccc6ffdf3c9b4dc273ba",
+        "root-8a03da8e8825490a21e8c7c4048e418030ed9f97",
+        "root-a63c293421b3ae9560447a5d0e75184896d19bb6",
+        "root-c1a8791cda9b6e8c6373d313ea975854e1ed3b29",
+        "root-c704cb023661720901c8685f7688f451f7705a44",
+        "root-e035e7cd1672e670230fa7a40649eebed211da7e"
+      ],
+      "tool:java": [
+        "root-a8acffd81c520b83027eebedc45543f14c5a8059"
+      ],
+      "tool:javascript": [
+        "root-668acc2c08ee823fd851ccc6ffdf3c9b4dc273ba",
+        "root-7b423cc5c0ebcf5e6d281712d474e61132926ca6",
+        "root-8fb62af0c28972b8b34768f79e91a2d37dabb41a",
+        "root-9282fb64212a62f173e6b4061764baf1f9f897d6",
+        "root-9d051312e28222ba65f04120b33b28caf67b073b",
+        "root-a8acffd81c520b83027eebedc45543f14c5a8059",
+        "root-c704cb023661720901c8685f7688f451f7705a44",
+        "root-e035e7cd1672e670230fa7a40649eebed211da7e"
+      ],
+      "tool:python": [
+        "root-2f10f4d87715b1d4f832d39eab836726dd82cdd1",
+        "root-3dd4e6c240a07fcc1e62395dbab4fe2bea722ea0",
+        "root-668acc2c08ee823fd851ccc6ffdf3c9b4dc273ba",
+        "root-7548713d615764ad518a6bbecd014aeb5975c3fc",
+        "root-a8acffd81c520b83027eebedc45543f14c5a8059",
+        "root-abbb0db7a74673342c4d7fcf3971b6bea1930c1c",
+        "root-c1a3b64248d5c18e48cf2f56092f09e13cb70310",
+        "root-e035e7cd1672e670230fa7a40649eebed211da7e"
+      ],
+      "tool:ruby": [
+        "root-a8acffd81c520b83027eebedc45543f14c5a8059"
+      ],
+      "tool:shell": [
+        "root-668acc2c08ee823fd851ccc6ffdf3c9b4dc273ba",
+        "root-9d051312e28222ba65f04120b33b28caf67b073b",
+        "root-a8acffd81c520b83027eebedc45543f14c5a8059",
+        "root-abbb0db7a74673342c4d7fcf3971b6bea1930c1c"
+      ],
+      "tool:swift": [
+        "root-a8acffd81c520b83027eebedc45543f14c5a8059"
+      ],
+      "tool:typescript": [
+        "root-1227e2b44a9b6b91aca05d4cf252c755e0ba7abf",
+        "root-7b423cc5c0ebcf5e6d281712d474e61132926ca6",
+        "root-8fb62af0c28972b8b34768f79e91a2d37dabb41a",
+        "root-a8acffd81c520b83027eebedc45543f14c5a8059",
+        "root-c1a8791cda9b6e8c6373d313ea975854e1ed3b29"
       ]
     }
   },
