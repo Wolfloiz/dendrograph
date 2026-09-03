@@ -16,7 +16,8 @@ No server. No database. No account. Python 3.11+ and nothing else — the publis
 a folder you can open from a pen drive with the network unplugged.
 
 ```bash
-cd dendrograph
+git clone https://github.com/Wolfloiz/dendrograph.git ~/dendrograph
+cd ~/dendrograph
 python3 cli.py scan github:tinygrad --root ~/my-archive   # any public account
 python3 cli.py build --root ~/my-archive
 xdg-open ~/my-archive/site/index.html                     # or just open the file
@@ -24,6 +25,10 @@ xdg-open ~/my-archive/site/index.html                     # or just open the fil
 
 No credential needed for a public account. The first scan clones full history into a
 temporary directory and throws it away — nothing is cached between runs.
+
+`pip install -e .` puts the same commands on your PATH as `dendro`, which is the short name
+used elsewhere in this file. Every step below spells out `python3 .../cli.py` so that
+nothing you are asked to paste depends on having installed anything.
 
 Or skip the scan and open a real one: [`examples/site/index.html`](examples/site/) is a
 published archive of 57 public repositories, committed to this repository. No install, no
@@ -123,11 +128,14 @@ it worked, so a failure shows up where it happened instead of at the end.
 **1. Take the template.**
 
 ```bash
-gh repo create my-archive --private --template <this repo>/templates/archive
-cd my-archive
+git clone https://github.com/Wolfloiz/dendrograph.git ~/dendrograph  # skip if you have it
+cp -r ~/dendrograph/templates/archive ~/my-archive
+cd ~/my-archive && git init
 ```
 
-Or copy `templates/archive/` by hand. It works untouched: an absent config is valid.
+A copy, not a fork: the archive is yours from its first commit and nothing in it points
+back here. It works untouched — an absent config is valid. To keep it on GitHub, private,
+`gh repo create my-archive --private --source .` once you have something to commit.
 
 *You should see* a repository with `store/`, `site/` and a `dendrograph.toml` whose every
 example is commented out — and every one of them is valid the moment you uncomment it.
@@ -135,13 +143,13 @@ example is commented out — and every one of them is valid the moment you uncom
 **2. Point it at your work.**
 
 ```bash
-python3 /path/to/dendrograph/cli.py scan github:<your-account> --root .
-python3 /path/to/dendrograph/cli.py build --root .
+python3 ~/dendrograph/cli.py scan github:<your-account> --root .
+python3 ~/dendrograph/cli.py build --root .
 ```
 
-No credential is needed for public repositories. `dendro login` — an OAuth device flow, no
-token to mint or store — adds your private ones to the store, and they stay out of the
-published site unless you opt each one in.
+No credential is needed for public repositories. `python3 ~/dendrograph/cli.py login` — a
+GitHub OAuth device flow, no token to mint or store — adds your private ones to the store,
+and they stay out of the published site unless you opt each one in.
 
 Set `[archive].emails` to the addresses you commit under before you build. Without them
 there is no "yours" to measure, and every Tool span says so rather than passing a fork's
@@ -175,7 +183,7 @@ If some of your private work should be visible as *shape* without being named, a
 see [Publishing private work without naming it](#publishing-private-work-without-naming-it).
 
 ```bash
-python3 /path/to/dendrograph/cli.py publish --root .
+python3 ~/dendrograph/cli.py publish --root .
 ```
 
 Then serve `site/` with GitHub Pages, or push it to `[publish].target_repository`, or
