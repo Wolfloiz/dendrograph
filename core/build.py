@@ -66,7 +66,8 @@ def emit(payload: dict, root: Path | str, mode: str) -> dict[str, Path]:
     # junto pelo mesmo motivo: empacotar a IBM Plex é o que protege o design
     # de depender de uma CDN (ADR-0004).
     views = Path(__file__).resolve().parent.parent / "views"
-    assets = list(views.glob("*.html")) + list(views.glob("*.js")) + list(views.glob("*.css"))
+    assets = (list(views.glob("*.html")) + list(views.glob("*.js"))
+              + list(views.glob("*.css")) + list(views.glob("*.svg")))
     fonts_dir = views / "fonts"
     if fonts_dir.exists():
         assets.extend(fonts_dir.glob("*.woff2"))
@@ -85,7 +86,7 @@ def emit(payload: dict, root: Path | str, mode: str) -> dict[str, Path]:
 
 
 # Extensões que as views possuem neste diretório. Tudo o mais é dado ou fonte.
-_VIEW_SUFFIXES = frozenset({".html", ".js", ".css"})
+_VIEW_SUFFIXES = frozenset({".html", ".js", ".css", ".svg"})
 
 
 def _remove_stale_views(directory: Path, written: dict) -> None:

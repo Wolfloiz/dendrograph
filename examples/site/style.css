@@ -126,6 +126,21 @@ h1 {
   line-height: 1.15;
 }
 
+/* A marca ao lado do bloco de título. `flex: none` porque o SVG não tem
+ * largura intrínseca e encolheria junto com o texto no celular. */
+.brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+}
+
+.mark {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  margin-top: 1px;
+}
+
 /* Marca acima do título: diz de que site é a página antes de dizer que
  * página é. Texto pequeno pede tracking positivo — o contrário do h1. */
 .eyebrow {

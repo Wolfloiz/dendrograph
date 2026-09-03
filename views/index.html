@@ -4,14 +4,32 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Archive — dendrograph</title>
 <link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
 <script src="theme.js"></script>
 
 <div class="wrap">
 <header>
-  <div>
-    <p class="eyebrow">dendrograph</p>
-    <h1 id="title">Archive</h1>
-    <p class="sub" id="meta"></p>
+  <!-- A marca é inline, e não um <img src="logo.svg">, porque o tema aqui
+       tem um botão: um <img> só enxerga o prefers-color-scheme do sistema e
+       erraria a cor sempre que o leitor trocasse o tema à mão. Inline ela lê
+       os mesmos tokens que o resto da página. -->
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="var(--c-period)" stroke-opacity=".5" stroke-width="2.2" stroke-linecap="round">
+        <path d="M16 25L6.5 10.5"/>
+        <path d="M16 25V7"/>
+        <path d="M16 25L25.5 10.5"/>
+      </g>
+      <circle cx="6.5" cy="10.5" r="2.9" fill="var(--c-period)"/>
+      <circle cx="16" cy="7" r="2.9" fill="var(--c-tool)"/>
+      <circle cx="25.5" cy="10.5" r="2.9" fill="var(--c-technique)"/>
+      <circle cx="16" cy="25" r="3.2" fill="var(--c-artifact)"/>
+    </svg>
+    <div>
+      <p class="eyebrow">dendrograph</p>
+      <h1 id="title">Archive</h1>
+      <p class="sub" id="meta"></p>
+    </div>
   </div>
   <nav>
     <div class="views" id="views" role="group" aria-label="View"></div>

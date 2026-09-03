@@ -33,7 +33,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dendrograph (${{ env.DENDROGRAPH_VERSION }})
-        run: python -m pip install "dendrograph @ https://github.com/luiz/dendrograph/archive/${{ env.DENDROGRAPH_VERSION }}.tar.gz"
+        run: python -m pip install "dendrograph @ https://github.com/Wolfloiz/dendrograph/archive/${{ env.DENDROGRAPH_VERSION }}.tar.gz"
         # Ajuste a URL acima para onde o pacote é publicado (PyPI ou o seu fork).
 
       - name: Scan configured sources
@@ -71,7 +71,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dendrograph (${{ env.DENDROGRAPH_VERSION }})
-        run: python -m pip install "dendrograph @ https://github.com/luiz/dendrograph/archive/${{ env.DENDROGRAPH_VERSION }}.tar.gz"
+        run: python -m pip install "dendrograph @ https://github.com/Wolfloiz/dendrograph/archive/${{ env.DENDROGRAPH_VERSION }}.tar.gz"
 
       - name: Publish to the target repository
         env:

@@ -9,3 +9,16 @@ venv/
 dist/
 *.egg-info/
 .DS_Store
+
+# O README manda rodar `scan --root .`, e um `dendro build` completo escreve
+# `.dendro-local/` com todo Artifact, os privados inclusive. Este repositório
+# não guarda dado de Author nenhum (ADR-0010): commitar qualquer um dos três
+# publicaria acervo pessoal no histórico de um repositório público.
+#
+# `/store/` e `/site/` estão ancorados na raiz de propósito. Sem a barra
+# inicial o padrão casaria em qualquer nível e engoliria `examples/site/` e
+# `templates/archive/site/`, que são versionados — e o arquivo novo que
+# alguém pusesse ali sairia ignorado sem aviso.
+/store/
+/site/
+.dendro-local/

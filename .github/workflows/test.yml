@@ -2,6 +2,12 @@ name: test
 
 on: [push, pull_request]
 
+# A suíte só lê o repositório e roda unittest. Sem esta linha o job herda
+# o token de escrita padrão, que num repositório público é permissão de
+# sobra para qualquer coisa que um pull request de terceiro execute.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest

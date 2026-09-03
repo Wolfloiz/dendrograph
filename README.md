@@ -1,3 +1,5 @@
+<img src="views/logo.svg" alt="" width="64" height="64">
+
 # dendrograph
 
 **A knowledge graph of what you have built.** Point it at your git repositories and get a

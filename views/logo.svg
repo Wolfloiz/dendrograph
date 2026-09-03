@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-labelledby="logo-title">
+<title id="logo-title">dendrograph</title>
+<!-- A marca é a primeira frase do README: um Artifact e o que ele liga —
+     Tool, Technique e tempo. As cores saem de views/style.css e de mais
+     lugar nenhum. O cinza do Period é o mesmo valor nos dois temas, então
+     as arestas e o nó de tempo não dependem da media query para aparecer;
+     só os três nós coloridos trocam. Um SVG, sem rede (ADR-0004). -->
+<style>
+  :root {
+    --c-artifact: #2f6f4f;
+    --c-tool: #2a78d6;
+    --c-technique: #eb6834;
+    --c-period: #8a8a84;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --c-artifact: #89c3a0;
+      --c-tool: #3987e5;
+      --c-technique: #d95926;
+    }
+  }
+</style>
+<g fill="none" stroke="var(--c-period)" stroke-opacity=".5" stroke-width="2.2" stroke-linecap="round">
+  <path d="M16 25L6.5 10.5"/>
+  <path d="M16 25V7"/>
+  <path d="M16 25L25.5 10.5"/>
+</g>
+<circle cx="6.5" cy="10.5" r="2.9" fill="var(--c-period)"/>
+<circle cx="16" cy="7" r="2.9" fill="var(--c-tool)"/>
+<circle cx="25.5" cy="10.5" r="2.9" fill="var(--c-technique)"/>
+<circle cx="16" cy="25" r="3.2" fill="var(--c-artifact)"/>
+</svg>

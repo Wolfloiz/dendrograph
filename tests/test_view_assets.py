@@ -36,7 +36,7 @@ def references(text: str) -> set[str]:
 class TheViewsReachNothingOnTheNetwork(unittest.TestCase):
     def test_no_view_names_an_absolute_url(self):
         for path in sorted(VIEWS.rglob("*")):
-            if path.suffix not in (".html", ".css", ".js"):
+            if path.suffix not in (".html", ".css", ".js", ".svg"):
                 continue
             for reference in references(path.read_text(encoding="utf-8")):
                 self.assertFalse(
