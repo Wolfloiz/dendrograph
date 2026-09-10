@@ -103,6 +103,36 @@ The only check that cannot be automated:
 - [ ] At the point where it first publishes, the README states exactly what the published
       site does and does not contain (Principle IV).
 
+## 4b. Private work under an alias (optional — ADR-0011)
+
+Only if the archive has private Artifacts. Everything above holds without this; nothing
+here is required to close v0.2. Skip it and the private work stays out of the site, which
+is the default and the safe end of the choice.
+
+```bash
+python3 ~/dendrograph/cli.py login --root .          # once; private repos need it
+python3 ~/dendrograph/cli.py scan github:YOUR-ACCOUNT --root .
+grep -l '^  "name": "the-project"' store/artifacts/*.json    # the id is the filename
+```
+
+Put that id in `dendrograph.toml` under `[[publish.alias]]`, then `build` and `publish`.
+
+- [ ] Before the alias: the private Artifact is in `store/` and in **no** published file —
+      not its name, not its description, not its URL, not its source locator.
+- [ ] After the alias: one node with the label you chose, `aliased: true`, and its dates.
+- [ ] `reveal = []` (or absent) publishes the node and its dates and nothing else. Each
+      name added to `reveal` adds exactly one field and no other.
+- [ ] The real name appears nowhere in `site/`. The only `dendrograph` in a clean archive
+      is `generator`, which is the tool naming itself.
+- [ ] A Technique published under an alias ships **without** its evidence path — a path
+      like `clientname/api/deploy.yml` would destroy the anonymity on its own (ADR-0011).
+- [ ] No lineage edge reaches the aliased node.
+- [ ] **The published `id` is the Artifact's root commit SHA** (ADR-0003), and it is
+      published as-is under an alias. Anyone holding a clone of that repository can run
+      `git rev-list --max-parents=0 HEAD` and confirm the match; if the private repository
+      is a fork of anything public, the root SHA is public already. Confirm whether this is
+      the disclosure you intend before publishing. See the note in ADR-0011.
+
 ## 5. Nothing regressed
 
 ```bash

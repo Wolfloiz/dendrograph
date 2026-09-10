@@ -100,6 +100,23 @@ Client work you cannot name is still work you did. An **alias** publishes the no
 dates under a label you choose (or a generated *Private project 3*), and reveals nothing
 further until you name each field:
 
+First scan the private repositories — `login` once, then scan as usual; a private
+repository enters the store and stays out of the published site until you say otherwise:
+
+```bash
+python3 ~/dendrograph/cli.py login --root .
+python3 ~/dendrograph/cli.py scan github:YOUR-ACCOUNT --root .
+```
+
+Then find the `id`. It is the store filename, and the name inside says which is which —
+the two leading spaces anchor on the Artifact's own name, not a contributor's:
+
+```bash
+grep -l '^  "name": "the-project"' store/artifacts/*.json
+```
+
+Put that id in `dendrograph.toml` and rebuild:
+
 ```toml
 [[publish.alias]]
 id = "root-a1b2c3..."
