@@ -30,7 +30,7 @@
 # [[publish.alias]]
 # id = "root-a1b2c3..."
 # label = "Anonymous fintech project"
-# reveal = ["period", "tools", "authorship", "dependencies"]
+# reveal = ["period", "tools", "authorship", "dependencies", "collections"]
 
 [exclude]
 # artifacts = ["root-d4e5f6..."]   # omitted from the graph; NOT deleted from the store

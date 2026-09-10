@@ -80,7 +80,8 @@ class AnUnknownRevealFieldIsRejected(FixtureCase):
         from core.config import REVEAL_FIELDS
 
         self.assertEqual(
-            REVEAL_FIELDS, ("period", "tools", "authorship", "dependencies")
+            REVEAL_FIELDS,
+            ("period", "tools", "authorship", "dependencies", "collections"),
         )
         # Uma lista só. `core.privacy` já teve a sua própria cópia, com um campo
         # a mais, e nada quebrou — porque ninguém a lia. Um campo publicável a

@@ -31,7 +31,7 @@ target_repository = "author/archive-site"   # optional: deploy the site to a sec
 [[publish.alias]]
 id = "root-a1b2c3..."
 label = "Anonymous fintech project"   # omit for a stable generated "Private project N"
-reveal = ["period", "tools", "authorship", "dependencies"]  # empty by default: node + dates only
+reveal = ["period", "tools", "authorship", "dependencies", "collections"]  # empty: node + dates
 
 [exclude]
 artifacts = ["root-d4e5f6..."]  # omitted from the graph; NOT deleted from the store

@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 
 from core import build, graph as graph_module
-from core.config import Alias, Config
+from core.config import Alias, Collection, Config
 from tests.support import archives
 from tests.support.fixtures import FixtureCase
 
@@ -238,4 +238,56 @@ class DependenciesAreAFingerprintAndDoNotCrossByDefault(FixtureCase):
         self.assertIn(
             "DEPENDS_ON", [e["type"] for e in self.edges_of(reveal=("dependencies",))]
         )
+
+
+class ACollectionNamesTheClientWithoutNamingTheProject(FixtureCase):
+    """`IN_COLLECTION` cruzava, e o nome da Collection é escolhido pelo Author.
+
+    Uma coleção chamada "Acme client work" contendo um nó anônimo derrota o
+    alias sem que ninguém tenha olhado o nó. A aresta é emitida no bloco
+    `if config:`, fora do laço do Artifact, então nenhum `if aliased` daquele
+    laço a alcançava — que é o argumento para a proteção viver no builder e
+    não em cada ponto de emissão.
+
+    Dois vazamentos, não um: a aresta, e o nó da Collection quando nenhum
+    membro sobrevive. O segundo é um rótulo solto no grafo, e o rótulo basta.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.root = self.tmp / "archive"
+        self.root.mkdir()
+        archives.write(self.root, archives.private(), archives.public())
+
+    def graph(self, members, reveal=()):
+        return build.build(self.root, config=Config(
+            aliases=(Alias(id=archives.PRIVATE_ID, label="Anon", reveal=reveal),),
+            collections=(Collection(name="Acme client work", artifacts=members),),
+        ))
+
+    def test_the_edge_does_not_cross_with_an_empty_reveal(self):
+        payload = self.graph((archives.PRIVATE_ID, archives.PUBLIC_ID))
+        self.assertNotIn("IN_COLLECTION", [
+            e["type"] for e in payload["edges"] if e["from"] == archives.PRIVATE_ID
+        ])
+
+    def test_a_collection_of_only_aliased_work_is_not_published_at_all(self):
+        payload = self.graph((archives.PRIVATE_ID,))
+        self.assertNotIn("Acme client work", json.dumps(payload))
+        self.assertEqual(
+            [], [n for n in payload["nodes"] if n["type"] == "Collection"],
+            "a Collection whose every member is anonymous still published its name",
+        )
+
+    def test_a_public_member_still_justifies_the_collection(self):
+        # A retenção é sobre o nó anônimo, não sobre a Collection: trabalho
+        # público agrupado continua agrupado.
+        payload = self.graph((archives.PRIVATE_ID, archives.PUBLIC_ID))
+        self.assertIn("Acme client work", json.dumps(payload))
+
+    def test_naming_collections_lets_the_edge_cross(self):
+        payload = self.graph((archives.PRIVATE_ID,), reveal=("collections",))
+        self.assertIn("IN_COLLECTION", [
+            e["type"] for e in payload["edges"] if e["from"] == archives.PRIVATE_ID
+        ])
 

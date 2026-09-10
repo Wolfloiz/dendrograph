@@ -398,6 +398,40 @@ someone who did not write it.
     drop the part that was never about the software. The pattern is worth naming, because
     it has now happened twice — a criterion phrased as one number over a whole journey
     measures whatever dominates the journey, which is rarely the thing under test.
+- [ ] T041 **Close the fixture blind spot structurally, not case by case.** Two privacy
+      leaks shipped for the same reason and were found the same way — by building against a
+      real account, never by a test. `DEPENDS_ON` published a private Artifact's whole
+      manifest, and `IN_COLLECTION` published the Author's own name for the work. Both were
+      invisible because `archives.private()` did not carry the field, so the sweep in
+      `tests/test_alias.py` had nothing to sweep.
+  - The audit that found them, run 2026-09-10, and what it still says:
+
+    | `store.Artifact` field | private fixture carries it | shielded under alias |
+    |---|---|---|
+    | tools, techniques, sources, content_hashes, description | yes | yes |
+    | dependencies | yes *(added T041's first fix)* | yes *(fixed)* |
+    | **authorship** | **no — gate exists, never exercised** | yes |
+    | **declarations_applied** | **no** | unknown, never tested |
+
+    Eight edge types exist. `USES`, `APPLIES`, `IN_PERIOD`, `AUTHORED_BY`, `DEPENDS_ON`,
+    `DERIVES_FROM`, `SUCCEEDS` and `IN_COLLECTION` are now all accounted for — but three of
+    them are accounted for only by reading the code, because no fixture drives them.
+  - **The work**: give `archives.private()` every field an Artifact can hold, each carrying
+    the client's name the way `DEPENDENCY_NAME` does, so the existing `SECRETS` sweep
+    exercises all of them. Then add the test that makes this class of defect impossible to
+    reopen: enumerate `dataclasses.fields(store.Artifact)` and fail when the private fixture
+    leaves one empty. A field added in v0.3 then fails a test the day it is added, instead of
+    shipping and being found by someone building a demo.
+  - **Why the shield moved to the builder** (done, recorded here because it is the shape the
+    rest should follow): a per-loop `if aliased` cannot protect an edge emitted outside that
+    loop, which is exactly how `IN_COLLECTION` escaped — it is written in the `if config:`
+    block. `GraphBuilder.shield(node, *edge_types)` declares once what may not touch an
+    anonymous node, and `edge()` enforces it wherever the edge is emitted. New edge types
+    should be added there, not guarded again at each call site.
+  - Also unresolved and worth a look in the same pass: a node that exists **only** to be
+    connected leaks through its label alone. A Collection whose every member was anonymous
+    published `Acme client work` with no edges at all until this was fixed by not creating
+    the node. Check whether Tool, Technique, Period or Dependency can reach that state.
 
 ---
 

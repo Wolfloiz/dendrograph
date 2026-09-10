@@ -20,7 +20,7 @@ PUBLISH_MODES = ("public", "redacted")
 # `dependencies` entrou depois de as arestas DEPENDS_ON cruzarem sem gate
 # nenhum sob alias (ADR-0011); é campo separado de `tools` porque um manifesto
 # é dezenas de pacotes exatos e `tools` são dez nós curados.
-REVEAL_FIELDS = ("period", "tools", "authorship", "dependencies")
+REVEAL_FIELDS = ("period", "tools", "authorship", "dependencies", "collections")
 SOURCE_KINDS = ("github", "local")
 
 

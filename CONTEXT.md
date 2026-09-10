@@ -174,7 +174,8 @@ _Avoid_: Fork (ambiguous — a rewritten fork is real work), clone, copy
 **Alias**:
 A name a private Artifact is published under, revealing nothing beyond the node, its
 **id** and its dates until the Author names each field. Disclosure is opt-in per
-field — `period`, `tools`, `authorship`, `dependencies` — and there is no opt-out
+field — `period`, `tools`, `authorship`, `dependencies`, `collections` — and there is
+no opt-out
 redaction.
 
 The id is in that sentence because leaving it out made the sentence false. An

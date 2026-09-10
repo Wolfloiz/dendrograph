@@ -22,8 +22,8 @@ the Author names what may cross.
 ## Consequences
 
 - **Disclosure is opt-in, per field.** `reveal` names what may be published — `period`,
-  `tools`, `authorship`, `dependencies`. Empty, which is the default, publishes the node and
-  its dates and nothing else.
+  `tools`, `authorship`, `dependencies`, `collections`. Empty, which is the default,
+  publishes the node and its dates and nothing else.
 - **`dependencies` was added after the default failed to hold it.** Dependency nodes arrived
   in v0.2 and the alias path was not updated with them, so an aliased Artifact published its
   whole manifest with an empty `reveal` — on a real account, 52 exact packages of one private
@@ -41,7 +41,16 @@ the Author names what may cross.
   under an alias therefore ships without its pointer, and stops being verifiable; the
   contract says so rather than implying otherwise.
 - **Lineage edges are withheld** because an edge from an anonymous node to a known public
-  repository identifies the anonymous one.
+  repository identifies the anonymous one. **`IN_COLLECTION` is withheld for the same
+  reason**, and for a second one: the Collection's name is chosen by the Author, and
+  "Acme client work" names the client without naming the project. A Collection whose every
+  member is anonymous is not published at all — the node would be a bare label, and the
+  label is the disclosure. A public member still justifies it.
+- **The withholding lives in the graph builder, not at each emission point.** `shield(node,
+  *edge_types)` declares once what may not touch an anonymous node and `edge()` enforces it
+  wherever the edge comes from. A guard written per loop cannot protect an edge emitted
+  outside that loop, which is how `IN_COLLECTION` escaped: it is written in the config block,
+  not in the Artifact loop. New edge types belong on the shield.
 - **The node id is not aliased, and it is the root commit SHA.** Artifact identity is the
   root commit (ADR-0003) and the graph publishes Artifact ids as their store ids
   (`contracts/graph.md`), so an aliased node carries a value anyone holding a clone of that

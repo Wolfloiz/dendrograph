@@ -161,12 +161,29 @@ class GraphBuilder:
         self._nodes: dict[str, dict] = {}
         self._edges: set[tuple[str, str, str]] = set()
         self._edge_payload: dict[tuple[str, str, str], dict] = {}
-        # Nós cujas arestas de linhagem nunca podem cruzar: uma aresta de um
-        # nó anônimo para um Artifact público identifica o anônimo.
-        self._shielded: set[str] = set()
+        # Nó anônimo -> tipos de aresta que não podem tocá-lo. Uma aresta de um
+        # nó anônimo para um Artifact público identifica o anônimo, e o mesmo
+        # vale para uma Collection que o Author nomeou.
+        #
+        # É um lugar só de propósito. A alternativa — um `if aliased` dentro de
+        # cada laço que emite aresta — já falhou duas vezes: DEPENDS_ON entrou
+        # sem gate na v0.2, e IN_COLLECTION nunca teve, porque é emitido fora
+        # do laço do Artifact. Aqui a proteção alcança quem emite de qualquer
+        # lugar, e esquecer exige esquecer nesta linha.
+        self._shielded: dict[str, set[str]] = {}
 
-    def shield(self, node_id_: str) -> None:
-        self._shielded.add(node_id_)
+    def shield(self, node_id_: str, *edge_types: str) -> None:
+        self._shielded.setdefault(node_id_, set()).update(edge_types or LINEAGE_EDGES)
+
+    def blocks(self, node_id_: str, edge_type: str) -> bool:
+        """Se uma aresta deste tipo tocando este nó seria descartada.
+
+        Quem emite um nó que só existe para ser ligado precisa perguntar antes:
+        uma Collection sem nenhum membro sobrevivente vira um rótulo solto no
+        grafo, e o rótulo é o vazamento — "Acme client work" nomeia o cliente
+        sem precisar de aresta nenhuma.
+        """
+        return edge_type in self._shielded.get(node_id_, ())
 
     def node(self, node_id_: str, node_type: str, label: str, **extra) -> str:
         existing = self._nodes.get(node_id_, {})
@@ -184,8 +201,8 @@ class GraphBuilder:
         return node_id_
 
     def edge(self, source: str, target: str, edge_type: str, **extra) -> None:
-        if edge_type in LINEAGE_EDGES and (
-            source in self._shielded or target in self._shielded
+        if edge_type in self._shielded.get(source, ()) or edge_type in self._shielded.get(
+            target, ()
         ):
             return
         key = (edge_type, source, target)
@@ -379,7 +396,14 @@ def build(artifacts, *, config=None, build_mode: str = "public",
             artifact.id, "Artifact", artifact.name or artifact.id, **extra
         )
         if aliased:
-            builder.shield(artifact_node)
+            # IN_COLLECTION agrupa o nó anônimo com Artifacts nomeados, e a
+            # Collection carrega um nome que o Author escolheu — "Client work"
+            # diz de quem é sem nomear o quê.
+            builder.shield(
+                artifact_node,
+                *LINEAGE_EDGES,
+                *(() if "collections" in reveal else ("IN_COLLECTION",)),
+            )
 
         for tool in artifact.tools:
             if aliased and "tools" not in reveal:
@@ -498,12 +522,19 @@ def build(artifacts, *, config=None, build_mode: str = "public",
         # IN_COLLECTION vem só do config: a máquina propõe, o Author dispõe (FR-021).
         stored_ids = stored
         for collection in config.collections:
+            members = [
+                a for a in collection.artifacts
+                if a in stored_ids and not builder.blocks(a, "IN_COLLECTION")
+            ]
+            # Sem membro que sobreviva, o nó não é criado: o nome da Collection
+            # é escolhido pelo Author e diz de quem é o trabalho.
+            if not members:
+                continue
             collection_node = builder.node(
                 node_id("Collection", collection.name), "Collection", collection.name
             )
-            for artifact_id in collection.artifacts:
-                if artifact_id in stored_ids:
-                    builder.edge(artifact_id, collection_node, "IN_COLLECTION")
+            for artifact_id in members:
+                builder.edge(artifact_id, collection_node, "IN_COLLECTION")
         # SUCCEEDS existe porque uma linha do config diz que existe, nunca
         # porque a ferramenta achou parecido (FR-011, ADR-0009). `dendro
         # suggest` propõe o par; só isto aqui o cria.
