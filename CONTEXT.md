@@ -8,8 +8,10 @@ This file is the project's glossary: the words we use and the words we refuse.
 observed and deferential about what it interpreted: anything inferred is offered for
 confirmation, never asserted. See `docs/adr/0009`.
 
-Public surface is English: node and edge identifiers, CLI, file names, docs.
-Code comments are Portuguese. See `docs/adr/` for that decision.
+Public surface is English: node and edge identifiers, CLI, file names, docs. Code
+comments are Portuguese. Prose documentation also exists in Portuguese — the seam is
+that prose translates and the CLI does not, so `README.pt-br.md` carries the same
+commands as `README.md`, byte for byte. See `docs/adr/0001`.
 
 ## Language
 
@@ -170,10 +172,19 @@ dates to any Span and is counted apart.
 _Avoid_: Fork (ambiguous — a rewritten fork is real work), clone, copy
 
 **Alias**:
-A name a private Artifact is published under, revealing nothing beyond the node and
-its dates until the Author names each field. Disclosure is opt-in per field; there
-is no opt-out redaction. See `docs/adr/0011`.
-_Avoid_: Pseudonym, anonymised, masked, redacted (means a whole build mode here)
+A name a private Artifact is published under, revealing nothing beyond the node, its
+**id** and its dates until the Author names each field. Disclosure is opt-in per
+field; there is no opt-out redaction.
+
+The id is in that sentence because leaving it out made the sentence false. An
+Artifact's id is the SHA of its root commit, and an aliased node publishes it
+unchanged — so anyone holding a clone of the repository reproduces it with
+`git rev-list --max-parents=0 HEAD` and confirms the match, and a private fork of
+something public has a public root SHA already. Known, accepted and documented
+rather than fixed. An alias is for the reader who does not have the repository, not
+for one who does. See `docs/adr/0011`.
+_Avoid_: Pseudonym, anonymised, masked, redacted (means a whole build mode here),
+anonymity (it is not one)
 
 **Build mode**:
 `public`, `redacted` or `full`. It chooses the **output directory**, not a filter
