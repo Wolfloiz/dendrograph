@@ -302,7 +302,7 @@ def cmd_search(args, config) -> RunReport:
 
 
 # Comandos que só leem. Ver contracts/cli.md: "Writes: Nothing — prints".
-READ_ONLY_COMMANDS = frozenset({"suggest", "prune", "search"})
+READ_ONLY_COMMANDS = frozenset({"suggest", "prune", "search", "login"})
 
 COMMANDS = {
     "scan": cmd_scan,
@@ -366,8 +366,10 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_FAILURE
 
     report.dry_run = getattr(args, "dry_run", False)
-    # `suggest` e `prune` não escrevem nada: "0 Artifact(s) added, 0 changed"
-    # depois deles é ruído que sugere que houve uma escrita a considerar.
+    # Comandos que não tocam no store não levam resumo: "0 Artifact(s) added,
+    # 0 changed" depois deles é ruído que sugere uma escrita a considerar.
+    # `login` autentica e mais nada, e dizia isso logo abaixo de "Already
+    # authenticated" — a linha lida como se a autenticação tivesse falhado.
     if args.command not in READ_ONLY_COMMANDS:
         print(report.render())
     return report.exit_code

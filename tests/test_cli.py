@@ -108,3 +108,30 @@ class Surface(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CommandsThatWriteNothingSayNothingAboutWriting(unittest.TestCase):
+    """Um comando que não toca no store não fecha com um resumo de escrita.
+
+    `login` autentica e mais nada, e imprimia "0 Artifact(s) added, 0 changed"
+    logo abaixo de "Already authenticated from the environment". Quem acabou de
+    autenticar lê a linha seguinte como o resultado da autenticação, e ela diz
+    zero. O comentário no `main` já descrevia o defeito para `suggest` e
+    `prune`; `login` era a mesma categoria e estava de fora.
+
+    O teste é sobre a categoria, não sobre o `login`: o que a define é não
+    escrever Artifact nenhum, e o próximo comando assim tem que entrar junto.
+    """
+
+    def test_login_is_declared_as_writing_nothing(self):
+        self.assertIn("login", cli.READ_ONLY_COMMANDS)
+
+    def test_every_read_only_command_exists(self):
+        for name in cli.READ_ONLY_COMMANDS:
+            self.assertIn(name, cli.COMMANDS, f"{name} is declared read-only but is not a command")
+
+    def test_the_commands_that_do_write_are_not_silenced(self):
+        # A guarda do outro lado: silenciar `scan`, `build` ou `publish`
+        # esconderia justamente o número que diz se o comando fez algo.
+        for name in ("scan", "build", "publish"):
+            self.assertNotIn(name, cli.READ_ONLY_COMMANDS)

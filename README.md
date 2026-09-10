@@ -143,9 +143,13 @@ example is commented out — and every one of them is valid the moment you uncom
 **2. Point it at your work.**
 
 ```bash
-python3 ~/dendrograph/cli.py scan github:<your-account> --root .
+python3 ~/dendrograph/cli.py scan github:YOUR-ACCOUNT --root .
 python3 ~/dendrograph/cli.py build --root .
 ```
+
+`YOUR-ACCOUNT` is your GitHub username or organisation — `octocat`, not an email address
+and not a URL. A wrong one is not silent: the scan reports it as unreachable with the HTTP
+status, and records it as unreachable rather than as deleted.
 
 No credential is needed for public repositories. `python3 ~/dendrograph/cli.py login` — a
 GitHub OAuth device flow, no token to mint or store — adds your private ones to the store,
