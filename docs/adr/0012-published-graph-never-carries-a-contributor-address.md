@@ -2,7 +2,7 @@
 
 An Author node is identified by a digest of the commit email and **labelled** by the local
 part of that address, with GitHub's numeric prefix removed —
-`57202004+kshitija7@users.noreply.github.com` is published as `kshitija7`. The full address
+`1024+octocat@users.noreply.github.com` is published as `octocat`. The full address
 survives only in `full` mode, which `core/build.py` writes to `.dendro-local/` and never
 publishes, and in the store, which is the Author's own file on the Author's own disk.
 
@@ -40,7 +40,7 @@ this decision is about what must never be published, not about what the best lab
   which is what identity is answered by. The label guard fires on one id with two labels, not
   on two ids with one label.
 - **This narrows harvesting, it does not defeat identification.** A local part plus a public
-  repository is often enough to find someone; `kshitija7` *is* a GitHub username. The claim
+  repository is often enough to find someone; `octocat` *is* a GitHub username. The claim
   here is narrow and should be stated narrowly: the site does not hand out a working email
   address. It is the same bargain ADR-0011 records for aliases.
 - **`full` still shows addresses**, deliberately. Distinguishing two contributors called

@@ -26,14 +26,14 @@ ADDRESS = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 class TheLabelIsNotTheIdentity(unittest.TestCase):
     def test_a_published_label_drops_the_domain(self):
         self.assertEqual(
-            author_label("anantprsd5@gmail.com", published=True), "anantprsd5"
+            author_label("nadia-r@example.com", published=True), "nadia-r"
         )
 
     def test_the_github_numeric_prefix_goes_with_it(self):
         # O que sobra é o nome de usuário, que já é público.
         self.assertEqual(
-            author_label("57202004+kshitija7@users.noreply.github.com", published=True),
-            "kshitija7",
+            author_label("1024+octocat@users.noreply.github.com", published=True),
+            "octocat",
         )
 
     def test_the_full_build_keeps_the_address(self):

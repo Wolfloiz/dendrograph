@@ -18,9 +18,9 @@ def _key(email: str) -> str:
     """A mesma normalização que `Authorship` aplica ao guardar.
 
     Contar por e-mail cru parte uma pessoa em duas linhas quando ela escreve a
-    caixa diferente entre dois commits — `Cloud11665@gmail.com` e
-    `cloud11665@gmail.com` saíram do mesmo arquivo real —, e cada metade fica
-    com metade das contagens.
+    caixa diferente entre dois commits — `Marta9@example.com` e
+    `marta9@example.com` —, e cada metade fica com metade das contagens. Numa
+    varredura real as duas grafias saíram do mesmo arquivo.
     """
     return email.strip().lower()
 

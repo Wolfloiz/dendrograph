@@ -1,7 +1,7 @@
 """Como uma pessoa assina, que não é como ela é identificada.
 
 ADR-0012 tirou o endereço da saída publicada e deixou a parte local no lugar
-dele — `kshitija7` em vez do endereço inteiro. A parte local é o que sobra
+dele — `octocat` em vez do endereço inteiro. A parte local é o que sobra
 quando não se tem coisa melhor. O nome do commit é a coisa melhor: é o que a
 pessoa escolheu, é o que o GitHub já mostra em cada commit dela, e `%an` sempre
 esteve ali no `git log` — o coletor é que o descartava.
@@ -24,16 +24,16 @@ from support.fixtures import FixtureCase  # noqa: E402
 class TheLabelPrefersTheName(unittest.TestCase):
     def test_the_name_wins_over_the_local_part(self):
         self.assertEqual(
-            author_label("57202004+kshitija7@users.noreply.github.com",
-                         "Kshitija Patil", published=True),
-            "Kshitija Patil",
+            author_label("1024+octocat@users.noreply.github.com",
+                         "Mona Lisa", published=True),
+            "Mona Lisa",
         )
 
     def test_without_a_name_the_local_part_still_answers(self):
         # Registros guardados antes de o coletor ler `%an` não têm nome, e o
         # store acumula em vez de reconstruir (ADR-0002).
-        self.assertEqual(author_label("anantprsd5@gmail.com", None, published=True),
-                         "anantprsd5")
+        self.assertEqual(author_label("nadia-r@example.com", None, published=True),
+                         "nadia-r")
 
     def test_a_name_that_is_itself_an_address_is_refused(self):
         # `user.name = meu@endereço` é comum, e aí o nome não é melhor que o

@@ -337,14 +337,15 @@ class DistinctToolsGetDistinctNodes(unittest.TestCase):
 class TheSameAuthorTypedTwoWaysIsOnePerson(unittest.TestCase):
     """git grava o que a pessoa digitou, e ela não digita igual toda vez.
 
-    `Cloud11665@gmail.com` e `cloud11665@gmail.com` apareceram no mesmo arquivo
-    real. Sem normalizar viram dois autores: duas contagens, dois nós Author, e
+    `Marta9@example.com` e `marta9@example.com` são a mesma pessoa, e as duas
+    grafias saíram do mesmo arquivo numa varredura real. Sem normalizar viram
+    dois autores: duas contagens, dois nós Author, e
     um `share` que não fecha.
     """
 
     def test_the_stored_email_is_normalised(self):
-        self.assertEqual(entry("Cloud11665@Gmail.COM", None, None).author,
-                         "cloud11665@gmail.com")
+        self.assertEqual(entry("Marta9@Example.COM", None, None).author,
+                         "marta9@example.com")
 
     def test_two_spellings_weigh_as_one_author(self):
         from collectors.git.authorship import share

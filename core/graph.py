@@ -56,8 +56,8 @@ def slug(text: str) -> str:
 
 def node_id(node_type: str, label: str) -> str:
     # Um e-mail é identificador, não rótulo: sluggar come a pontuação e faz
-    # `ebagola@gmail,.com` — vírgula perdida no git config de alguém — colidir
-    # com `ebagola@gmail.com`. Ninguém pode consertar o config alheio, então o
+    # `ana@example,.com` — vírgula perdida no git config de alguém — colidir
+    # com `ana@example.com`. Ninguém pode consertar o config alheio, então o
     # id de Author é derivado sem perda em vez de legível. Também mantém o
     # endereço fora da string do id.
     if node_type == "Author":
@@ -116,8 +116,8 @@ def dependency_id(ecosystem: str, name: str) -> str:
 # exatamente por isso, e nada aqui autoriza a ferramenta a desfazer isso.
 #
 # Publicado, o rótulo é a parte local do endereço, sem o prefixo numérico que o
-# GitHub antepõe: `57202004+kshitija7@users.noreply.github.com` vira
-# `kshitija7`, que já é o nome de usuário público. O modo `full`, que nunca sai
+# GitHub antepõe: `1024+octocat@users.noreply.github.com` vira
+# `octocat`, que já é o nome de usuário público. O modo `full`, que nunca sai
 # da máquina do Author (`core/build.py`), mantém o endereço — distinguir dois
 # `john` é problema de quem olha o próprio arquivo.
 #

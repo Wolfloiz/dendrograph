@@ -30,8 +30,9 @@ from real data costs what real data costs.
 - **Private repositories, and anything whose visibility was never observed.** 40 of the 97
   Artifacts in the source archive are withheld here, because a local scan cannot tell that a
   folder is meant to be public and `unknown` is not `public` (ADR-0005).
-- **Contributor email addresses.** Author nodes are labelled by the local part of the commit
-  address — `kshitija7`, not `57202004+kshitija7@users.noreply.github.com` (ADR-0012).
+- **Contributor email addresses.** An Author node is labelled by the name they sign commits
+  with, or by the local part of the address when the collector has no name — never the
+  address itself, and never `1024+octocat@users.noreply.github.com` (ADR-0012).
 - **Paths on the author's machine.** Local locators never cross into a published build.
 
 The store that produced this is not here either. It lives in the author's own archive
