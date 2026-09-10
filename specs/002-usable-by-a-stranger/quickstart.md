@@ -16,7 +16,7 @@ python3 cli.py publish --root ~/my-archive             # site/
 ## 1. One screen (US1)
 
 ```bash
-xdg-open ~/my-archive/site/index.html
+xdg-open ~/my-archive/site/index.html   # macOS: open · Windows: start
 ```
 
 - [ ] Both views are reachable from a control on the page, with no document load.
@@ -28,7 +28,7 @@ xdg-open ~/my-archive/site/index.html
 
 ```bash
 nmcli networking off        # or unplug it
-xdg-open ~/my-archive/site/index.html
+xdg-open ~/my-archive/site/index.html   # macOS: open · Windows: start
 ```
 
 - [ ] Every view works. Nothing is fetched. Switching views does not break.

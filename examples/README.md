@@ -7,7 +7,7 @@ nothing else.
 Open it with no server, no install and no account:
 
 ```bash
-xdg-open examples/site/index.html   # or open the file however your desktop does
+xdg-open examples/site/index.html   # macOS: open · Windows: start — or double-click it
 ```
 
 Unplug the network first if you want to check the claim. Everything the page needs —

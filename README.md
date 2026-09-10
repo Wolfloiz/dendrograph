@@ -2,6 +2,8 @@
 
 # dendrograph
 
+***English** · [Português](README.pt-br.md)*
+
 **A knowledge graph of what you have built.** Point it at your git repositories and get a
 navigable map of Artifacts, Tools, Techniques and time — one that can answer *how long
 have I actually used Rust?* with a date instead of a guess.
@@ -20,8 +22,12 @@ git clone https://github.com/Wolfloiz/dendrograph.git ~/dendrograph
 cd ~/dendrograph
 python3 cli.py scan github:tinygrad --root ~/my-archive   # any public account
 python3 cli.py build --root ~/my-archive
-xdg-open ~/my-archive/site/index.html                     # or just open the file
+xdg-open ~/my-archive/site/index.html                     # macOS: open · Windows: start
 ```
+
+**On Windows**, use PowerShell and change two words: `py` instead of `python3`, and
+`Select-String` instead of `grep`. Everything else on this page is the same, including the
+paths — PowerShell understands `~`.
 
 No credential needed for a public account. The first scan clones full history into a
 temporary directory and throws it away — nothing is cached between runs.
@@ -190,8 +196,11 @@ repository while it scans, and a `site/` directory afterwards.
 **3. Open it, then publish it.**
 
 ```bash
-xdg-open site/index.html          # it works from disk, offline
+xdg-open site/index.html          # macOS: open · Windows: start
 ```
+
+Or double-click it. It is a plain HTML file: it opens from disk, on any operating system,
+with no server and no network.
 
 **Before you publish, this is what the site contains and what it does not.** It is the
 only claim in this README that costs something to get wrong:
