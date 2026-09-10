@@ -25,9 +25,14 @@ python3 cli.py build --root ~/my-archive
 xdg-open ~/my-archive/site/index.html                     # macOS: open · Windows: start
 ```
 
-**No Windows**, use o PowerShell e troque duas palavras: `py` no lugar de `python3`, e
-`Select-String` no lugar de `grep`. O resto desta página é igual, inclusive os caminhos —
-o PowerShell entende `~`.
+**No macOS** a página funciona exatamente como está escrita, com uma troca: `open` no
+lugar de `xdg-open`.
+
+**No Windows** use o Git Bash, que vem junto com o Git for Windows. Aí a página também
+funciona como está escrita, com duas trocas: `py` no lugar de `python3`, e `start` no lugar
+de `xdg-open`. O PowerShell precisa de mais duas — `Select-String` no lugar de `grep`, e
+`Copy-Item -Recurse` no lugar de `cp -r` — e é por isso que o Git Bash é o caminho mais
+curto.
 
 Nenhuma credencial é necessária para uma conta pública. A primeira varredura clona a
 história completa num diretório temporário e o joga fora — nada fica em cache entre

@@ -25,9 +25,13 @@ python3 cli.py build --root ~/my-archive
 xdg-open ~/my-archive/site/index.html                     # macOS: open · Windows: start
 ```
 
-**On Windows**, use PowerShell and change two words: `py` instead of `python3`, and
-`Select-String` instead of `grep`. Everything else on this page is the same, including the
-paths — PowerShell understands `~`.
+**On macOS** the page works exactly as written, with one change: `open` instead of
+`xdg-open`.
+
+**On Windows** use Git Bash, which ships with Git for Windows. Then the page works as
+written too, with two changes: `py` instead of `python3`, and `start` instead of
+`xdg-open`. PowerShell needs two more — `Select-String` for `grep`, and `Copy-Item
+-Recurse` for `cp -r` — which is why Git Bash is the shorter road.
 
 No credential needed for a public account. The first scan clones full history into a
 temporary directory and throws it away — nothing is cached between runs.
