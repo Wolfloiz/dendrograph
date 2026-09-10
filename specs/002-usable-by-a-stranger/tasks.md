@@ -278,17 +278,60 @@ someone who did not write it.
 - [X] T036 Add **View**, **Selection** and **Search result** to `CONTEXT.md` — new vocabulary
       lands there when it is resolved, not in a backlog. All three exist in the interface only
       and none is stored; say so, or the next person will look for the table.
-- [ ] T037 **Partly done; the rest needs a browser.** Run [quickstart.md](./quickstart.md) end to end against the real archive, including
-      the offline check with the network actually off and the frame probe in a real browser.
+- [X] T037 Run [quickstart.md](./quickstart.md) end to end against the real archive, including
+      the offline check and the frame probe in a real browser.
   - **Done headlessly, 2026-08-29.** No absolute URL in any published file, so nothing is
     fetched. The 40 withheld Artifacts leak neither name nor description into `graph.json`,
     `graph.js` or `graph.sqlite` — the one apparent hit was the tool naming itself in
     `generator`, not an Artifact. `dendro search` answers from the whole archive, the page
     index answers in 2.96 ms worst-case, the screen passes 15 interaction checks, and the
     Tool profile's count matches its list on every Tool.
-  - **Still needs a browser**: the network actually unplugged, and the frame probe while
-    panning. Nothing here rasterises, and SC-007 is about rasterisation. The numbers to
-    beat are v0.1's: first render 182 ms, 60fps at every zoom.
+  - **Done in a browser, 2026-09-10.** Chrome 152, 1920x993, `examples/site/` — the real
+    published archive, 2,433 nodes and 2,714 edges. Three runs: two over `http://127.0.0.1`
+    and one from `file://` with no server behind the site's own files. **SC-007 passes on
+    both halves.**
+
+    | | file:// | http | http |
+    |---|---|---|---|
+    | first render | **381.8 ms** | 688.3 ms | 835.9 ms |
+    | pan at fit | 59.6fps *(ceiling 59.7)* | 58.8 *(58.9)* | 59.5 *(59.6)* |
+    | pan at min zoom `k=0.05` | 58.3 *(58.7)* | 53.7 *(60.0)* | 58.6 *(58.9)* |
+    | pan at max zoom `k=6` | 59.6 *(60.0)* | 59.7 *(60.0)* | 59.0 *(59.4)* |
+    | frames behind the timeline | **0** | **0** | **0** |
+
+  - **Nothing is fetched, proven twice.** From `file://` the only network requests in the
+    whole run were the probe's own reports to the harness; the site asked for nothing. Over
+    http the page made 16 requests, every one same-origin. The three absolute URLs that do
+    exist in the files are not fetches: `scripts.sil.org` is prose in the OFL licence,
+    `packtpub.com` is an Artifact's locator inside `graph.json`, and `w3.org/2000/svg` is
+    the XML namespace in `logo.svg`. The network was not physically unplugged — cutting it
+    would have cut the session doing the measuring — but with zero requests leaving the
+    page there is nothing left for an unplugged cable to change.
+  - **The regression the single screen was most likely to introduce did not happen.** Zero
+    frames drawn behind the timeline, in all three runs. `suspend()` genuinely stops the
+    loop rather than leaving it dirty-gated and running.
+  - **Panning is vsync-bound, not compute-bound.** Painted frames equal the display's
+    ceiling at every zoom — the probe counted both, and the graph draws every frame the
+    browser offers. Median gap 16.7 ms throughout. The one exception is the first http run
+    at minimum zoom, 53.7fps against a 60.0 ceiling with a single 303 ms stall; it did not
+    reproduce in either later run at the same zoom, so it reads as a one-off collection
+    pause rather than a cost that scales with zoom.
+  - **First render is 2.1x v0.1's 182 ms, and under SC-007's 2 s ceiling by 5x.** The
+    comparable number is `file://`'s 381.8 ms; http's 688–836 ms carries 723 KB of
+    `graph.js` over the wire. Run 2's breakdown puts 547.7 ms of that *after* `graph.js`
+    was already available, so it is work and not transport. v0.1 measured a page that
+    loaded one view; the single screen loads eight scripts before it can paint, which is
+    what US1 bought. Worth knowing, not worth blocking on.
+  - **Not a criterion, but measured and worth recording**: the force simulation runs 17–24
+    seconds before it settles, drawing every frame while it converges.
+  - Instrumented by hooking `clearRect` — `draw()` is its only caller in the whole site
+    (`view-graph.js:353`), so the count is painted frames and not `frame()` calls, which
+    fire every rAF even when `dirty` is false. The harness lived entirely outside the
+    repository. Two traps worth writing down for whoever repeats this: Chrome suspends
+    `requestAnimationFrame` **and** `setTimeout` in a background tab, so a probe driven
+    from a tab that never comes to the front measures the freeze and not the product — the
+    first numbers this task produced were exactly that, and were thrown away; and the
+    browser extension cannot drive `file://` at all, so that half has to be opened by hand.
 - [X] T038 [P] Rebuild `examples/site/` from a fresh publish and sweep the copy again for
       addresses, local paths and absolute URLs. The demo is the thing a stranger opens; it
       must carry the release it advertises.
