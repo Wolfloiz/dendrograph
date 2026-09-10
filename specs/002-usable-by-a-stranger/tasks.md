@@ -265,8 +265,37 @@ places it last for that reason, not because it matters least.
       nothing to find, and a Tool profile if any Tool exists. This is the first thing every
       adopter sees, and US4's third acceptance scenario — stopping after step one leaves a
       working thing rather than a broken half — is not true until something checks it.
-- [ ] T035 [US4] **Needs a person, not an agent.** Time a stranger through it. Under 10 minutes, asking nothing (SC-004). Record
-      what they got stuck on, if anything, in this file.
+- [ ] T035 [US4] **Partly done; still needs a stranger.** Time a stranger through it. Under
+      10 minutes, asking nothing (SC-004). Record what they got stuck on, if anything, here.
+  - **Walked by the Author, 2026-09-10: about twelve minutes, and most of it was the
+    clones, not the commands.** This does not close SC-004 — the criterion says *a stranger
+    with no prior knowledge*, and the Author wrote the thing. What it does establish is
+    where the twelve minutes went, which no stranger's stopwatch would have told us any
+    better: downloading repositories dominated, and the reading and typing did not.
+  - Two defects surfaced on the way and are fixed: `scan github:<your-account>` could not be
+    pasted, because `<word` is an input redirect in zsh and bash; and `login` printed
+    "0 Artifact(s) added, 0 changed" directly under "Already authenticated", which reads as
+    the authentication having failed. Both were found by running the text rather than
+    reading it, which is the whole argument for this task existing.
+  - **`--filter=blob:none` was measured and rejected — do not retry it.** The collector
+    clones full history with `--no-checkout` (FR-024 needs the root commit and the per-author
+    counts), and full history means every version of every file. A partial clone looks like
+    the obvious fix and is not. On `tinygrad/tinygrad` (14,753 commits):
+
+    | | clone | then `ls-tree -r --long HEAD` | on disk |
+    |---|---|---|---|
+    | `--no-checkout` (today) | 8.78 s | **0.00 s** | 127 MB |
+    | `+ --filter=blob:none` | 2.24 s | **280 s, unfinished** | 21 MB |
+
+    Same commit count and the same root SHA both ways, so identity survives — but `--long`
+    needs each blob's size, and a partial clone fetches the missing blobs one at a time.
+    The clone gets 4x faster and the command after it becomes unusable. Anything in this
+    direction has to deal with `--long` first.
+  - **This puts a question to SC-004 rather than answering it.** The criterion times a
+    stranger to their published archive, but the measurement is dominated by how many
+    repositories they own and how fast their connection is — neither of which the README can
+    change. SC-008 was rewritten in T039 for being unobservable as stated; SC-004 may deserve the
+    same look, split into the part the interface controls and the part the network does.
 
 **Checkpoint**: The path from *interesting* to *I want one* exists and has been walked by
 someone who did not write it.
