@@ -93,9 +93,16 @@ Open a Tool that appears in at least one untouched fork.
 
 The only check that cannot be automated:
 
-- [ ] Hand the README to someone who has never seen the repository. Time them. They reach a
-      published archive of their own public repositories in under 10 minutes, asking nothing.
+- [ ] Hand the README to someone who has never seen the repository. They reach a published
+      archive of their own public repositories, asking nothing.
 - [ ] They never open a source file.
+- [ ] Every command runs as pasted — no editing beyond the account name and the platform
+      note. A command that has to be fixed before it runs is a failure, not a typo.
+- [ ] Every *You should see* matches what they actually saw, at the step where it is written.
+- [ ] **Time their hands, not their link** (SC-004): reading, deciding and typing stays under
+      10 minutes, with the clock stopped while a scan or clone runs. What the waiting costs
+      is SC-008's number. The first walk of this took twelve minutes wall-clock and the
+      clones were the larger part — timing the whole journey measures the connection.
 - [ ] Stopping after step one leaves them with a working thing, not a broken half — build an
       archive of a single Artifact and confirm every view renders it: a graph of one node, a
       one-row timeline, a search with nothing to find. It is the first thing every adopter

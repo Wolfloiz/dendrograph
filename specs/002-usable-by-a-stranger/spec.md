@@ -240,8 +240,32 @@ Two entities exist in the interface only, and neither is stored:
   the node they had selected.
 - **SC-003**: Asked *how long has this person used X, and on what*, a visitor answers from
   one screen without opening a second document or a file.
-- **SC-004**: A stranger with a GitHub account and no prior knowledge reaches their own
-  published archive in under 10 minutes, following the README and asking nothing.
+- **SC-004**: **Rewritten, not timed against the wrong clock a second time.** A stranger
+  with a GitHub account and no prior knowledge reaches their own published archive following
+  the README alone. Four conditions, all observable, none of them a stopwatch on the
+  network:
+  1. They **ask nothing** and **open no source file**.
+  2. Every command **runs as pasted**, with no editing beyond the account name and the
+     platform note the README already gives.
+  3. Each step's *You should see* matches what they actually see, so a failure surfaces
+     where it happened.
+  4. Their **own time — reading, deciding and typing — stays under 10 minutes**, measured
+     with the waiting removed: clock stops while a scan or clone runs.
+
+  What the waiting costs is **SC-008's line, not this one**. A criterion that measures how
+  many repositories someone owns and how fast their link is cannot be passed or failed by
+  changing the README, which is the only thing this criterion is about.
+
+  *Why it changed*: the walk happened on 2026-09-10 and took about twelve minutes, of which
+  the clones were the larger part — the reading and the typing were not close. Under the old
+  wording that is a failure, and the fix would have been to own fewer repositories. Two real
+  defects surfaced on the same walk and were fixed: a command that could not be pasted
+  (`<your-account>` is an input redirect in zsh and bash) and a `login` that printed
+  "0 Artifact(s) added" under "Already authenticated", which reads as having failed. Both
+  are interface defects, both are what this criterion exists to catch, and the old sentence
+  scored them the same as a slow connection. The split keeps what the original protected —
+  a newcomer who is never blocked, confused, or sent to read source — and hands the network
+  to the criterion that already governs it.
 - **SC-005**: A search over an archive of 3,000 nodes returns its results in under 50 ms per
   keystroke — fast enough that they appear while the visitor is still typing, with no spinner
   and no delay they can feel. The number is here because *no perceptible wait* cannot fail a

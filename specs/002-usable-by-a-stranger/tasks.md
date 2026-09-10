@@ -265,8 +265,10 @@ places it last for that reason, not because it matters least.
       nothing to find, and a Tool profile if any Tool exists. This is the first thing every
       adopter sees, and US4's third acceptance scenario — stopping after step one leaves a
       working thing rather than a broken half — is not true until something checks it.
-- [ ] T035 [US4] **Partly done; still needs a stranger.** Time a stranger through it. Under
-      10 minutes, asking nothing (SC-004). Record what they got stuck on, if anything, here.
+- [ ] T035 [US4] **Partly done; still needs a stranger.** Walk a stranger through it against
+      SC-004 as rewritten: asking nothing, opening no source file, every command running as
+      pasted, each *You should see* matching, and under 10 minutes of their own time with the
+      waiting removed. Record what they got stuck on, if anything, here.
   - **Walked by the Author, 2026-09-10: about twelve minutes, and most of it was the
     clones, not the commands.** This does not close SC-004 — the criterion says *a stranger
     with no prior knowledge*, and the Author wrote the thing. What it does establish is
@@ -291,11 +293,11 @@ places it last for that reason, not because it matters least.
     needs each blob's size, and a partial clone fetches the missing blobs one at a time.
     The clone gets 4x faster and the command after it becomes unusable. Anything in this
     direction has to deal with `--long` first.
-  - **This puts a question to SC-004 rather than answering it.** The criterion times a
-    stranger to their published archive, but the measurement is dominated by how many
+  - **This put a question to SC-004, and T040 answered it.** The old criterion timed a
+    stranger to their published archive, but the measurement was dominated by how many
     repositories they own and how fast their connection is — neither of which the README can
-    change. SC-008 was rewritten in T039 for being unobservable as stated; SC-004 may deserve the
-    same look, split into the part the interface controls and the part the network does.
+    change. SC-004 is now split: the interface conditions here, the cost of the waiting under
+    SC-008, which already governs it.
 
 **Checkpoint**: The path from *interesting* to *I want one* exists and has been walked by
 someone who did not write it.
@@ -379,6 +381,23 @@ someone who did not write it.
     software; it was a stand-in for "big enough that a hang would matter", and linearity
     measured across 500 synthetic repositories says more about that than one account ever
     would.
+- [X] T040 Decide SC-004's disposition and record it here. T035's walk showed the criterion
+      measures the network as much as the interface; either it says which it means, or the
+      next person passes it by owning fewer repositories.
+  - **Decided: rewritten, split rather than relaxed.** The old sentence bundled two things
+    that fail for unrelated reasons — a README that confuses someone, and a link that is
+    slow. T035 took about twelve minutes and the clones were the larger part, so under the
+    old wording it fails; and yet the same walk found two genuine interface defects, which
+    is the criterion working. Scoring both on one stopwatch hides each behind the other.
+  - SC-004 now carries four observable interface conditions — asks nothing, opens no source
+    file, every command runs as pasted, every *You should see* matches — plus a ten-minute
+    bound on the walker's **own** time, with the clock stopped while anything downloads.
+    The cost of the waiting moves to SC-008, which already states it as a per-repository
+    number and is the criterion that can actually be failed by the software.
+  - Same shape as T039, and for the same reason: keep what the original was protecting,
+    drop the part that was never about the software. The pattern is worth naming, because
+    it has now happened twice — a criterion phrased as one number over a whole journey
+    measures whatever dominates the journey, which is rarely the thing under test.
 
 ---
 
