@@ -42,6 +42,9 @@ execuções.
 usado no resto deste arquivo. Todo passo abaixo escreve `python3 .../cli.py` por extenso,
 para que nada que você precise colar dependa de ter instalado alguma coisa.
 
+**[Veja um no ar](https://wolfloiz.github.io/dendrograph-demo/)** — 66 Artifacts, 8 deles
+privados e publicados sob alias. Arquivos estáticos no GitHub Pages, sem servidor atrás.
+
 Ou pule a varredura e abra um arquivo de verdade:
 [`examples/site/index.html`](examples/site/) é um acervo publicado de 57 repositórios
 públicos, versionado neste repositório. Sem instalação, sem conta, e renderiza com a rede

@@ -40,6 +40,9 @@ temporary directory and throws it away — nothing is cached between runs.
 used elsewhere in this file. Every step below spells out `python3 .../cli.py` so that
 nothing you are asked to paste depends on having installed anything.
 
+**[See one live](https://wolfloiz.github.io/dendrograph-demo/)** — 66 Artifacts, 8 of them
+private and published under an alias. Static files on GitHub Pages, no server behind it.
+
 Or skip the scan and open a real one: [`examples/site/index.html`](examples/site/) is a
 published archive of 57 public repositories, committed to this repository. No install, no
 account, and it renders with the network unplugged. `examples/README.md` says what the
