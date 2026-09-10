@@ -76,6 +76,13 @@ class AnUnknownRevealFieldIsRejected(FixtureCase):
         # `reveal` é lista de divulgação: só o que ela nomeia cruza. Não há
         # como expressar "tudo menos X", porque esse controle faz o
         # esquecimento virar o modo de falha (ADR-0011).
+        from core import privacy
         from core.config import REVEAL_FIELDS
 
-        self.assertEqual(REVEAL_FIELDS, ("period", "tools", "authorship"))
+        self.assertEqual(
+            REVEAL_FIELDS, ("period", "tools", "authorship", "dependencies")
+        )
+        # Uma lista só. `core.privacy` já teve a sua própria cópia, com um campo
+        # a mais, e nada quebrou — porque ninguém a lia. Um campo publicável a
+        # mais de um lado é um vazamento do outro.
+        self.assertIs(privacy.REVEAL_FIELDS, REVEAL_FIELDS)

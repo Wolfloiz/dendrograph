@@ -435,7 +435,14 @@ def build(artifacts, *, config=None, build_mode: str = "public",
                 evidence=[] if aliased else technique.get("evidence", []),
             )
 
-        for dependency in artifact.dependencies:
+        # Uma lista de dependências é impressão digital: 52 pacotes exatos com
+        # as datas dizem qual projeto é, sem precisar do nome. Todo outro laço
+        # aqui já era fechado sob alias; este entrou com os nós Dependency na
+        # v0.2 e ficou aberto, publicando o manifesto inteiro de um Artifact
+        # privado com `reveal` vazio — o oposto do que a ADR-0011 promete.
+        for dependency in (
+            () if aliased and "dependencies" not in reveal else artifact.dependencies
+        ):
             ecosystem = dependency["ecosystem"]
             label = dependency_name(ecosystem, dependency["name"])
             dependency_node = builder.node(

@@ -23,6 +23,7 @@ def artifact(
     visibility: str = store.VISIBILITY_PUBLIC,
     tools=(),
     techniques=(),
+    dependencies=(),
     sources=(),
     authorship=(),
     activity=None,
@@ -38,7 +39,7 @@ def artifact(
         visibility=visibility,
         tools=[{"name": t} for t in tools],
         techniques=list(techniques),
-        dependencies=[],
+        dependencies=list(dependencies),
         sources=[
             s if isinstance(s, store.Source)
             else store.Source(
@@ -52,6 +53,11 @@ def artifact(
         content_hashes=content_hashes if content_hashes is not None else {},
         last_seen=last_seen,
     )
+
+
+# Um pacote interno leva o nome do cliente com ele. É por isso que ele é
+# segredo aqui e não só ruído de fixture.
+DEPENDENCY_NAME = f"{CLIENT_NAME}-internal-sdk"
 
 
 def private(**kwargs) -> store.Artifact:
@@ -74,6 +80,16 @@ def private(**kwargs) -> store.Artifact:
             "last_seen": "2026-07-01",
         }],
         content_hashes={EVIDENCE_PATH: CONTENT_HASH},
+        # Um manifesto identifica sem nomear: os pacotes exatos de um projeto,
+        # com as datas, dizem qual ele é. O fixture não os tinha, e por isso a
+        # varredura de privacidade passou por anos sem exercitar o caso — as
+        # arestas DEPENDS_ON de um Artifact sob alias cruzavam inteiras.
+        dependencies=[
+            {"ecosystem": "cargo", "name": DEPENDENCY_NAME, "version": "0.3.1",
+             "evidence": {"kind": "manifest", "detail": "Cargo.toml"}},
+            {"ecosystem": "cargo", "name": "serde", "version": "1.0.0",
+             "evidence": {"kind": "manifest", "detail": "Cargo.toml"}},
+        ],
         last_seen="2026-07-01",
         **kwargs,
     )

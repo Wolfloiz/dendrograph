@@ -18,9 +18,11 @@ from core import store
 
 MODE_FULL = "full"
 
-# Campos que um [[publish.alias]].reveal pode nomear. Qualquer outra coisa é
-# recusada no config, nunca ignorada — esquecimento aqui é vazamento.
-REVEAL_FIELDS = ("period", "tools", "authorship")
+# Reexportado de `core.config`, e não redefinido: duas listas dos mesmos campos
+# é uma lista que envelhece sozinha, e esta já tinha envelhecido — o valor aqui
+# divergiu do que o config validava, sem quebrar teste nenhum, porque ninguém
+# a lia. Um campo publicável a mais de um lado é um vazamento do outro.
+from core.config import REVEAL_FIELDS  # noqa: F401
 
 GENERATED_LABEL_PREFIX = "Private project"
 

@@ -15,7 +15,12 @@ from pathlib import Path
 CONFIG_NAME = "dendrograph.toml"
 
 PUBLISH_MODES = ("public", "redacted")
-REVEAL_FIELDS = ("period", "tools", "authorship")
+# Campos que um `[[publish.alias]].reveal` pode nomear. Qualquer outra coisa é
+# recusada aqui, nunca ignorada — esquecimento neste ponto é vazamento.
+# `dependencies` entrou depois de as arestas DEPENDS_ON cruzarem sem gate
+# nenhum sob alias (ADR-0011); é campo separado de `tools` porque um manifesto
+# é dezenas de pacotes exatos e `tools` são dez nós curados.
+REVEAL_FIELDS = ("period", "tools", "authorship", "dependencies")
 SOURCE_KINDS = ("github", "local")
 
 

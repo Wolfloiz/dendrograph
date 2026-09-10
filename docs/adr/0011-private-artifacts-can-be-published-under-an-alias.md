@@ -22,8 +22,17 @@ the Author names what may cross.
 ## Consequences
 
 - **Disclosure is opt-in, per field.** `reveal` names what may be published — `period`,
-  `tools`, `authorship`. Empty, which is the default, publishes the node and its dates and
-  nothing else.
+  `tools`, `authorship`, `dependencies`. Empty, which is the default, publishes the node and
+  its dates and nothing else.
+- **`dependencies` was added after the default failed to hold it.** Dependency nodes arrived
+  in v0.2 and the alias path was not updated with them, so an aliased Artifact published its
+  whole manifest with an empty `reveal` — on a real account, 52 exact packages of one private
+  project, which together with its dates say which project it is without ever naming it. The
+  fixture had no dependencies, so the sweep never exercised the case. Fixed, and the fixture
+  now carries a package whose name carries the client's, the way an internal SDK does. It is
+  a separate field rather than part of `tools` on purpose: `tools` is ten curated nodes, a
+  manifest is dozens of exact ones, and an Author opting into the first is not opting into
+  the second.
 - **Some fields never cross, at any setting**: the real name, description and URL; source
   locators; Technique evidence paths; content hashes; and lineage edges to other Artifacts.
   Evidence paths are the sharpest of these — FR-010 requires every Technique to point at the

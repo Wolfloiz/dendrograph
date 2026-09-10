@@ -22,6 +22,7 @@ SECRETS = (
     archives.CONTENT_HASH,
     "Internal tooling",
     "/media/backup/work",  # o locator
+    archives.DEPENDENCY_NAME,  # o manifesto nomeia o cliente junto
 )
 
 
@@ -185,3 +186,56 @@ class TheAliasedNodeKeepsTheIdThatIdentifiesTheRepository(FixtureCase):
         adr = (Path(__file__).resolve().parent.parent
                / "docs/adr/0011-private-artifacts-can-be-published-under-an-alias.md")
         self.assertIn("root commit SHA", adr.read_text(encoding="utf-8"))
+
+
+class DependenciesAreAFingerprintAndDoNotCrossByDefault(FixtureCase):
+    """O manifesto identifica sem nomear, e cruzava inteiro.
+
+    Todo outro laço de relação em `core/graph.py` era fechado sob alias —
+    evidência de Technique, Tools, Periods, Authorship. As dependências
+    entraram com os nós Dependency na v0.2 e ficaram de fora do gate, então
+    um Artifact privado com `reveal` vazio publicava o manifesto completo:
+    numa conta real, 52 pacotes exatos de um projeto privado, que com as
+    datas dizem qual projeto é sem precisar do nome.
+
+    O fixture não tinha dependências, e é por isso que a varredura passou.
+    Ele tem agora, e o nome do pacote carrega o do cliente — do jeito que um
+    SDK interno de verdade carrega.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.root = self.tmp / "archive"
+        self.root.mkdir()
+        archives.write(self.root, archives.private(), archives.public())
+
+    def edges_of(self, reveal=()):
+        payload = build.build(self.root, config=Config(aliases=(
+            Alias(id=archives.PRIVATE_ID, label="Anon", reveal=reveal),
+        )))
+        return [e for e in payload["edges"] if e["from"] == archives.PRIVATE_ID]
+
+    def test_no_dependency_edge_crosses_with_an_empty_reveal(self):
+        self.assertEqual(
+            [e["type"] for e in self.edges_of()], ["APPLIES"],
+            "an aliased Artifact published its dependency manifest",
+        )
+
+    def test_the_package_name_is_nowhere_in_the_published_files(self):
+        self.edges_of()
+        self.assertNotIn(archives.DEPENDENCY_NAME, published_text(self.root))
+
+    def test_revealing_tools_does_not_drag_the_manifest_along(self):
+        # `tools` são dez nós curados; um manifesto são dezenas de pacotes
+        # exatos. Quem opta por um não está optando pelo outro.
+        self.assertNotIn(
+            "DEPENDS_ON", [e["type"] for e in self.edges_of(reveal=("tools",))]
+        )
+
+    def test_naming_dependencies_lets_them_cross(self):
+        # Recusar sempre seria uma decisão diferente da que a ADR-0011 toma:
+        # divulgação é opt-in por campo, e este campo agora existe.
+        self.assertIn(
+            "DEPENDS_ON", [e["type"] for e in self.edges_of(reveal=("dependencies",))]
+        )
+
