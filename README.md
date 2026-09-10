@@ -133,6 +133,14 @@ lineage edges.
 a project from its dates and Tools. An alias is for the reader who does not already know —
 it is not anonymity against a determined guess. See `docs/adr/0011`.
 
+**One disclosure stated plainly, so it is not left to a guess.** The node keeps its id, and
+the id is the repository's root commit SHA (ADR-0003). Anyone holding a clone reproduces it
+with `git rev-list --max-parents=0 HEAD` and confirms the match; a private fork of a public
+repository has a public root SHA already. The alias hides the project from a reader who does
+not have the repository. It does not hide it from one who does — a client, a former
+collaborator, a contractor. If that is the reader you are hiding from, do not publish the
+Artifact at all. That is the default, and it costs nothing to keep.
+
 ## Three steps to your own archive
 
 The tool holds no data of yours. Your Artifacts, your config and your decisions live in an

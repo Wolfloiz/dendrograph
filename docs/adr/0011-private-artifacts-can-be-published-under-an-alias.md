@@ -33,6 +33,18 @@ the Author names what may cross.
   contract says so rather than implying otherwise.
 - **Lineage edges are withheld** because an edge from an anonymous node to a known public
   repository identifies the anonymous one.
+- **The node id is not aliased, and it is the root commit SHA.** Artifact identity is the
+  root commit (ADR-0003) and the graph publishes Artifact ids as their store ids
+  (`contracts/graph.md`), so an aliased node carries a value anyone holding a clone of that
+  repository reproduces with `git rev-list --max-parents=0 HEAD`. A private repository that
+  is a fork of something public already has a public root SHA, because a fork *is* the same
+  Artifact. This is the failure the withheld lineage edges avoid, reached by another route.
+  **It is left in place and documented rather than fixed**, decided 2026-09-10. The
+  alternative is a second identity scheme for one node type — the id is what the page
+  addresses nodes by and what `indexes.tool_to_artifacts` keys on — and the disclosure is
+  the one the paragraph above already describes, made specific: an alias is for the reader
+  who does not have the repository, not for the one who does. An Author for whom that
+  matters should not publish the Artifact at all, which is the default.
 - **Re-identification remains possible and is not solved here.** Exact dates, a Tool set and
   an authorship share can be enough for someone who knows the field. The tool narrows the
   surface; it cannot make a project unrecognisable to a reader who was there. Documentation

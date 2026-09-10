@@ -8,6 +8,7 @@ o que sobrou é exatamente o que `reveal` liberou.
 """
 
 import json
+from pathlib import Path
 
 from core import build, graph as graph_module
 from core.config import Alias, Config
@@ -141,3 +142,46 @@ class LineageEdgesNeverCrossAnAlias(FixtureCase):
         types = {e["type"] for e in builder.to_dict(build_mode="full")["edges"]}
         self.assertNotIn("DERIVES_FROM", types)
         self.assertNotIn("SUCCEEDS", types)
+
+
+class TheAliasedNodeKeepsTheIdThatIdentifiesTheRepository(FixtureCase):
+    """O id de um Artifact sob alias é o SHA do commit raiz, e é publicado.
+
+    Não é descuido: a identidade de Artifact é o commit raiz (ADR-0003) e o
+    grafo publica ids de Artifact como ids do store (contracts/graph.md). Quem
+    tem um clone reproduz o valor com `git rev-list --max-parents=0 HEAD` e
+    confirma a correspondência — e um repositório privado que seja fork de algo
+    público já tem o SHA raiz público, porque um fork *é* o mesmo Artifact.
+
+    Foi decidido em 2026-09-10 documentar em vez de corrigir. Este teste é
+    onde a decisão fica executável: se alguém passar a derivar o id sob alias,
+    ele falha e obriga a mexer na ADR-0011 junto, em vez de o comportamento
+    mudar em silêncio nos dois sentidos.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.root = self.tmp / "archive"
+        self.root.mkdir()
+        archives.write(self.root, archives.private(), archives.public())
+        self.payload = build.build(self.root, config=Config(aliases=(
+            Alias(id=archives.PRIVATE_ID, label="Anonymous fintech project"),
+        )))
+
+    def test_the_published_id_is_the_store_id_unchanged(self):
+        node = next(n for n in self.payload["nodes"] if n.get("aliased"))
+        self.assertEqual(node["id"], archives.PRIVATE_ID)
+
+    def test_the_id_reaches_the_published_files(self):
+        # O rótulo é falso e o id é verdadeiro, no mesmo arquivo. É exatamente
+        # isso que a ADR-0011 registra como divulgação conhecida.
+        text = published_text(self.root)
+        self.assertIn("Anonymous fintech project", text)
+        self.assertIn(archives.PRIVATE_ID, text)
+
+    def test_the_disclosure_is_written_down_where_it_is_decided(self):
+        # Um teste que trava o comportamento sem a ADR que o explica deixaria a
+        # próxima pessoa achando que é acidente.
+        adr = (Path(__file__).resolve().parent.parent
+               / "docs/adr/0011-private-artifacts-can-be-published-under-an-alias.md")
+        self.assertIn("root commit SHA", adr.read_text(encoding="utf-8"))
